@@ -41,7 +41,7 @@ Linux Prerequisites
 =====================
 
 If you are running on Linux, you will need to ensure you have access to the serial ports and USB devices.
-Instructions on how to install the udev rules can be found in the :ref:`linux install guide <linux-install>`.
+Instructions on how to install the udev rules can be found in the :ref:`linux install guide <install-linux>`.
 
 =================
 Mac Prerequisites

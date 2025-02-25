@@ -50,9 +50,9 @@ Reserved Commands
 
 The following commands are reserved by SimpleSerial v1:
 
--  ``'v'``: Get Simpleserial version (len=0)
--  ``'y'``: Get the number of Simpleserial commands on the target
--  ``'w'``: Get Simpleserial commands
+- ``'v'``: Get Simpleserial version (len=0)
+- ``'y'``: Get the number of Simpleserial commands on the target
+- ``'w'``: Get Simpleserial commands
 
 .. _simpleserial_v2.1:
 
@@ -117,8 +117,8 @@ Reserved Commands
 
 The following commands are reserved by SimpleSerial v2:
 
--  ``'v'``: Get simpleserial version (len=0)
--  ``'w'``: Get simpleserial commands
+- ``'v'``: Get simpleserial version (len=0)
+- ``'w'``: Get simpleserial commands
 
 SimpleSerial V2.0
 ~~~~~~~~~~~~~~~~~
@@ -168,23 +168,23 @@ ordered arguments:
 SimpleSerial V1.\*
 ''''''''''''''''''
 
--  ``char`` - the **command** the target needs to listen for.
--  ``unsigned int`` - the **amount of data bytes** expected. The maximum
-   is 64 bytes.
--  ``(uint8_t*, uint8_t) -> uint8_t`` - the **handler** for the command
-   taking the **data buffer** and the **actual data buffer length** in
-   bytes and returning a status code.
+- ``char`` - the **command** the target needs to listen for.
+- ``unsigned int`` - the **amount of data bytes** expected. The maximum
+  is 64 bytes.
+- ``(uint8_t*, uint8_t) -> uint8_t`` - the **handler** for the command
+  taking the **data buffer** and the **actual data buffer length** in
+  bytes and returning a status code.
 
 SimpleSerial V2
 '''''''''''''''
 
--  ``char`` - the **command** the target needs to listen for.
--  ``unsigned int`` - the **amount of data bytes** expected. The maximum
-   is 192 bytes.
--  ``(uint8_t, uint8_t, uint8_t, uint8_t*) -> uint8_t`` - the
-   **handler** for the command taking the arguments **command**,
-   **sub-command**, **actual data buffer length** and the **data
-   buffer** in bytes, in that order, and returning a status code.
+- ``char`` - the **command** the target needs to listen for.
+- ``unsigned int`` - the **amount of data bytes** expected. The maximum
+  is 192 bytes.
+- ``(uint8_t, uint8_t, uint8_t, uint8_t*) -> uint8_t`` - the **handler**
+  for the command taking the arguments **command**, **sub-command**,
+  **actual data buffer length** and the **data buffer** in bytes, in
+  that order, and returning a status code.
 
 Return value
 ^^^^^^^^^^^^
@@ -196,9 +196,9 @@ reached. Will return ``0`` otherwise.
 Notes
 ^^^^^
 
--  The callbacks function return value will be returned to the capture
-   board. In SimpleSerial V1.1 this will be through a ``'z'`` message,
-   as described above.
+- The callbacks function return value will be returned to the capture
+  board. In SimpleSerial V1.1 this will be through a ``'z'`` message, as
+  described above.
 
 Example
 ^^^^^^^
@@ -241,10 +241,10 @@ Arguments
 
 This function takes the following ordered arguments:
 
--  ``char`` - the **command** for the capture board (e.g. ``'z'`` for
-   ack, or ``'e'`` for error).
--  ``uint8_t`` - the **size of the data buffer**.
--  ``uint8_t*`` - the **data buffer** of the packet send.
+- ``char`` - the **command** for the capture board (e.g. ``'z'`` for
+  ack, or ``'e'`` for error).
+- ``uint8_t`` - the **size of the data buffer**.
+- ``uint8_t*`` - the **data buffer** of the packet send.
 
 .. _example-1:
 
@@ -283,10 +283,10 @@ being check.
 
 It might return without calling a callback for several reasons:
 
--  There are no handler listening to the command send.
--  The send packet is invalid. e.g. in SimpleSerial this could be due to
-   data bytes not being in HexASCII format.
--  The data buffer has an unexpected length.
+- There are no handler listening to the command send.
+- The send packet is invalid. e.g. in SimpleSerial this could be due to
+  data bytes not being in HexASCII format.
+- The data buffer has an unexpected length.
 
 .. _example-2:
 
