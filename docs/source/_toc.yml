@@ -1,0 +1,22 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: index
+parts:
+- caption: Getting Started
+  chapters:
+  - file: getting-started
+  - file: installation
+    sections:
+      - file: windows-install
+      - file: drivers
+      - file: linux-install
+      - file: mac-install
+      - file: virtual-box-inst
+  - file: starting
+- caption: API
+  chapters:
+  - file: scope-api
+  - file: target-api
+
