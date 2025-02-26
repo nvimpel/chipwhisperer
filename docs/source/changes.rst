@@ -4,4 +4,4 @@
 Change Log
 ##########
 
-.. include:: /../CHANGES.txt
+.. include:: /../../CHANGES.txt

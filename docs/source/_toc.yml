@@ -19,4 +19,16 @@ parts:
   chapters:
   - file: scope-api
   - file: target-api
+  - file: capture-api
+  - file: analyzer-api
+  - file: firmware
+- caption: Additional Features
+  chapters:
+  - file: debugging
+  - file: logging
+  - file: simpleserial
+  - file: custom-firmware
+- caption: Other
+  chapters:
+  - file: changes
 

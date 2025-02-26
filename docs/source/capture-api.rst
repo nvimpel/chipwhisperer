@@ -1,9 +1,9 @@
 
 .. _capture-api:
 
-****************
-Capture Helpers
-****************
+***********
+Capture API
+***********
 
 This page documents the included helper functions and classes
 for capturing, storing, and plotting traces.

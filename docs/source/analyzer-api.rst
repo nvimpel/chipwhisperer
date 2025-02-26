@@ -1,9 +1,9 @@
 
 .. _analyzer-api:
 
-********
-Analyzer
-********
+************
+Analyzer API
+************
 
 You may want to use your captured traces to perform an attack based on a type
 of side-channel analysis, in comes the analyzer. You can import the analyzer API
