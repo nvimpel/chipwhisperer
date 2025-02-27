@@ -4,6 +4,7 @@
 
 title: ChipWhisperer Documentation
 author: NewAE
+copyright: 2023-2025
 logo: _static/logo.png
 
 # Force re-execution of notebooks on each build.
@@ -13,7 +14,8 @@ execute:
 
 # due to submodules there's lots of files we don't want built:
 only_build_toc_files: true
-exclude_patterns: [.github/actions/copycat-action/*]
+#exclude_patterns: [.github/actions/copycat-action/*]
+exclude_patterns: [chipwhisperer-target-cw308t/.github/*]
 
 
 # Define the name of the latex output file for PDF builds
@@ -23,7 +25,7 @@ latex:
 
 # Information about where the book exists on the web
 repository:
-  url: https://github.com/jpcrypt/example-jupyter-book  # Online location of your book
+  url: https://github.com/newaetech/chipwhisperer  # Online location of your book
   path_to_book: docs  # Optional path to your book, relative to the repository root
   branch: main  # Which branch of the repository should be used when creating links (optional)
 
@@ -32,6 +34,8 @@ repository:
 html:
   use_issues_button: true
   use_repository_button: true
+
+# TODO: eventually return autodoc_warningiserror to true
 
 sphinx:
   config:
@@ -52,28 +56,7 @@ sphinx:
     napoleon_type_aliases: None
     napoleon_attr_annotations: true
     todo_include_todos: true
-    intersphinx_mapping:
-      ebp:
-        - "https://executablebooks.org/en/latest/"
-        - null
-      myst-parser:
-        - "https://myst-parser.readthedocs.io/en/latest/"
-        - null
-      myst-nb:
-        - "https://myst-nb.readthedocs.io/en/latest/"
-        - null
-      sphinx:
-        - "https://www.sphinx-doc.org/en/master"
-        - null
-      nbformat:
-        - "https://nbformat.readthedocs.io/en/latest"
-        - null
-      sd:
-        - "https://sphinx-design.readthedocs.io/en/latest"
-        - null
-    hoverxref_intersphinx:
-     - "sphinxproof"
-        
+
   extra_extensions:
     - sphinx.ext.napoleon
     - sphinx.ext.todo
