@@ -185,7 +185,7 @@ Otherwise, short the erase pins on your ChipWhisperer to
 enter bootloader mode, then flash the correct firmware onto your device.
 
 Instructions for shorting the erase pins can be found
-on the documentation page for your device at https://rtfm.newae.com
+on the documentation page for your device.
 
 If you run into any issues not covered here, or if none of these steps
 work for you, let us know over at https://forum.newae.com

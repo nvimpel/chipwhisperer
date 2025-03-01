@@ -39,7 +39,7 @@ connections are as follows:
 ### Building Firmware
 
 Building Firmware for this target requires make and arm-none-eabi-gcc.
-Installation of both these are covered in https://chipwhisperer.readthedocs.io/en/latest/prerequisites.html
+Installation of both these are covered in the {doc}`installation instructions <../installation>`.
 
 If you have make and arm-none-eabi-gcc, you can build firmware by navigating via command line to the relevant
 build directory and running:

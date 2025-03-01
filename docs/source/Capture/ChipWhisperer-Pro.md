@@ -13,10 +13,6 @@ Available in the [ChipWhisperer-Pro Starter Kit](../Starter%20Kits/ChipWhisperer
 
 [Datasheet](https://media.newae.com/datasheets/NAE-CW1200_datasheet.pdf)
 
-## Software Docs/Installation
-
-https://chipwhisperer.readthedocs.io/
-
 ---
 
 ## Quick-Start Guide
@@ -28,8 +24,9 @@ or the glitch SMA connector (if you're doing voltage glitching) and the SMA conn
 target. Be sure to check the relevant hardware documentation for your target before proceeding as
 well. 
 
-Once that's done, follow our software/driver installation guide at chipwhisperer.readthedocs.io,
-which will take the rest of the way towards learning about side channel attacks!
+Once that's done, follow our {doc}`installation guide <../installation>`, which
+will take the rest of the way towards learning about side channel attacks!
+
 
 ---
 
@@ -126,12 +123,12 @@ offering vastly improved performance over a typical asynchronous oscilloscope se
 ## Using the ChipWhisperer-Pro
 
 All communication with the ChipWhisperer-Pro is done through ChipWhisperer's Python
-API, which is documented on our 
-[ReadTheDocs Page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#openadc-scope).
+API, which is documented on our {ref}`Scope API <api-scope>` page.
 
 ChipWhisperer also has many Jupyter Notebook tutorials/labs, which serve as learning material for side-channel
-attacks, as well as examples on how to use the ChipWhisperer API. If you followed the install
-instructions on [ReadTheDocs](https://chipwhisperer.readthedocs.io/en/latest/#installation), this will be in the `jupyter/` folder in the place you installed ChipWhisperer.
+attacks, as well as examples on how to use the ChipWhisperer API. If you followed the
+{doc}`installation instructions <../installation>`,
+this will be in the `jupyter/` folder in the place you installed ChipWhisperer.
 
 We also have full courses available at https://learn.chipwhisperer.io/ that supplement
 the Jupyter Notebook tutorials.
@@ -280,11 +277,9 @@ See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
 ---
 ##### **Upgrading Firmware**
 
-  See
-  <https://chipwhisperer.readthedocs.io/en/latest/firmware.html>
-  for instructions on how to update the SAM3U firmware.
+See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
 
-  ---
+---
 
 ##### **Erase Pins**
 

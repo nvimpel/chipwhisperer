@@ -9,6 +9,7 @@ In addition to interfacing with ChipWhisperer's 20-pin connector and SMA-connect
 already have necessary side channel modifications (shunt resistor, capacitor removal, etc.) integrated
 into the board, so there's no need to reach for your soldering iron or utility knife!
 
+(integrated-targets)=
 ## Integrated Targets
 
 The following targets typically come attached to a capture board:
@@ -35,6 +36,7 @@ with a 20-pin cable and SMA cables
 
 Hardware design files can be found at [https://github.com/newaetech/chipwhisperer/tree/develop/hardware/victims](https://github.com/newaetech/chipwhisperer/tree/develop/hardware/victims)
 
+(cw308-targets)=
 ### CW308 Targets
 
 The CW308 UFO board is a convenient main board for attacking a wide variety of targets. It includes

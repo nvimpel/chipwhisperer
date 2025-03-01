@@ -8,23 +8,25 @@ Target API
 The target object provides the interface for configuring the target device
 under test (DUT). There are currently two UART communication classes:
 
- * :ref:`api-target-simpleserial` (default)
- * :ref:`api-target-simpleserial2`
+* :ref:`api-target-simpleserial` (default)
+* :ref:`api-target-simpleserial2`
 
 and two FPGA based targets:
 
- * :ref:`api-target-cw305`
- * :ref:`api-target-cw310`
+* :ref:`api-target-cw305`
+* :ref:`api-target-cw310`
 
 The easiest way to create a target object is to use the :code:`chipwhisperer.target`
-function::
+function:
+
+.. code:: python
 
     import chipwhisperer as cw
     scope = cw.scope()
     target = cw.target(scope, cw.targets.SimpleSerial)
 
+
 .. autodata:: chipwhisperer.target
-    :annotation: chipwhisperer.target(scope, target_type=targets.SimpleSerial, **kwargs)
 
 Serial Targets
 ==============
@@ -34,7 +36,7 @@ Serial Targets
 Simple Serial Target
 --------------------
 
-38400bps ASCII encoded serial. See SimpleSerial for protocol documentation.::
+38400bps ASCII encoded serial. See :doc:`simpleserial` for protocol documentation.
 
     import chipwhisperer as cw
     scope = cw.scope()
@@ -42,8 +44,8 @@ Simple Serial Target
 
 Supported Targets:
 
- * `Targets integrated into capture boards <https://rtfm.newae.com/Targets/#integrated-targets>`_
- * `CW308 UFO targets <https://rtfm.newae.com/Targets/#cw308-targets>`_
+* :ref:`Targets integrated into capture boards <integrated-targets>`
+* :ref:`CW308 UFO targets <cw308-targets>`
 
 .. autoclass:: chipwhisperer.targets.SimpleSerial
     :members:
@@ -53,7 +55,7 @@ Supported Targets:
 Simple Serial V2 Target
 -----------------------
 
-230400bps COBS serial. See SimpleSerial for protocol documentation.::
+230400bps COBS serial. See :doc:`simpleserial` for protocol documentation.
 
     import chipwhisperer as cw
     scope = cw.scope()
@@ -61,8 +63,9 @@ Simple Serial V2 Target
 
 Supported Targets:
 
- * `Targets integrated into capture boards <https://rtfm.newae.com/Targets/#integrated-targets>`_
- * `CW308 UFO targets <https://rtfm.newae.com/Targets/#cw308-targets>`_
+* :ref:`Targets integrated into capture boards <integrated-targets>`
+* :ref:`CW308 UFO targets <cw308-targets>`
+
 
 .. autoclass:: chipwhisperer.targets.SimpleSerial2
     :members:
@@ -90,15 +93,15 @@ CW305 FPGA Target
 -----------------
 
 Used for controlling and communicating with the 
-`CW305 Artix FPGA Target <https://rtfm.newae.com/Targets/CW305%20Artix%20FPGA/>`_.::
+:doc:`Targets/CW305 Artix FPGA`::
 
     import chipwhisperer as cw
     target = cw.target(None, cw.targets.CW305) # programs default bitstream, see _con() for full arg list
 
 Examples:
 
- * `Attacking AES <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb>`_
- * `Attacking ECC <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/demos/CW305_ECC>`_
+  `Attacking AES <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb>`_
+* `Attacking ECC <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/demos/CW305_ECC>`_
 
 
 .. autoclass:: chipwhisperer.targets.CW305
@@ -117,14 +120,14 @@ CW310
 -----
 
 Used for controlling and communicating with the 
-`CW310 Bergen Board <https://rtfm.newae.com/Targets/CW305%20Artix%20FPGA/>`_.::
+:doc:`Targets/CW310 Bergen Board`::
 
     import chipwhisperer as cw
     target = cw.target(None, cw.targets.CW310)
 
 Examples:
 
- * Coming soon!
+* Coming soon!
 
 .. autoclass:: chipwhisperer.capture.targets.CW310.CW310
 

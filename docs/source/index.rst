@@ -15,9 +15,7 @@ about the project and its recent changes.
 The :ref:`installing <install>` sections have everything you need to know to
 install ChipWhisperer.
 
-.. _hardware: https://rtfm.newae.com
-
-After setting up your `hardware`_, run:
+After setting up your :doc:`hardware <Capture/index>`, run:
 
 .. code:: python
 

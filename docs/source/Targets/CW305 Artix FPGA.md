@@ -55,11 +55,16 @@ has all items.
 ### USB Interface
 
 The USB interface for the CW305 implements the higher lever
-simpleserial commands, such as `simpleserial_read()` and `simpleserial_write()`.
+simpleserial commands, such as 
+{py:meth}`simpleserial_read() <chipwhisperer.targets.SimpleSerial.simpleserial_read>`
+and
+{py:meth}`simpleserial_write() <chipwhisperer.targets.SimpleSerial.simpleserial_write>`
+
 For lower level communication, the CW305 allows you to directly
 read and write to registers and does not feature the serial `read()`/`write()`
-like with the `SimpleSerial` class. For full documentation, see
-[the CW305 software documentation](https://chipwhisperer.readthedocs.io/en/latest/target-api.html#cw305-fpga-target)
+like with the {ref}`SimpleSerial <api-target-simpleserial>` class. For full documentation, see
+{ref}`the CW305 target API documentation <api-target-cw305>`
+
 
 To reduce noise in your power measurements, you may want to disable the USB clock
 while the encryption operation is happening. Again, this can be done via the Python
@@ -188,10 +193,10 @@ Like with other ChipWhisperer hardware
 with a USB interface, the onboard SAM3U microcontroller
 providing the interface can be reprogrammed. The bootloader can be entered and new firmware can be uploaded using the same
 interface as the ChipWhisperer Capture hardware:
-[https://chipwhisperer.readthedocs.io/en/latest/firmware.html](https://chipwhisperer.readthedocs.io/en/latest/firmware.html).
+{doc}`../firmware`.
 
 There is also a Cortex Debug Connector located near the USB-B connector that 
-can be used to program and debug the SAM3U. See details at end of page for SAM3U firmware.
+can be used to program and debug the SAM3U. See [this section](#sam3u-firmware) for SAM3U firmware details.
 
 ---
 
@@ -422,7 +427,7 @@ which connects the SPI flash pins to the SAM3U.
 This means during SPI programming your FPGA design will be cleared. You can reload your FPGA design of course afterwards, but if you are using a soft-core type system
 you should program the SPI flash first, then load your FPGA bitstream (which will clear out the SPI-flash bitstream).
 
-SPI API documentation for this can be found on our [ReadTheDocs page](https://chipwhisperer.readthedocs.io/en/latest/api.html#cw305-spi-program)
+SPI API documentation for this can be found on the {ref}`target API documentation page <cw305-spi-program>`.
 
 Note you'll need to adjust the mode switches back and forth for this to work - the switches need to be set to allow USB programming for the shim to work, then can be switched back to load from the on-board SPI flash.
 

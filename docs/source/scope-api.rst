@@ -16,8 +16,8 @@ which will connect to a ChipWhisperer device and return a scope object of the co
 
 There are currently two types of scopes:
 
- * :ref:`api-scope-openadc` (Lite, Pro, Husky)
- * :ref:`api-scope-cwnano` (Nano)
+* :ref:`api-scope-openadc` (Lite, Pro, Husky)
+* :ref:`api-scope-cwnano` (Nano)
 
 These scope objects also inherit common methods from :ref:`api-scope-common`
 
@@ -36,16 +36,16 @@ OpenADC Scope
 
 Supported scopes:
 
- * `ChipWhisperer-Lite <https://rtfm.newae.com/Capture/ChipWhisperer-Lite/>`_
- * `ChipWhisperer-Pro <https://rtfm.newae.com/Capture/ChipWhisperer-Pro/>`_
- * `ChipWhisperer-Husky <https://www.crowdsupply.com/newae/chipwhisperer-husky>`_
+* :doc:`Capture/ChipWhisperer-Lite`
+* :doc:`Capture/ChipWhisperer-Pro`
+* :doc:`Capture/ChipWhisperer-Husky`
 
 Usage examples:
 
- * `Power Analysis <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/courses/sca101>`_
- * `Glitch <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/courses/fault101>`_
- * `Pro features <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/CW-Pro%20Using%20SAD%20(Analog%20Pattern)%20Trigger%20-%20Attacking%20AES.ipynb>`_
- * `Husky glitching <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/husky/03%20-%20Husky%20Glitching.ipynb>`_
+* `Power Analysis <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/courses/sca101>`_
+* `Glitch <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/courses/fault101>`_
+* `Pro features <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/CW-Pro%20Using%20SAD%20(Analog%20Pattern)%20Trigger%20-%20Attacking%20AES.ipynb>`_
+* `Husky glitching <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/husky/03%20-%20Husky%20Glitching.ipynb>`_
 
 .. autoclass:: chipwhisperer.scopes.OpenADC
     :members:
@@ -280,7 +280,7 @@ ChipWhisperer Nano Scope
 
 Supported scopes:
 
- * `ChipWhisperer-Nano <https://rtfm.newae.com/Capture/ChipWhisperer-Nano/>`_
+* :doc:`Capture/ChipWhisperer-Nano`
 
 .. autoclass:: chipwhisperer.scopes.CWNano
     :members:

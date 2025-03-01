@@ -14,10 +14,6 @@ are listed [here](index.md#chipwhisperer-husky-plus-features-over-chipwhisperer-
 
 [https://www.crowdsupply.com/newae/chipwhisperer-husky](https://www.crowdsupply.com/newae/chipwhisperer-husky)
 
-## Software Docs/Installation
-
-[https://chipwhisperer.readthedocs.io/](https://chipwhisperer.readthedocs.io/)
-
 ---
 ## Quick-Start Guide
 
@@ -27,9 +23,8 @@ between the measure POS SMA (if you're doing power analysis) or the glitch
 SMA connector (if you're doing voltage glitching) and the SMA connector on the target. 
 For other targets, check the relevant target documentation.
 
-Once that's done, follow our software/driver installation guide at 
-[chipwhisperer.readthedocs.io](https://chipwhisperer.readthedocs.io),
-which will take the rest of the way towards learning about side channel attacks!
+Once that's done, follow our {doc}`installation guide <../installation>`, which
+will take the rest of the way towards learning about side channel attacks!
 
 ---
 ## Product Highlights
@@ -145,12 +140,12 @@ offering vastly improved performance over a typical asynchronous oscilloscope se
 ## Using the ChipWhisperer-Husky
 
 All communication with the ChipWhisperer-Husky is done through ChipWhisperer's Python
-API, which is documented on our 
-[Read the Docs Page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#openadc-scope).
+API, which is documented on our {ref}`Scope API <api-scope>` page.
 
 ChipWhisperer also has many Jupyter Notebook tutorials/labs, which serve as learning material for side-channel
-attacks, as well as examples on how to use the ChipWhisperer API. If you followed the install
-instructions on [Read the Docs](https://chipwhisperer.readthedocs.io/en/latest/index.html#install), this will be in the `jupyter/` folder in the place you installed 
+attacks, as well as examples on how to use the ChipWhisperer API. If you followed the
+{doc}`installation instructions <../installation>`,
+this will be in the `jupyter/` folder in the place you installed 
 ChipWhisperer.
 
 We also have full courses available at https://learn.chipwhisperer.io/ that supplement
@@ -439,22 +434,9 @@ if the device varies from -0.1 to 0.1 on the graph when idle, then spikes to
 
 The UART trigger module looks for a pattern of characters on the trigger
 pin and, if it detects that pattern, outputs a trigger. Up to 8 patterns
-can be set at a time. Documentation for this module is available on
-[on our Read the Docs page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#scope-uarttrigger),
-but here is a quick example:
+can be set at a time. For documentation and usage, see:
+{py:meth}`scope.UARTTrigger() <chipwhisperer.capture.trace.TraceWhisperer.UARTTrigger>`.
 
-```python
-#assuming setup scope:
-scope.trigger.triggers = 'tio1'
-scope.trigger.module = 'UART'
-scope.UARTTrigger.enabled = True
-scope.UARTTrigger.baud = 38400
-scope.UARTTrigger.set_pattern_match(0, 'r')
-scope.UARTTrigger.trigger_source = 0
-```
-
-This will cause the UART trigger to match on the typical simpleserial `"r..."` response
-from NewAE targets.
 
 ---
 
@@ -474,7 +456,8 @@ comparison to be done over 512 samples.
 This trigger allows ChipWhisperer to detect a specific pattern (for
 instance, an encryption operation) in a power trace without any other data.
 
-The documentation for the SAD module can be found [on our Read the Docs page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#sad).
+The documentation for the SAD module can be found 
+{py:meth}`here <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.HuskySAD>`.
 
 There are many SAD settings to configure; 
 [this notebook](https://github.com/newaetech/chipwhisperer-jupyter/blob/main/demos/husky/06%20-%20Husky%20SAD%20Triggering.ipynb)
@@ -496,6 +479,9 @@ Arm Trace data.
 Due to the amount of debug information you have access to in real time with Trace, TraceWhisperer
 allows you to set up highly specific testing scenarios for your device under test for both power analysis
 and glitching.
+
+The documentation for this module can be found 
+{py:meth}`here <chipwhisperer.capture.trace.TraceWhisperer.TraceWhisperer>`.
 
 We also have a [Jupyter Notebook Demo](https://github.com/newaetech/DesignStartTrace/blob/master/jupyter/TraceWhisperer.ipynb) that showcases may features of TraceWhisperer, including triggering.
 
@@ -595,11 +581,9 @@ See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
 ---
 ##### **Upgrading Firmware**
 
-  See
-  <https://chipwhisperer.readthedocs.io/en/latest/firmware.html>
-  for instructions on how to update the SAM3U firmware.
+See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
 
-  ---
+---
 
 ##### **Erase Pins/Button**
 

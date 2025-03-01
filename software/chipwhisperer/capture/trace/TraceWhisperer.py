@@ -2043,7 +2043,7 @@ class ARM_debug_registers(util.DisableNewAttr):
 
 class UARTTrigger(TraceWhisperer):
     ''' Husky UART trigger module settings.
-    Basic usage for triggering on 'r'::
+    Basic usage for triggering on the typical 'r...' response from NewAE targets::
 
         #assuming setup scope:
         scope.trigger.triggers = 'tio1'

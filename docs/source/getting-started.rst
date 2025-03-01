@@ -44,7 +44,7 @@ Hardware
 
 ChipWhisperer has scope boards, which are used to mount side channel attacks,
 as well as target boards, which function as a device under test (DuT).
-Hardware documentation can be found at https://rtfm.newae.com
+Hardware documentation can be found in the "Hardware" section of this site.
 
 Hardware is for the most part open source and design files/schematics
 can be found either on the `ChipWhisperer Github repository`_,
@@ -157,7 +157,6 @@ Important Links
 .. _UFO target board repository: https://github.com/newaetech/chipwhisperer-target-cw308t
 .. _NewAE Store: https://store.newae.com/
 .. _Jupyter Notebook: https://jupyter.org/
-.. _NewAE Hardware Documentation: https://rtfm.newae.com
 .. _ChipWhisperer ReadTheDocs: https://chipwhisperer.readthedocs.io
 .. _Issue Tracker: https://github.com/newaetech/chipwhisperer/issues
 .. _ChipWhisperer GitHub repository: https://github.com/newaetech/chipwhisperer

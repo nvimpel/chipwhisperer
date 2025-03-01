@@ -21,10 +21,6 @@ Available in the [ChipWhisperer-Lite starter kit](../Starter%20Kits/ChipWhispere
 
 [Datasheet](https://media.newae.com/datasheets/NAE-CW1173_datasheet.pdf)
 
-## Software Docs/Installation
-
-https://chipwhisperer.readthedocs.io/
-
 ---
 ## Quick-Start Guide
 
@@ -35,8 +31,8 @@ as a coax cable between the measure SMA connector (if you're doing power analysi
 SMA connector (if you're doing voltage glitching) and the SMA connector on the target. 
 For other targets, check the relevant target documentation.
 
-Once that's done, follow our software/driver installation guide at chipwhisperer.readthedocs.io,
-which will take the rest of the way towards learning about side channel attacks!
+Once that's done, follow our {doc}`installation guide <../installation>`, which
+will take the rest of the way towards learning about side channel attacks!
 
 ---
 ## Product Highlights
@@ -128,13 +124,12 @@ offering vastly improved performance over a typical asynchronous oscilloscope se
 ## Using the ChipWhisperer-Lite
 
 All communication with the ChipWhisperer-Lite is done through ChipWhisperer's Python
-API, which is documented on our 
-[ReadTheDocs Page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#openadc-scope).
+API, which is documented on our {ref}`Scope API <api-scope>` page.
 
 ChipWhisperer also has many Jupyter Notebook tutorials/labs, which serve as learning material for side-channel
-attacks, as well as examples on how to use the ChipWhisperer API. If you followed the install
-instructions on [ReadTheDocs](https://chipwhisperer.readthedocs.io/en/latest/installing.html), this will be in the `jupyter/` folder in the place you installed 
-ChipWhisperer.
+attacks, as well as examples on how to use the ChipWhisperer API. If you followed the 
+{doc}`installation instructions <../installation>`,
+this will be in the `jupyter/` folder in the place you installed ChipWhisperer.
 
 We also have full courses available at https://learn.chipwhisperer.io/ that supplement
 the Jupyter Notebook tutorials.
@@ -221,7 +216,7 @@ receive USART data on the ChipWhisperer in the same way target module is normall
 USART methods can be used individually, or both at the same time, though we recommend that you
 don't send messages on both at the same time.
 
-For more information, please read our [serial port rtfm page](../Serial Ports.md)
+For more information, please read our [serial port page](../Serial%20Ports.md).
 
 This new serial port has a few advantages:
 
@@ -353,11 +348,9 @@ See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
 
 ##### **Upgrading Firmware**
 
-  See
-  <https://chipwhisperer.readthedocs.io/en/latest/firmware.html>
-  for instructions on how to update the SAM3U firmware.
+See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
 
-  ---
+---
 
 ##### **Erase Pins**
 

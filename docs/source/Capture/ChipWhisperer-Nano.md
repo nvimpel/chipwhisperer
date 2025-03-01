@@ -1,7 +1,5 @@
 # CW1101 ChipWhisperer-Nano
 
----
-
 The ChipWhisperer-Nano is the lowest cost platform for performing side-channel 
 power analysis attacks in training and educational environments. This 
 device has a smaller subset of features compared 
@@ -16,10 +14,6 @@ Available in the [ChipWhisperer-Nano Starter Kit](../Starter%20Kits/ChipWhispere
 
 [Datasheet](https://media.newae.com/datasheets/NAE-CW1101_datasheet.pdf)
 
-## Software Docs/Installation
-
-https://chipwhisperer.readthedocs.io/
-
 ---
 
 ## Quick-Start Guide
@@ -27,9 +21,8 @@ https://chipwhisperer.readthedocs.io/
 Like with the 1-part CW1173, hardware setup is easy! Simply use a
 micro-usb cable to connect the ChipWhisperer-Nano to a computer or laptop.
 
-
-Once that's done, follow our software/driver installation guide at chipwhisperer.readthedocs.io,
-which will take the rest of the way towards learning about side channel attacks!
+Once that's done, follow our {doc}`installation guide <../installation>`, which
+will take the rest of the way towards learning about side channel attacks!
 
 ---
 
@@ -104,9 +97,9 @@ ChipWhisperer-Enabling your development platforms.
 | Voltage Glitching | Yes | 
 | Clock Glitching | No | 
 | Glitch Outputs | Glitch-Only | 
-| Glitch Width\* | Time increments between [0, 2^32) increments | 
+| Glitch Width\* | Time increments between \[0, 2^32) increments | 
 | Glitch Width Increments | ~8.3ns | 
-| Glitch Offset | Time increments between [0 , 2^32) increments, ~200ns jitter| 
+| Glitch Offset | Time increments between \[0 , 2^32) increments, ~200ns jitter| 
 | Glitch Offset Increments | ~8.3ns | 
 | Glitch Cycle Offset | N/A |
 | Glitch Cycle Repeat | N/A |
@@ -133,12 +126,12 @@ ChipWhisperer-Enabling your development platforms.
 ## Using the ChipWhisperer-Nano
 
 All communication with the ChipWhisperer-Nano is done through ChipWhisperer's Python
-API, which is documented on our 
-[ReadTheDocs Page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#chipwhisperer-nano-scope).
+API, which is documented on our {ref}`Scope API <api-scope>` page.
 
 ChipWhisperer also has many Jupyter Notebook tutorials/labs, which serve as learning material for side-channel
-attacks, as well as examples on how to use the ChipWhisperer API. If you followed the install
-instructions on [ReadTheDocs](https://chipwhisperer.readthedocs.io/en/latest/installing.htm), this will be in the `jupyter/` folder in the place you installed 
+attacks, as well as examples on how to use the ChipWhisperer API. If you followed the
+{doc}`installation instructions <../installation>`,
+this will be in the `jupyter/` folder in the place you installed 
 ChipWhisperer.
 
 We also have full courses available at https://learn.chipwhisperer.io/ that supplement
@@ -352,11 +345,9 @@ See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
 --- 
 #### **Upgrading Firmware**
 
-  See
-  <https://chipwhisperer.readthedocs.io/en/latest/firmware.html>
-  for instructions on how to update the SAM3U firmware.
+See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
 
-  ---
+---
 
 #### **Erase Pins**
 

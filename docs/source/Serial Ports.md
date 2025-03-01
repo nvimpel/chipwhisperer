@@ -28,8 +28,8 @@ As well as a few disadvantages:
 This last concern is addressed by the ChipWhisperer's option to ignore CDC USART settings changes
 (typically `scope.io.cdc_settings`). 
 
-If you're connected to the scope in Python, you can see the serial port name
-by calling `scope.get_serial_ports()`. See [its ReadTheDocs page](https://chipwhisperer.readthedocs.io/en/latest/scope-api.html#chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface.get_serial_ports) for more information.
+If you're connected to the scope in Python, you can see the serial port name by calling
+{py:meth}`scope.get_serial_ports() <chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface.get_serial_ports>`.
 
 ## Examples
 
