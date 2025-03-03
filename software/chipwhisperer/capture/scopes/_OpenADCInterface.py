@@ -1647,7 +1647,7 @@ class TriggerSettings(util.DisableNewAttr):
 
     @property
     def fifo_state(self):
-        """Husky only, for debugging: return the state of the Husky FIFO FSM.
+        """Husky only, for debugging; state of the Husky FIFO FSM.
         """
         if not self._is_husky:
             raise ValueError("For CW-Husky only.")

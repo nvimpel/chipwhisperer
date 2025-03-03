@@ -663,8 +663,8 @@ class TraceWhisperer(util.DisableNewAttr):
 
         Args:
             check_uart (bool): check that the hardware UART state machine is not stuck,
-            and if it is, reset it. Should not be required unless trace is left enabled
-            when not used. Trace clock needs to be active for this to work.
+                and if it is, reset it. Should not be required unless trace is left enabled
+                when not used. Trace clock needs to be active for this to work.
         """
         assert self.trace_synced, 'Not synchronized!'
         assert self.enabled, 'Not enabled!'
@@ -2198,7 +2198,7 @@ class UARTTrigger(TraceWhisperer):
 
         Args:
             as_string (bool): convert each byte to its boolean string; otherwise,
-            results are returned as a list of self.data_bits-sized words.
+                results are returned as a list of self.data_bits-sized words.
         """
         raw = self.fpga_read(self.REG_MATCHED_DATA, 8)
         if as_string:

@@ -298,10 +298,10 @@ class HuskySAD(util.DisableNewAttr):
 
         Raises:
             ValueError: if setting a threshold higher than what the hardware
-            supports.  If you would like a higher threshold than what's
-            possible, you can turn off comparison for some samples via
-            enabled_samples and/or trigger_sample, which effectively
-            increases the threshold range.
+                supports.  If you would like a higher threshold than what's
+                possible, you can turn off comparison for some samples via
+                enabled_samples and/or trigger_sample, which effectively
+                increases the threshold range.
         """
         return  int.from_bytes(self.oa.sendMessage(CODE_READ, "SAD_THRESHOLD", Validate=False, maxResp=4), byteorder='little')
 
@@ -319,7 +319,7 @@ class HuskySAD(util.DisableNewAttr):
 
         Raises:
             ValueError: if setting a threshold higher than what the hardware
-            supports.
+                supports.
 
         """
         return self.oa.sendMessage(CODE_READ, "SAD_INTERVAL_THRESHOLD", Validate=False, maxResp=1)[0]
