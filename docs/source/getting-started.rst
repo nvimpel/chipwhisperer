@@ -47,7 +47,7 @@ as well as target boards, which function as a device under test (DuT).
 Hardware documentation can be found in the "Hardware" section of this site.
 
 Hardware is for the most part open source and design files/schematics
-can be found either on the `ChipWhisperer Github repository`_,
+can be found either on the `ChipWhisperer Capture Github repository`_,
 or on a `UFO target board repository`_.
 
 .. image:: _images/cwlite_basic.png
@@ -64,12 +64,12 @@ and targets.
 
 Scope firmware is written in Verilog (for
 the FPGA) and C (USB microcontroller) and can be found in the
-:code:`hardware/capture` sections of the `ChipWhisperer
-Github repository`_.
+`ChipWhisperer Capture Github repository`_, with the exception of Husky which
+has its own `ChipWhisperer Husky Github repository`_.
 
 Target firmware is mostly written in C (though we do have
 a few FPGA targets with code in Verilog) and can be found 
-in the :code:`hardware/victims/firmware` directory of
+in the :code:`firmware` directory of
 the `ChipWhisperer Github repository`_.
 
 .. _getting_started-software:
@@ -159,9 +159,12 @@ Important Links
 .. _Jupyter Notebook: https://jupyter.org/
 .. _ChipWhisperer ReadTheDocs: https://chipwhisperer.readthedocs.io
 .. _Issue Tracker: https://github.com/newaetech/chipwhisperer/issues
-.. _ChipWhisperer GitHub repository: https://github.com/newaetech/chipwhisperer
+.. _ChipWhisperer Github repository: https://github.com/newaetech/chipwhisperer
+.. _ChipWhisperer Capture Github repository: https://github.com/newaetech/chipwhisperer-capture
 .. _NewAE Forum: https://forum.newae.com/
 .. _NewAE Website: https://newae.com/
 .. _ChipWhisperer Jupyter Github repository: https://github.com/newaetech/chipwhisperer-jupyter
 .. _readthedocs: https://readthedocs.org
 .. _Online Courses: https://learn.chipwhisperer.io
+.. _ChipWhisperer Husky Github repository: https://github.com/newaetech/chipwhisperer-husky
+

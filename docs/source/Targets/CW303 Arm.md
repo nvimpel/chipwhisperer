@@ -67,7 +67,7 @@ cw.program_target(scope, prog, "<path/to/firmware.hex>")
 ### Increasing CLKIN
 
 The STM32F303 has a max CLKIN input of 32MHz; however, to increase it above 24MHz, the flash latency must be increased.
-Note that this may adversely affect clock glitching in particular. Flash latency can be increased in `hardware/victims/firmware/hal/stm32f3/stm32f3_hal.c`
+Note that this may adversely affect clock glitching in particular. Flash latency can be increased in `firmware/mcu/hal/stm32f3/stm32f3_hal.c`
 
 ### Connectors
 

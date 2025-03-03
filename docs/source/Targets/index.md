@@ -21,7 +21,7 @@ The following targets typically come attached to a capture board:
 | CW1101 Target Board | STM32F030F4P6 | Arm Cortex-M0 | No | CW-integrated  | Released | 
 
 These boards are integrated into a capture board and therefore can be found
-with the associated capture design files: [https://github.com/newaetech/chipwhisperer/tree/develop/hardware/capture](https://github.com/newaetech/chipwhisperer/tree/develop/hardware/capture)
+with the associated capture design files: [https://github.com/newaetech/chipwhisperer-capture](https://github.com/newaetech/chipwhisperer-capture)
 
 ## Standalone Targets
 
@@ -34,7 +34,7 @@ with a 20-pin cable and SMA cables
 | CW305 Artix FPGA | Xilinx Artix-7 | FPGA | Yes | CW-integrated , external | Released |
 | CW310 Kintex FPGA | Xilinx Kintex-7 | FPGA | Yes | CW-integrated, external | Released |
 
-Hardware design files can be found at [https://github.com/newaetech/chipwhisperer/tree/develop/hardware/victims](https://github.com/newaetech/chipwhisperer/tree/develop/hardware/victims)
+Hardware design files can be found at [https://github.com/newaetech/chipwhisperer-capture](https://github.com/newaetech/chipwhisperer-capture)
 
 (cw308-targets)=
 ### CW308 Targets

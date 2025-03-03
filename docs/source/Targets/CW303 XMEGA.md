@@ -139,7 +139,7 @@ LDO and USB connector
 
 The XMEGA uses AVR architecture and needs an AVR compiler. The target
 firmware can be found under the
-`chipwhisperer/hardware/victims/firmware/` directory in their project
+`chipwhisperer/firmware/mcu/` directory in their project
 (e.g. simpleserial-aes, basic-passwdcheck) folder.
 
   - Atmel AVR-GCC standalone - see [Atmel avr-gcc
@@ -153,7 +153,7 @@ To build the code, follow these steps:
 
 1.  `cd` to the project directory with the firmware source (.c) and
     makefile, and run `make`:
-        cd c:\chipwhisperer\hardware\victims\firmware\<project dir>
+        cd c:\chipwhisperer\firmware\mcu\<project dir>
         make PLATFORM=CW303 CRYPTO_TARGET=AVRCRYPTOLIB
     where the \<\> part is changed to the project name.
     If this is successful, you'll see an output like the following:

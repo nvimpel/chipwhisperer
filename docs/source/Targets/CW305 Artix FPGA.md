@@ -437,7 +437,7 @@ Note you'll need to adjust the mode switches back and forth for this to work - t
 To generate the `.mcs` or `.bin` files inside of Vivado, use the `write_cfgmem` command. You'll need to change directory first for this to work. An example run is shown below:
 
 ```
-cd C:/dev/chipwhisperer/hardware/victims/cw305_artixtarget/fpga/vivado_examples/aes128_verilog/aes128_verilog.runs/impl_35t
+cd C:/dev/chipwhisperer/firmware/fpgas/aes/vivado/cw305_aes.runs/impl_35t
 write_cfgmem -format mcs -interface SPIx1 -size 32 -loadbit "up 0x0 cw305_top.bit" -file cw305_a35_aes.mcs
 write_cfgmem -format bin -interface SPIx1 -size 32 -loadbit "up 0x0 cw305_top.bit" -file cw305_a35_aes.bin
 ```
@@ -450,12 +450,12 @@ When using the SPI on-board chip to boot me sure you adjusted the mode switches.
 
 ## SAM3U Firmware
 
-The firmware for the SAM3U is open-source and can be modified as you wish. See [hardware/victims/cw305_artixtarget/fw/sam3u/CW305_SAM3U_FW](https://github.com/newaetech/chipwhisperer/tree/develop/hardware/victims/cw305_artixtarget/fw/sam3u/CW305_SAM3U_FW) for the firmware in the ChipWhisperer repository.
+The firmware for the SAM3U is open-source and can be modified as you wish; find it in the [cw305-artix-target repository](https://github.com/newaetech/cw305-artix-target)
 
 Currently, you build it with:
 
 ```
-cd src
+cd fw/sam3u/CW305_SAM3U_FW/src
 make clean
 make
 ```
@@ -476,7 +476,7 @@ programmer.enter_bootloader(really_enter=True)
 
 #Wait a moment for device to re-enumerate as USB-serial
 programmer = cw.SAMFWLoader(scope=None)
-programmer.program("com4", r"..\..\hardware\victims\cw305_artixtarget\fw\sam3u\CW305_SAM3U_FW\src\ChipWhisperer-CW305-SAM3U1C.bin")
+programmer.program("com4", r"/path/to/ChipWhisperer-CW305-SAM3U1C.bin")
 
 #Power cycle CW305 using switch
 ```
@@ -487,7 +487,7 @@ programmer.program("com4", r"..\..\hardware\victims\cw305_artixtarget\fw\sam3u\C
 
 You can get the full schematic in PDF format from the git repo. See below for individual pages.
 
-[Open Schematic in PDF](https://github.com/newaetech/chipwhisperer/blob/develop/hardware/victims/cw305_artixtarget/NAE-CW305-Schematic.pdf)
+[Open Schematic in PDF](https://github.com/newaetech/cw305-artix-target/blob/main/NAE-CW305-Schematic.pdf)
 
 ![](Images/cw305_sch1.png)
 ![](Images/cw305_sch2.png)
