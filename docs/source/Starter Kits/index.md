@@ -2,7 +2,7 @@
 title: Overview & Comparison
 ---
 
-## Starter Kits
+# Starter Kits
 
 NewAE currently offers 6 starter packs to make getting into side channel attacks easier. 1 of these (the ChipSHOUTER)
 fall under the ChipSHOUTER branch of products, while the remaining 5 fall under the ChipWhisperer branch of products.

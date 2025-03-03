@@ -175,6 +175,7 @@ by NewAE.
   The "MEASURE" port is the input to the low-noise amplifier and ADC.
 
 --- 
+(20-pin-connector)=
 #### **20-Pin Connector**
 
   The 20-pin connector carries power and IO pins between the ChipWhisperer-Lite and 

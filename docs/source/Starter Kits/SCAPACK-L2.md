@@ -18,8 +18,8 @@ Also links to documentation.
 
 * [ChipWhisperer-Lite](../Capture/ChipWhisperer-Lite.md)
 * [CW308](../Targets/CW308%20UFO.md)
-* [CW308T-STM32F0/F3](../Targets/UFO%20Targets/CW308T-STM32F.md)
-* [CW308T-XMEGA](../Targets/UFO%20Targets/CW308T-XMEGA.md)
+* [CW308T-STM32F0/F3](../chipwhisperer-target-cw308t/CW308T_STM32F/README.md)
+* [CW308T-XMEGA](../chipwhisperer-target-cw308t/CW308T_XMEGA/README.md)
 * [H-Field Probe](../Tools/CW505%20Planar%20H-Field%20Probe.md)
 * [Differential Probe](../Tools/CW501%20Differential%20Probe.md)
 * [Probe Power Supply](../Tools/CW503%20Probe%20Power%20Supply.md)

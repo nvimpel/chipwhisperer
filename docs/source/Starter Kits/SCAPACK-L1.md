@@ -23,6 +23,6 @@ Also links to documentation.
 
 * [ChipWhisperer-Lite](../Capture/ChipWhisperer-Lite.md)
 * [CW308](../Targets/CW308%20UFO.md)
-* [CW308T-STM32F0/F3](../Targets/UFO%20Targets/CW308T-STM32F.md)
-* [CW308T-XMEGA](../Targets/UFO%20Targets/CW308T-XMEGA.md)
-* [CW308T Generic PCB](../Targets/UFO%20Targets/CW308T-GENERIC.md)
+* [CW308T-STM32F0/F3](../chipwhisperer-target-cw308t/CW308T_STM32F/README.md)
+* [CW308T-XMEGA](../chipwhisperer-target-cw308t/CW308T_XMEGA/README.md)
+* [CW308T Generic PCB](../chipwhisperer-target-cw308t/CW308T_GENERIC/README.md)

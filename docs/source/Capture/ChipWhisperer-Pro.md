@@ -318,7 +318,7 @@ After shorting the pins, unplug and replug the USB connector.
 ---
 ## Advanced Features
 
-#### _**Streaming Mode**_
+### _**Streaming Mode**_
 
 The ChipWhisperer Pro has a streaming mode that allows extremely long
 captures as long as relatively low sampling rates are used. For example,
@@ -360,7 +360,7 @@ On the software end, there are two things to watch for:
     quickly.
 
 ---
-#### _**Trigger Module**_
+### _**Trigger Module**_
 
 Unlike the ChipWhisperer-Lite, the Pro has three different trigger modes
 to help capture traces when it's difficult to get a concrete trigger
@@ -377,7 +377,7 @@ looks directly at the power trace and does not use these trigger inputs.
 
 ---
 
-##### **Edge/Level**
+#### **Edge/Level**
 
 The edge/level detector can trigger on four different events:
 
@@ -392,7 +392,7 @@ trigger signal - if you have control over the target's source code, let
 it output a rising edge when the encryption or other operation begins.
 
 ---
-##### **I/O Decoder**
+#### **I/O Decoder**
 
 The I/O decoder examines the trigger signal, assumes that it is either
 UART or SPI traffic, and outputs a trigger signal when it detects a
@@ -418,7 +418,7 @@ receiving data, respectively.
 
 ---
 
-##### **Sum of Absolute Differences (SAD)**
+#### **Sum of Absolute Differences (SAD)**
 
 Some targets don't have nice trigger signals to detect. Sad\!
 
@@ -463,7 +463,7 @@ first.
 
 ---
 
-#### _**SMA I/O**_
+### _**SMA I/O**_
 
 The Pro has an extra SMA connector intended to be used for additional
 trigger logic. It can be used either as a trigger input or output.
@@ -484,14 +484,14 @@ ChipWhisperer.
 
 ---
 
-#### _**Touchscreen**_
+### _**Touchscreen**_
 
 The touchscreen on the ChipWhisperer Pro shows various details about its
 status and current settings.
 
 ---
 
-##### **Screen 1: Clock**
+#### **Screen 1: Clock**
 
 The clock screen shows the status of the CLKGEN and ADC clocks along
 with the frequency counter.
@@ -518,7 +518,7 @@ with the frequency counter.
 
 ---
 
-##### **Screen 2: Routing**
+#### **Screen 2: Routing**
 
 The routing screen shows the status of the various I/O pins.
 
@@ -536,7 +536,7 @@ The routing screen shows the status of the various I/O pins.
 
 ---
 
-##### **Screen 3: Trigger**
+#### **Screen 3: Trigger**
 
 The trigger screen shows the current settings for the trigger module and
 the ADC capture settings.
@@ -571,7 +571,7 @@ the ADC capture settings.
 
 ---
 
-##### **Screen 4: Glitch**
+#### **Screen 4: Glitch**
 
 The glitch screen shows the current settings for the glitch module.
 

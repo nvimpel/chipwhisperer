@@ -181,7 +181,7 @@ Note that the VCC-INT banana plugs are not suitable voltage glitching
 points as filtering is present after them.
 
 If using an external fault amplifier, connect again to X3, and remove the jumper
-next to the shunt resistor as described in [Jumper](#jumper)
+next to the shunt resistor as described in the [the jumper section](#jumper).
 
 ---
 
@@ -269,6 +269,7 @@ If you wish to have the lowest-noise power source, you must mount the VCC-IO and
 
 ---
 
+(jumper)=
 #### Jumper
 
 In some circumstances you may wish to entirely remove the shunt

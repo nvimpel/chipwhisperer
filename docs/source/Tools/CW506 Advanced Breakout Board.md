@@ -115,9 +115,10 @@ to output 3.3V reference signals:
 
 ![cw506\_vccio.jpg](Images/Cw506_vccio.jpg "cw506_vccio.jpg")
 
+---
+
 #### Using External VREF
 
----
 
 The final setting allows you to use the banana jack (BJACK) or test
 point TP9 as the voltage reference. This allows usage of an external lab
@@ -184,7 +185,6 @@ issue.
 
 ### **Inserting External Equipment into Test Path**
 
----
 
 ## Schematic
 

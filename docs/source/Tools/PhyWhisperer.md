@@ -82,8 +82,9 @@ In total, the PhyWhisperer has 3 USB connections:
 
 #### I/O
 
-This PhyWhisperer also has a ChipWhisperer 20-pin connector (documented on the [ChipWhisperer-Lite's doc page](../Capture/ChipWhisperer-Lite.md#20-pin-connector)) for easy connection to other NewAE products, as well as a
-digital IO header connected to the PhyWhisperer's FPGA. Its pinout is as follows:
+This PhyWhisperer also has a [ChipWhisperer 20-pin connector](#20-pin-connector) for easy connection
+to other NewAE products, as well as a digital IO header connected to the
+PhyWhisperer's FPGA. Its pinout is as follows:
 
 | Number | Name | Description |
 |----------|-----|-----------|

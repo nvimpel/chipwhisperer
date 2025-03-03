@@ -15,8 +15,8 @@ Varies by target board. See `UFO Targets` for target documentation
 
 Available in the [Level 1 Starter Kit](../Starter%20Kits/SCAPACK-L1.md), the [Level 2 Starter Kit](../Starter%20Kits/SCAPACK-L2.md), and the [ChipWhisperer-Pro Starter Kit](../Starter%20Kits/SCAPACK-L2.md).
 
-Also available standalone with a [CW308T-STM32F3](UFO%20Targets/CW308T-STM32F.md) target and
-a [CW308T-XMEGA](UFO%20Targets/CW308T-XMEGA.md) target from the [NewAE Store](https://store.newae.com/cw308-ufo-board/)
+Also available standalone with a [CW308T-STM32F3](../chipwhisperer-target-cw308t/CW308T_STM32F/README.md) target and
+a [CW308T-XMEGA](../chipwhisperer-target-cw308t/CW308T_XMEGA/README.md) target from the [NewAE Store](https://store.newae.com/cw308-ufo-board/)
 
 ## Supported Targets
 
@@ -27,17 +27,17 @@ build them yourself.
 
 Examples of targets available as CW308 target boards:
 
-  - [CW308T-GENERIC](UFO%20Targets/CW308T-GENERIC.md "wikilink") (Protoboard)
-  - [CW308T-AVR](UFO%20Targets/CW308T-AVR.md "wikilink") (Atmel AVR, 8-bit)
-  - [CW308T-XMEGA](UFO%20Targets/CW308T-XMEGA.md "wikilink") (Atmel XMEGA, 8-bit)
-  - [CW308T-87C51](UFO%20Targets/CW308T-87C51.md "wikilink") (Intel 87C51RB, 8-bit)
-  - [CW308T-ATSAMR21](UFO%20Targets/CW308T-ATSAMR21.md "wikilink") (Atmel SAMR21 with
+  - [CW308T-GENERIC](../chipwhisperer-target-cw308t/CW308T_GENERIC/README.md "wikilink") (Protoboard)
+  - [CW308T-AVR](../chipwhisperer-target-cw308t/CW308T_AVR/README.md "wikilink") (Atmel AVR, 8-bit)
+  - [CW308T-XMEGA](../chipwhisperer-target-cw308t/CW308T_XMEGA/README.md "wikilink") (Atmel XMEGA, 8-bit)
+  - [CW308T-87C51](../chipwhisperer-target-cw308t/CW308T_87C51/README.md "wikilink") (Intel 87C51RB, 8-bit)
+  - [CW308T-ATSAMR21](../chipwhisperer-target-cw308t/CW308T_ATSAMR21/README.md "wikilink") (Atmel SAMR21 with
     802.15.4 radio, 32-bit ARM Cortex M0)
-  - [CW308T-MEGARF](UFO%20Targets/CW308T-ATMega1284RFR2.md "wikilink") (Atmel MegaRF2564RFR2,
+  - [CW308T-MEGARF](../chipwhisperer-target-cw308t/CW308T_ATMega1284RFR2/README.md "wikilink") (Atmel MegaRF2564RFR2,
     8-bit AVR)
-  - [CW308T-MSP430FR5](UFO%20Targets/CW308T-MSP430.md "wikilink") (TI MSP430FR5xxx,
+  - [CW308T-MSP430FR5](../chipwhisperer-target-cw308t/CW308T_MSP430/README.md "wikilink") (TI MSP430FR5xxx,
     16-bit)
-  - [CW308T-S6LX9](UFO%20Targets/CW308T-S6LX9.md "wikilink") (Xilinx Spartan 6 LX9 in
+  - [CW308T-S6LX9](../chipwhisperer-target-cw308t/CW308T_S6LX9/README.md "wikilink") (Xilinx Spartan 6 LX9 in
     TQFP, FPGA)
 
 If you need to support a new target, it's generally very simple to build
@@ -374,9 +374,8 @@ drop in the shunt and/or filter.
 
 The CW308 can be used stand-alone. This is accomplished by providing an
 external DC power supply, and using a SMA-BNC to connect the voltage
-measurement to an oscilloscope. For more details, see [CW308T:
-Stand-Alone Simple Serial Example (AVR or
-XMEGA)](CW308T:_Stand-Alone_Simple_Serial_Example_\(AVR_or_XMEGA\) "wikilink").
+measurement to an oscilloscope. For more details, see TODO (old wiki link:
+[](https://wiki.newae.com/CW308T:_Stand-Alone_Simple_Serial_Example_(AVR_or_XMEGA)))
 
 If using a simple-serial target (such as the XMEGA or AVR), you can
 connect a USB-Serial device to provide communication.

@@ -116,5 +116,6 @@ interpreter, use **chipwhisperer** as you normally would any python package::
     import chipwhisperer as cw
     help(cw)
 
-The :ref:`Python API <api>` has all the information about what functions,
+The :doc:`Python API <scope-api>` has all the information about what functions,
 and classes are at your disposal.
+

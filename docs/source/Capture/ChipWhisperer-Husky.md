@@ -6,7 +6,7 @@ and faster ADC, a bigger FPGA enabling additional features that were
 exclusive to the ChipWhisperer-Pro, and more flexible clocking.
 
 Husky-Plus has the same capabilities but with several upgraded specs, which
-are listed [here](index.md#chipwhisperer-husky-plus-features-over-chipwhisperer-husky).
+are listed [here](overview.md#chipwhisperer-husky-plus-features-over-chipwhisperer-husky).
 
 ![](Images/cwhusky.jpg)
 

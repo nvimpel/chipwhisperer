@@ -2,7 +2,7 @@
 title: Overview & Comparison
 ---
 
-## Overview and Comparison
+# Overview and Comparison
 
 ChipWhisperer is a platform that makes researching and testing embedded side channel attacks simple, easy, replicable, and convenient. In particular, ChipWhisperer focuses on power analysis and voltage/clock glitching.
 
@@ -22,7 +22,7 @@ reliable glitches
 
 On this page, "Husky" refers to both the "regular" Husky and to Husky Plus.
 All differences between Husky and Husky Plus are summarized
-[here](index.md#chipwhisperer-husky-plus-features-over-chipwhisperer-husky).
+[here](#chipwhisperer-husky-plus-features-over-chipwhisperer-husky).
 
 ---
 ## Analog Capture and Clock

@@ -80,7 +80,7 @@ Software
 
 ChipWhisperer has an open source Python library for controlling the
 capture hardware and communicating with the target. `ChipWhisperer ReadTheDocs`_
-(this website) has the :ref:`API documentation <api>` and :ref:`installation instructions <install>` 
+(this website) has the :doc:`API documentation <scope-api>` and :ref:`installation instructions <install>` 
 for this part of the ChipWhisperer toolchain.
 
 The source code for the API is located on the `ChipWhisperer Github repository`_.

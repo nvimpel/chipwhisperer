@@ -100,7 +100,7 @@ Used for controlling and communicating with the
 
 Examples:
 
-  `Attacking AES <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb>`_
+* `Attacking AES <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/PA_HW_CW305_1-Attacking_AES_on_an_FPGA.ipynb>`_
 * `Attacking ECC <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/demos/CW305_ECC>`_
 
 
