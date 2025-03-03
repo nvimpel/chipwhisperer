@@ -19,7 +19,7 @@ There are currently two types of scopes:
 * :ref:`api-scope-openadc` (Lite, Pro, Husky)
 * :ref:`api-scope-cwnano` (Nano)
 
-These scope objects also inherit common methods from :ref:`api-scope-common`
+These scope objects also inherit common methods from :ref:`api-scope-common`.
 
 .. autodata:: chipwhisperer.scope
     :annotation: chipwhisperer.scope()

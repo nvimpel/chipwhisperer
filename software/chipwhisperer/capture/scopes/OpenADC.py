@@ -42,11 +42,6 @@ CODE_READ              = 0x80
 CODE_WRITE             = 0xC0
 
 class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
-    DEFAULT_GAIN_DB = 25
-    DEFAULT_ADC_SAMPLES = 5000
-    DEFAULT_CLOCKGEN_FREQ = 7.37e6
-    DEFAULT_ADC_MUL = 4
-
     """OpenADC scope object.
 
     This class contains the public API for the OpenADC hardware, including the
@@ -103,6 +98,11 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     """
 
     _name = "ChipWhisperer/OpenADC"
+    DEFAULT_GAIN_DB = 25
+    DEFAULT_ADC_SAMPLES = 5000
+    DEFAULT_CLOCKGEN_FREQ = 7.37e6
+    DEFAULT_ADC_MUL = 4
+
 
     # TODO: This should reside in a base clock class if common code is refactored out of HW specific
     # classes.
