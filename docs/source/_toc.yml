@@ -108,10 +108,34 @@ parts:
       - file: Tools/CW506 Advanced Breakout Board
       - file: Tools/CW508 SMA Analog Filters
       - file: Tools/PhyWhisperer
+- caption: Tips and Tricks
+  chapters:
+  - file: cw_tips_tricks/intro
+  - file: cw_tips_tricks/basics/intro
+    sections:
+        - file: cw_tips_tricks/basics/downsampling
+        - file: cw_tips_tricks/basics/trig_count
+        - file: cw_tips_tricks/basics/more_samples
+        - file: cw_tips_tricks/basics/stream
+        - file: cw_tips_tricks/basics/baud
+        - file: cw_tips_tricks/basics/external_clock
+  - file: cw_tips_tricks/advanced_usage/intro
+    sections:
+        - file: cw_tips_tricks/advanced_usage/regulators
+        - file: cw_tips_tricks/advanced_usage/improving_glitch_precision
+        - file: cw_tips_tricks/advanced_usage/segmented
+        - file: cw_tips_tricks/advanced_usage/sequenced
+        - file: cw_tips_tricks/advanced_usage/fast_captures
+        - file: cw_tips_tricks/advanced_usage/get_trigger_times
+  - file: cw_tips_tricks/common_errors/intro
+    sections:
+        - file: cw_tips_tricks/common_errors/target_errors
+        - file: cw_tips_tricks/common_errors/libusb_error_busy
+  - file: cw_tips_tricks/common_questions/intro
+    sections:
+        - file: cw_tips_tricks/common_questions/finding_instructions
 - caption: Other
   chapters:
   - file: Tutorials
   - file: changes
-        
-              
 

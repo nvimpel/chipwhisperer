@@ -58,6 +58,7 @@ sphinx:
     napoleon_attr_annotations: true
     todo_include_todos: true
     myst_heading_anchors: 3
+    suppress_warnings: [mystnb.unknown_mime_type]
 
   extra_extensions:
     - sphinx.ext.napoleon
