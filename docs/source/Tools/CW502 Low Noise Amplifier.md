@@ -24,7 +24,7 @@ power supply or other source.
 
 The LNA is based on the BGA2801 device from NXP. See details in the
 [BGA 2801
-Datasheet](http://www.nxp.com/documents/data_sheet/BGA2801.pdf). But a
+Datasheet](https://www.nxp.com/docs/en/data-sheet/BGA2801.pdf). But a
 summary of important specifications are:
 
   - 20 dB gain up to 2GHz.

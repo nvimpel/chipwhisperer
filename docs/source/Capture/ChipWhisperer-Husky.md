@@ -280,7 +280,7 @@ here we provide a brief overview.
 
 Arm Trace is an advanced debug feature of Arm processors allowing
 debug information to be streamed off of a microcontroller while it is running.
-A more complete description is available on [Arm's Website](https://developer.arm.com/tools-and-software/embedded/arm-development-studio/components/arm-debugger/trace).
+A more complete description is available on [Arm's Website](https://developer.arm.com/).
 
 [TraceWhisperer](https://github.com/newaetech/tracewhisperer), an Arm Trace sniffer by NewAE,
 has been integrated into ChipWhisperer-Husky.
