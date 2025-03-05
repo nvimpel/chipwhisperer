@@ -10,9 +10,6 @@ This page will give a brief overview of what ChipWhisperer is, where you can
 find documentation about different parts of the ChipWhisperer toolchain,
 as well as some of the major changes that have recently happened to ChipWhisperer.
 
-Consider this page the answer to "Help, I'm confused... there are too many websites
-that have resources related to ChipWhisperer".
-
 .. _getting_started_what-is-chipwhisperer:
 
 **********************
@@ -79,11 +76,18 @@ Software
 =========
 
 ChipWhisperer has an open source Python library for controlling the
-capture hardware and communicating with the target. `ChipWhisperer ReadTheDocs`_
-(this website) has the :doc:`API documentation <scope-api>` and :ref:`installation instructions <install>` 
-for this part of the ChipWhisperer toolchain.
+capture hardware and communicating with the target. On this site you'll find 
+the Python API documentation, organized in four sections:
+
+* :doc:`scope API <scope-api>`
+* :doc:`target API <target-api>`
+* :doc:`capture API <capture-api>`
+* :doc:`analyzer API <analyzer-api>`
 
 The source code for the API is located on the `ChipWhisperer Github repository`_.
+
+For software installation instructions, head over to the :doc:`installation section <installation>`.
+
 
 .. _getting_started-tutorials:
 
@@ -91,14 +95,22 @@ The source code for the API is located on the `ChipWhisperer Github repository`_
 Tutorials
 ==========
 
-Finally, ChipWhisperer also includes Jupyter Notebook tutorials and labs that both
-teach about side channel attacks that can be performed with ChipWhisperer,
-as well as showcase how to use the Python API. These tutorials/labs 
-are available in the `ChipWhisperer Jupyter Github repository`_.
+The best way to learn ChipWhisperer basics is to follow our 
+`Jupyter Notebook tutorials and labs <https://github.com/newaetech/chipwhisperer-jupyter>`__.
+
+By going through our notebooks, you will simultaneously
+learn (1) the basic mechanics of side-channel and fault attacks, and (2) how
+to execute these attacks with ChipWhisperer.
+
+Approach these tutorials like homework assignments: most of them require you
+to figure out some things on your own. The more work you put into it, the
+more you'll learn. If you are really stuck, some tutorials have a
+corresponding "solution" notebook; you can also ask for help on our `NewAE
+Forum`_.
 
 
-  .. image:: _images/jupyter_example.png
-    :width: 800
+.. image:: _images/jupyter_example.png
+
 
 .. _getting_started-important-links:
 
@@ -106,8 +118,32 @@ are available in the `ChipWhisperer Jupyter Github repository`_.
 Important Links
 ***************
 
-`Issue Tracker`_:
+* :doc:`Tips and Tricks <cw_tips_tricks/intro>`
+    If, after going through our tutorials, you have a question related to
+    ChipWhisperer usage, go to the :doc:`Tips and Tricks <cw_tips_tricks/intro>` 
+    section of this site, where we've gathered answers to the most commonly
+    asked questions.
 
+* `NewAE Forum`_:
+    The forum for all things related to side-channel analysis. If you are
+    stuck and need help, *and* your question is not answered in our 
+    :doc:`Tips and Tricks <cw_tips_tricks/intro>` section, then go here next
+    to ask for help. Whether about ChipWhisperer hardware or with other
+    projects related to side-channel analysis, all discussion is welcome.
+    One of us at NewAE Technology usually monitors the forum and there is a
+    good chance we can help you. There are also other active members that
+    are also on the forum which may have run into the same problems you
+    have. Before posting please take a look at other forum posts. You may
+    find your answer quicker than you think.
+
+* `ChipWhisperer Discord`_:
+    We also have a Discord server! It is monitored by staff, so you can
+    absolutely ask support questions there, but it is also intended for
+    general side-channel chit-chat. If you have a cool project or
+    interesting results that you want to share with like-minded people, this
+    is the place.
+
+* `Issue Tracker`_:
     The issue tracker for the GitHub repository. If you have any issues with
     the ChipWhisperer software that you suspect may be bugs, let us know
     there. Also, if you have any suggestions for future improvements this
@@ -115,28 +151,14 @@ Important Links
     welcome. Enhancements will be considered, and discussed there before
     the decision is made.
 
-`NewAE Forum`_:
-
-    The forum for all things related to side-channel analysis. If you are
-    stuck and need help, you may find some much needed help here. Whether
-    about ChipWhisperer hardware or with other projects related to
-    side-channel analysis, all discussion is welcome. One of us at NewAE
-    Technology usually monitors the forum and there is a good chance we
-    can help you. There are also other active members that are also on the
-    forum which may have run into the same problems you have. Before posting
-    please take a look at other forum posts. You may find your answer
-    quicker than you think.
-
-`Online Courses`_:
-
+* `Online Courses`_:
     NewAE offers paid online courses that go in depth into
     things not covered by the free tutorials, such as 
     different power measurement techniques, as well as how
     to setup non ChipWhisperer hardware for side channel
     attacks.
 
-`NewAE Website`_:
-
+* `NewAE Website`_:
     The is the website for NewAE Technolgy Inc. the maintainers of the
     ChipWhisperer software and the creators the of the ChipWhisperer
     platform. Here you can find out about the company, and find links
@@ -145,8 +167,7 @@ Important Links
     Technology Inc. sells like the electromagnetic fault injection platform,
     the ChipSHOUTER.
 
-`NewAE Store`_:
-
+* `NewAE Store`_:
     Here you can get yours hands on one of those hardware boards used by all
     of the tutorials. NewAE Technology sells hardware to take away the
     frustration of setting up the hardware for side-channel attacks. These
@@ -167,4 +188,5 @@ Important Links
 .. _readthedocs: https://readthedocs.org
 .. _Online Courses: https://learn.chipwhisperer.io
 .. _ChipWhisperer Husky Github repository: https://github.com/newaetech/chipwhisperer-husky
+.. _ChipWhisperer Discord: https://discord.gg/chipwhisperer
 

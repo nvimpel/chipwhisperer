@@ -2,17 +2,16 @@
 Introduction
 ************
 
-Welcome to the new and improved home of the documentation for the ChipWhisperer software,
-following the release of ChipWhisperer 6.0.0. Previously, documentation was
-spread across different sites; now everything is right here on one site. We hope this
-will make our documentation easier to navigate, and answers to your
-questions easier to find.
+Welcome to the new and improved home of the documentation for the ChipWhisperer
+software, Previously, documentation was spread across different sites; now
+everything is right here on one site. We hope this will make our documentation
+easier to navigate, and answers to your questions easier to find.
 
 If you're new to ChipWhisperer, or haven't been following the project recently,
 you may want to check out this :ref:`overview <getting_started>` to learn a little
 about the project and its recent changes.
 
-The :ref:`installing <install>` sections have everything you need to know to
+The :ref:`installation <install>` sections have everything you need to know to
 install ChipWhisperer.
 
 After setting up your :doc:`hardware <Capture/index>`, run:
@@ -42,6 +41,6 @@ hardware. To see what is possible with this interface check out the
 If you're not sure what to do next, the :ref:`starting <starting>` section
 will point you in the right direction.
 
-Be sure to explore the other sections in the left-side index to learn
-everything you can do with ChipWhisperer.
+Explore the other sections in the left-side index to learn everything you can
+do with ChipWhisperer.
 
