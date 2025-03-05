@@ -114,34 +114,12 @@ Forum`_.
 
 .. _getting_started-important-links:
 
-***************
-Important Links
-***************
+************
+Useful Links
+************
 
-* :doc:`Tips and Tricks <cw_tips_tricks/intro>`
-    If, after going through our tutorials, you have a question related to
-    ChipWhisperer usage, go to the :doc:`Tips and Tricks <cw_tips_tricks/intro>` 
-    section of this site, where we've gathered answers to the most commonly
-    asked questions.
-
-* `NewAE Forum`_:
-    The forum for all things related to side-channel analysis. If you are
-    stuck and need help, *and* your question is not answered in our 
-    :doc:`Tips and Tricks <cw_tips_tricks/intro>` section, then go here next
-    to ask for help. Whether about ChipWhisperer hardware or with other
-    projects related to side-channel analysis, all discussion is welcome.
-    One of us at NewAE Technology usually monitors the forum and there is a
-    good chance we can help you. There are also other active members that
-    are also on the forum which may have run into the same problems you
-    have. Before posting please take a look at other forum posts. You may
-    find your answer quicker than you think.
-
-* `ChipWhisperer Discord`_:
-    We also have a Discord server! It is monitored by staff, so you can
-    absolutely ask support questions there, but it is also intended for
-    general side-channel chit-chat. If you have a cool project or
-    interesting results that you want to share with like-minded people, this
-    is the place.
+* :doc:`support`
+    Running into trouble? Head here to learn how and where to get help.
 
 * `Issue Tracker`_:
     The issue tracker for the GitHub repository. If you have any issues with
@@ -188,5 +166,4 @@ Important Links
 .. _readthedocs: https://readthedocs.org
 .. _Online Courses: https://learn.chipwhisperer.io
 .. _ChipWhisperer Husky Github repository: https://github.com/newaetech/chipwhisperer-husky
-.. _ChipWhisperer Discord: https://discord.gg/chipwhisperer
 

@@ -41,6 +41,8 @@ hardware. To see what is possible with this interface check out the
 If you're not sure what to do next, the :ref:`starting <starting>` section
 will point you in the right direction.
 
+Need help? Check out the :doc:`support page <support>`.
+
 Explore the other sections in the left-side index to learn everything you can
 do with ChipWhisperer.
 
