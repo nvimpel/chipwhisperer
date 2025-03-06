@@ -64,7 +64,6 @@ parts:
       - file: Targets/CW313
       - file: Targets/CW340 Luna Board
       - file: Targets/CW340 OT Quickstart
-      - file: Targets/Target Defines
       - file: Targets/UFO Targets
         sections:
             - file: chipwhisperer-target-cw308t/CW308T_87C51/README
@@ -101,6 +100,7 @@ parts:
             - file: chipwhisperer-target-cw308t/CW312T_RP2350/README
             - file: chipwhisperer-target-cw308t/CW312T_ATSAM4S/README
             - file: chipwhisperer-target-cw308t/CW312T_XC7A35T/README
+      - file: Targets/Target Defines
   - file: Tools/index
     sections:
       - file: Tools/CANoodler

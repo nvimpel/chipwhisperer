@@ -1,4 +1,7 @@
-# ChipWhisperer Platforms
+# Platforms
+
+This table lists the various `PLATFORM` values that can be used with our
+firmware build system (e.g. `make PLATFORM=CWLITEXMEGA`).
 
 ```
 +-------------------------------------------------------+
