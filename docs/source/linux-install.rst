@@ -5,7 +5,7 @@ Linux Installation
 ####################
 
 The following instructions were designed for Ubuntu/Debian, but should
-be easily adaptable to other Linux distros.
+be easily adaptable to other Linux distributions.
 
 *******************
 Quick Installation

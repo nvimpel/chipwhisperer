@@ -10,7 +10,7 @@ Debugging with ChipWhisperer
 
 One of ChipWhisperer's main objectives has always been to make it easier to learn about and experiment with 
 side-channel attacks. This experience has always been best on our three primary targets - STM32F devices,
-XMega devices, and AVR devices. One reason for this is that we support programming these devices via built-in
+XMEGA devices, and AVR devices. One reason for this is that we support programming these devices via built-in
 bootloaders, meaning no external hardware is required to use these devices. If you have a ChipWhisperer capture 
 board, you're good to go!
 
@@ -33,8 +33,8 @@ Both SWD and JTAG are supported.
 MPSSE Tutorial
 **************
 
-We now have a tutorial that walks you through programming and debugging a CW308_STM32F3 via ChipWhipserer,
-OpenOCD, and gdb `here <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/Debugging%20the%20CW308_STM32F3%20Using%20ChipWhisperer.ipynb>`_
+We now have a tutorial that walks you through programming and debugging a CW308_STM32F3 via ChipWhisperer,
+OpenOCD, and GDB `here <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/Debugging%20the%20CW308_STM32F3%20Using%20ChipWhisperer.ipynb>`_
 
 **************************
 Checking for MPSSE Support
@@ -88,7 +88,7 @@ to use it with OpenOCD:
     scope = cw.scope()
     scope.enable_MPSSE(1)
 
-This will cause your ChipWhisperer device to disconnect and reeumerate,
+This will cause your ChipWhisperer device to disconnect and re-enumerate,
 replacing the CDC interface with the custom MPSSE interface. Some devices
 must do additional ChipWhisperer configuration after this swap. The 
 :code:`scope.enable_MPSSE(1)` call will attempt to handle this automatically,
@@ -264,7 +264,7 @@ You can give normal functionality back to nRST and the SPI pins by running the f
 
     scope.io.cwe.setAVRISPMode(0)
 
-MPSSE can be reenabled by running the following command::
+MPSSE can be re-enabled by running the following command::
 
     scope.io.cwe.setAVRISPMode(1)
 
@@ -302,7 +302,7 @@ The following MPSSE commands are not supported:
 * Adaptive clock
 * Read data bits
 
-General MPSSE Compatability
+General MPSSE Compatibility
 ---------------------------
 
 This implementation uses much smaller buffers than is required

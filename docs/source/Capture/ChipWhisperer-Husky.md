@@ -590,9 +590,9 @@ See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
 If you are unable to connect to the ChipWhisperer-Husky to erase its firmware, the SAM3U firmware
 can also be erased by shorting SJ1 while the Husky is on. 
 
-**Depending on what revesion of the Husky you have,
+**Depending on what revision of the Husky you have,
 you may have an erase button that you can press using a needle or wire. If present, this button will be present
-on the other side of the 20-pin connector from the USBC connector.**
+on the other side of the 20-pin connector from the USB-C connector.**
 
 Otherwise, you must open the Husky to erase it. SJ1 is located on the same side as the 20-pin User IO header, 
 by the 10-pin SAM3U debug header, near the middle of the board. If your Husky has the aforementioned button, SJ1

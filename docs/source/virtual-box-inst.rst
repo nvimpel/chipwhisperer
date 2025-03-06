@@ -93,7 +93,7 @@ VMWare
 ******
 
 For various reasons, such as licensing and USB support, users may prefer to run 
-ChipWhisperer through VMWare instead of VirtualBox. A VMWare compatable image is not
+ChipWhisperer through VMWare instead of VirtualBox. A VMWare compatible image is not
 provided with ChipWhisperer releases, but such an image can be easily converted
 from the provided image using VirtualBox
 
@@ -134,7 +134,7 @@ The final step is to setup VMWare port forwarding:
 * Click on the :code:`NAT` table entry (typically VMnet8) and click on :code:`NAT Settings...` 
   Take note of the Subnet Address of this entry
 
-* Under the Port Fowarding table, click :code:`Add` and fill in the following settings:
+* Under the Port Forwarding table, click :code:`Add` and fill in the following settings:
     * :code:`Host port:                  8888`
     * :code:`Type:                       TCP`
     * :code:`Virtual machine IP address: <subnet address>`

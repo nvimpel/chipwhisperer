@@ -31,7 +31,7 @@ run the attack.
         class.
 
         .. versionadded:: 5.1
-            Add leakage_models to anlayzer API.
+            Add leakage_models to analyzer API.
 
 
 .. _api-analyzer-preprocessing:
@@ -111,7 +111,7 @@ working with AES, and traces.
 AES Functions
 -------------
 
-You may want to perform certain AES operations seperately. For this there is the AES
+You may want to perform certain AES operations separately. For this there is the AES
 helper functions. They are accessible using::
 
     from chipwhisperer.analyzer import aes_funcs

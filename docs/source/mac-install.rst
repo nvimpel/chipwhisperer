@@ -74,7 +74,7 @@ have to find a different way to install the compilers.
 Mac M1 Notes
 ============
 
-ChipWhisperer is compatable with Mac M1; however, due to the M1's different architecture,
+ChipWhisperer is compatible with Mac M1; however, due to the M1's different architecture,
 as well as its x86 emulation, you need to manually install libusb1 and ensure that the
 architecture for libusb1 matches the architecture for Python.
 

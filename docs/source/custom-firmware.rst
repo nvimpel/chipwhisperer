@@ -15,7 +15,7 @@ Main Project Files
 ==================
 
 These files are contained in different project folders and are unique to each project. This includes source files and the project
-makefile. For example, simpleserial-aes has :code:`simplserial-aes.c` which contains :code:`main()` and various other
+makefile. For example, simpleserial-aes has :code:`simpleserial-aes.c` which contains :code:`main()` and various other
 functions for reading a key/plaintext over serial, doing an encryption, etc. The makefile for this project tells the build
 which custom files to use, as well as includes the simpleserial makefile and the main build makefile :code:`Makefile.inc`.
 
@@ -57,7 +57,7 @@ XOR cipher. Let's start by making a new folder for our project, which we'll call
     # Assume your in the firmware directory
     mkdir simpleserial-xor
 
-Next, we'll make a source file, :code:`simplserial-xor.c` that can accept a key and can also xor that key with incoming 
+Next, we'll make a source file, :code:`simpleserial-xor.c` that can accept a key and can also xor that key with incoming 
 plaintext and send it back. Our project files typically support both simpleserial V1 and V2, but here we'll just use V2:
 
 .. code:: C

@@ -14,7 +14,7 @@ Jupyter Notebooks
 
 Recommended reading for using Jupyter notebooks:
 
-* `Jupyter Notebook ReadtheDocs <https://jupyter-notebook.readthedocs.io/en/stable/>`_
+* `Jupyter Notebook ReadTheDocs <https://jupyter-notebook.readthedocs.io/en/stable/>`_
 
 Here is a quick start guide based on you having finished the installation
 of **chipwhisperer**. It only covers steps unique to our chipwhisperer/Jupyter

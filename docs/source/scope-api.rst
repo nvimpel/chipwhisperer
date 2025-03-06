@@ -349,7 +349,7 @@ is documented at :ref:`Updating_Firmware`.
 For versions 5.5.2 and below, you must follow the directions below:
 
 .. seealso:: You can also use the BOSSA 
-    `BOSSA <https://www.shumatech.com/web/products/bossa>`_ utiltiy
+    `BOSSA <https://www.shumatech.com/web/products/bossa>`_ utility
     to reflash the SAM3U firmware. If you need to build it from source,
     NewAE keeps a slightly modified version of the source at
     https://github.com/newaetech/BOSSA. This utility does **NOT** support the CWNano.

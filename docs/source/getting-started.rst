@@ -40,7 +40,7 @@ Hardware
 =========
 
 ChipWhisperer has scope boards, which are used to mount side channel attacks,
-as well as target boards, which function as a device under test (DuT).
+as well as target boards, which function as a device under test (DUT).
 Hardware documentation can be found in the "Hardware" section of this site.
 
 Hardware is for the most part open source and design files/schematics
@@ -137,7 +137,7 @@ Useful Links
     attacks.
 
 * `NewAE Website`_:
-    The is the website for NewAE Technolgy Inc. the maintainers of the
+    The is the website for NewAE Technology Inc. the maintainers of the
     ChipWhisperer software and the creators the of the ChipWhisperer
     platform. Here you can find out about the company, and find links
     to things like the store, and upcoming training sessions.

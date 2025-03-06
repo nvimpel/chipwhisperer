@@ -243,7 +243,7 @@ The following lists jumpers on the ChipWhisperer-Lite Capture Section:
 
   - JP4 is the "RESET" net for the SAM3U processor.
 
-  - JP2 causes the SAM3U processor flash memory to be erased. When the chip is erased a rom-resident bootloader takes over. See section XXXXX for bootloader details.
+  - JP2 causes the SAM3U processor flash memory to be erased. When the chip is erased a rom-resident bootloader takes over. See section TODO for bootloader details.
   - JP5 selects the IO voltage for the FPGA bank which connects to the
     20-pin target. By default SJ6 selects this to be 3.3V. It is not
     recommended to change this, as it is easy to damage the FPGA by
