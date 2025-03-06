@@ -8,16 +8,33 @@ Windows Installation
 Windows Bundled Installer
 *************************
 
-.. warning:: Windows Subsystem for Linux (WSL) seems to interfere with
-            :code:`%%bash` blocks. If you get an error about not being
-            able to find make, or something about needing to install 
-            a Linux distribution, try disabling WSL or 
-            changing :code:`%%bash` to :code:`%%sh`.
-
 .. warning:: It is recommended that you enable long paths on Windows
             to prevent any files from not being copied during installation.
             Follow https://www.microfocus.com/documentation/filr/filr-4/filr-desktop/t47bx2ogpfz7.html,
             then reboot to enable long paths
+
+.. _win_prereqs:
+
+========================
+Prerequisites
+========================
+
+The only prerequisite for ChipWhisperer on Windows is enabling and installing a distribution
+for Windows Subsystem for Linux (WSL). If you don't already have this enabled:
+
+1. Follow `Microsoft's instructions for enabling WSL <https://learn.microsoft.com/en-us/windows/wsl/install>`_.
+2. Restart your computer.
+3. Open a command prompt or powershell windows and run :code:`wsl --install -d ubuntu`
+
+Our Windows installer will install some compilers for building target firmware. This step requires an
+internet connection, so if you want to complete this step ahead of time, or if this step fails during
+installation, please see :ref:`Installing_Compilers_In_WSL`.
+
+.. _win_run_install:
+
+========================
+Running the Installer
+========================
 
 If you want to run a native Windows installation of ChipWhisperer, your best 
 bet is to run the Windows installer, which takes care of getting the 
@@ -29,27 +46,41 @@ prerequisites for you. The steps for using the installer are as follows:
     :width: 800
 
  * Find the latest ChipWhisperer Windows install executable (currently 
-   :code:`Chipwhisperer.v5.7.0.exe`)
- 
+   :code:`Chipwhisperer.v6.0.0.exe`)
+
+ * Run the installer. A summary of the installation is given on the second page.
+
+   .. image:: _images/win-installer-2.png
+    :width: 800
+
  * Run the executable and choose the path you want to install ChipWhisperer at. 
    You must have read/write permissions for the location you install to, so 
    avoid installing in a location like :code:`C:\Program Files` or the like. The 
    default install location (the user's home directory) will work for most users.
 
  * Choose whether or not you want to create a desktop shortcut for running 
-   ChipWhisperer. Make and compilers will always be installed.
+   ChipWhisperer.
 
-   .. image:: _images/win-installer-2.png
-    :width: 600
+ * Wait for the installation to finish. Additional windows will pop up during the installation to setup Python and install WSL compilers.
 
- * Wait for the installation to finish. Note that a second window will open before the install finishes to
-   complete additional steps.
+ * Some additional checks are run after the installation has completed. If any issues arise, you will be notified via a message box.
 
-   .. image:: _images/win-installer-3.png
+.. _Installing_Compilers_In_WSL:
+
+============================
+Installing Compilers In WSL:
+============================
+
+ChipWhisperer uses WSL for building target firmware. This part of the install is independent from the
+rest of the install process, and can easily be completed before or after running the installer. To install
+the target compilers, make sure you have the :ref:`prerequisites installed <_win_prereqs>`, then:
+
+1. Run WSL
+2. Run :code:`sudo apt update`.
+3. Run :code:`sudo apt install -y build-essential gcc-arm-none-eabi gcc-avr avr-libc`
+
+.. image:: _images/win-installer-3.png
     :width: 800
-
-On ChipWhisperers with updated firmware, drivers will be automatically installed. If you run
-into issues when trying to connect, you may want to read our :ref:`page on drivers <windows-drivers>`.
 
 =====================
 Running ChipWhisperer
