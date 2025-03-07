@@ -9,7 +9,7 @@ erased the firmware on your ChipWhisperer? If so, this page contains all the inf
 you need to get your device up and running again!
 
 .. note:: All ChipWhisperer scopes and FPGA targets have a ROM base bootloader,
-    meaning it is effectively impossible to "brick" your ChipWhisperer
+    meaning it is effectively impossible to "brick" your ChipWhisperer device
     by updating or erasing its firmware.
 
 .. warning:: This page only concerns firmware for ChipWhisperer scopes
@@ -19,6 +19,41 @@ you need to get your device up and running again!
 .. warning:: This update method for updating firmware only works
     for ChipWhisperer 5.6 and newer.
     For ChipWhisperer versions earlier than 5.6, see :ref:`api-scope-update`.
+
+
+*************************
+Checking Firmware Version
+*************************
+
+The firmware version can be accessed as follows:
+
+.. code:: python
+
+    >>> import chipwhisperer as cw
+    >>> scope = cw.scope()      # or target = cw.target(...) for targets
+    >>> print(scope.fw_version) # or print(target.fw_version) for targets
+    {'major': 0, 'minor': 11, 'debug': 0}
+
+
+The version of the newest firmware can be printed as follows:
+
+.. code:: python
+
+    >>> import chipwhisperer as cw
+    >>> scope = cw.scope()     # or target = cw.target(...) for targets
+    >>> print(scope.latest_fw) # or print(target.fw_version) for targets
+    {'major': 0, 'minor': 11}
+
+
+If a firmware update is available, the user will be warned when
+connecting to the scope (or target):
+
+.. code:: python
+
+    >>> scope = cw.scope()     # or target = cw.target(...) for targets
+    WARNING:root:Your firmware is outdated - latest is 0.12. Suggested to update firmware, as you may experience errors
+    See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
+
 
 *********************
 Prerequisites
@@ -182,10 +217,41 @@ your ChipWhisperer-Nano (0xACE0), you should use 0xACE2 as your product ID. You
 may find it helpful to use :code:`cw.list_devices()` to list connected NewAE devices.
 
 Otherwise, short the erase pins on your ChipWhisperer to
-enter bootloader mode, then flash the correct firmware onto your device.
+enter bootloader mode, then flash the correct firmware onto your device. Go
+to your device's page in the :ref:`Hardware / Capture section <capture>` to
+learn where its erase pins are located.
 
 Instructions for shorting the erase pins can be found
 on the documentation page for your device.
 
+
+=================================
+Linux usbserial module Workaround
+=================================
+
+There is an issue in some versions of Linux, where the SAM3U is not
+assigned a serial port when it enters bootloader mode. Here are some
+steps to resolve this issue (Note. this is not a permanent fix, you must
+go through these steps each time you put your ChipWhisperer into
+bootloader mode.). These steps assume you've already put ChipWhisperer
+into bootloader mode.
+
+1.  Unplug your ChipWhisperer (Leave unplugged until instructed otherwise)
+2.  Reboot your computer
+3.  Once logged in again, open a terminal session
+4.  Run this command: :code:`sudo modprobe usbserial vendor=0x3eb product=0x6124`
+5.  Plug your ChipWhisperer back in
+6.  Check that a serial port is now open using: :code:`ls -l /dev/ttyUSB*`
+
+.. image:: Capture/Images/ttyUSB_example.png
+
+You should now be able to program the bootloader from ChipWhisperer
+Capture through the port you created
+
+
+
 If you run into any issues not covered here, or if none of these steps
 work for you, let us know over at https://forum.newae.com
+
+
+

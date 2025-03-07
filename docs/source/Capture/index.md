@@ -2,6 +2,7 @@
 title: Capture
 ---
 
+(capture)=
 # Capture
 `Capture` contains information about the "capture" side of the ChipWhisperer hardware. These
 devices -- ChipWhisperer-Nano, -Lite, -Pro, and -Husky -- are the part of the hardware

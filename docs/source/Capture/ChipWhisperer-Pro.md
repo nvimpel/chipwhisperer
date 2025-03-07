@@ -168,9 +168,9 @@ input.
 ---
 ### Connectors
 
-#### **Using Glitch Port**
+#### **Glitch Port**
 
-  The "GLITCH" port is used for voltage glitching. It's connected to two
+  The "Glitch" port is used for voltage glitching. It's connected to two
   MOSFET elements, as the following figure shows:
 
   ![image](Images/Glitch.png "image")
@@ -194,9 +194,9 @@ input.
 
 ---
 
-#### **Using Measure Port**
+#### **Measure Port**
 
-  The "MEASURE" port is the input to the low-noise amplifier and ADC.
+  The "Measure" port is the input to the low-noise amplifier and ADC.
 
 --- 
 #### **20-Pin Connector**
@@ -204,60 +204,25 @@ input.
 The 20-pin connector is documented [here](20-pin-connector.md).
 
 ---
-### Advanced Usage
+### **Upgrading SAM3U Firmware**
 
-#### _**Upgrading SAM3U Firmware**_
+When talking about the ChipWhisperer's firmware, there is really two
+parts to this:
 
-  When talking about the ChipWhisperer's firmware, there is really two
-  parts to this:
+1.  The FPGA Bitstream file.
+2.  The SAM3U USB interface chip firmware.
 
-  1.  The FPGA Bitstream file.
-  2.  The SAM3U USB interface chip firmware.
+The FPGA bitstream alone is what is normally configured by the
+ChipWhisperer-Capture software. This bitstream is always the most
+up-to-date, since it's automatically reloaded by the computer every time
+you power cycle the ChipWhisperer-Capture. The SAM3U firmware is
+not updated automatically, but it tends to change less frequently.
 
-  The FPGA bitstream alone is what is normally configured by the
-  ChipWhisperer-Capture software. This bitstream is always the most
-  up-to-date, since it's automatically reloaded by the computer every time
-  you power cycle the ChipWhisperer-Capture. The SAM3U firmware is
-  not updated automatically, but it tends to change less frequently.
-
----
-##### **Checking Firmware Version**
-
-The firmware version can be accessed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.fw_version)
-{'major': 0, 'minor': 11, 'debug': 0}
-```
-
-The version of the newest firmware can be printed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.latest_fw)
-{'major': 0, 'minor': 11}
-```
-
-If a firmware update is available, the user will be warned when
-connecting to the scope:
-
-```python
->>> scope = cw.scope()
-WARNING:root:Your firmware is outdated - latest is 0.12. Suggested to update firmware, as you may experience errors
-See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
-```
-
----
-##### **Upgrading Firmware**
-
-See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
+To learn how to check your SAM3U firmware version and how to upgrade, go to {doc}`../firmware`.
 
 ---
 
-##### **Erase Pins**
+#### **Erase Pins**
 
 If you are unable to connect to the ChipWhisperer-Pro to erase its firmware, the SAM3U firmware
 can also be erased by shorting JP3 while the Pro is on. JP3 is located
@@ -267,34 +232,10 @@ on the left, JP3 is located to the right of the SAM3U, and has the text `ERASE` 
 After shorting the pins, unplug and replug the USB connector.
 
 ---
-##### **Linux usbserial module Workaround**
 
-  There is an issue in some versions of Linux, where the SAM3U is not
-  assigned a serial port when it enters bootloader mode. Here are some
-  steps to resolve this issue (Note. this is not a permanent fix, you must
-  go through these steps each time you put your ChipWhisperer into
-  bootloader mode.). These steps assume you've already put ChipWhisperer
-  into bootloader mode.
-
-  1.  Unplug your ChipWhisperer (Leave unplugged until instructed
-      otherwise)
-  2.  Reboot your computer
-  3.  Once logged in again, open a terminal session
-  4.  Run this command: `sudo modprobe usbserial vendor=0x3eb
-      product=0x6124`
-  5.  Plug your ChipWhisperer back in
-  6.  Check that a serial port is now open using: `ls -l /dev/ttyUSB*`
-
-  ![ttyUSB\_example.png](Images/ttyUSB_example.png "ttyUSB_example.png")
-
-  You should now be able to program the bootloader from ChipWhisperer
-  Capture through the port you created
-
-
----
 ## Advanced Features
 
-### _**Streaming Mode**_
+### **Streaming Mode**
 
 The ChipWhisperer Pro has a streaming mode that allows extremely long
 captures as long as relatively low sampling rates are used. For example,
@@ -336,7 +277,7 @@ On the software end, there are two things to watch for:
     quickly.
 
 ---
-### _**Trigger Module**_
+### **Trigger Module**
 
 Unlike the ChipWhisperer-Lite, the Pro has three different trigger modes
 to help capture traces when it's difficult to get a concrete trigger
@@ -439,7 +380,7 @@ first.
 
 ---
 
-### _**SMA I/O**_
+### **SMA I/O**
 
 The Pro has an extra SMA connector intended to be used for additional
 trigger logic. It can be used either as a trigger input or output.
@@ -460,7 +401,7 @@ ChipWhisperer.
 
 ---
 
-### _**Touchscreen**_
+### **Touchscreen**
 
 The touchscreen on the ChipWhisperer Pro shows various details about its
 status and current settings.

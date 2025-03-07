@@ -144,9 +144,9 @@ by NewAE.
 ---
 ### Connectors
 
-#### **Using Glitch Port**
+#### **Glitch Port**
 
-  The "GLITCH" port is used for voltage glitching. It's connected to two
+  The "Glitch" port is used for voltage glitching. It's connected to two
   MOSFET elements, as the following figure shows:
 
   ![image](Images/Glitch.png "image")
@@ -170,9 +170,9 @@ by NewAE.
 
 ---
 
-#### **Using Measure Port**
+#### **Measure Port**
 
-  The "MEASURE" port is the input to the low-noise amplifier and ADC.
+  The "Measure" port is the input to the low-noise amplifier and ADC.
 
 --- 
 
@@ -228,7 +228,7 @@ The following lists jumpers on the ChipWhisperer-Lite Capture Section:
     (default) or an external 5V supply at the +5VIN pin.
 
 ---
-#### _**Breaking Target Section Apart**_
+#### **Breaking Target Section Apart**
 
   You may wish to break the target section apart from the main capture
   board. This can easily be accomplished by following these instructions:
@@ -265,7 +265,7 @@ the edge this is prevented.
 ---
 
 (vtarget-usage)=
-#### _**VTarget Usage**_
+#### **VTarget Usage**
 
 **NOTE: The recommended method of interfacing with non 3.3V devices is to use external level shifters (like our [CW506](../Tools/CW506%20Advanced%20Breakout%20Board.md)). Use this method at your own risk!**
 
@@ -280,57 +280,25 @@ own risk.
 ---
 
 
-#### _**Upgrading SAM3U Firmware**_
+### **Upgrading SAM3U Firmware**
 
-  When talking about the ChipWhisperer's firmware, there is really two
-  parts to this:
+When talking about the ChipWhisperer's firmware, there is really two
+parts to this:
 
-  1.  The FPGA Bitstream file.
-  2.  The SAM3U USB interface chip firmware.
+1.  The FPGA Bitstream file.
+2.  The SAM3U USB interface chip firmware.
 
-  The FPGA bitstream alone is what is normally configured by the
-  ChipWhisperer-Capture software. This bitstream is always the most
-  up-to-date, since it's automatically reloaded by the computer every time
-  you power cycle the ChipWhisperer-Capture. The SAM3U firmware is
-  not updated automatically, but it tends to change less frequently.
+The FPGA bitstream alone is what is normally configured by the
+ChipWhisperer-Capture software. This bitstream is always the most
+up-to-date, since it's automatically reloaded by the computer every time
+you power cycle the ChipWhisperer-Capture. The SAM3U firmware is
+not updated automatically, but it tends to change less frequently.
 
----
-##### **Checking Firmware Version**
-
-The firmware version can be accessed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.fw_version)
-{'major': 0, 'minor': 11, 'debug': 0}
-```
-
-The version of the newest firmware can be printed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.latest_fw)
-{'major': 0, 'minor': 11}
-```
-
-If a firmware update is available, the user will be warned when
-connecting to the scope:
-
-```python
->>> scope = cw.scope()
-WARNING:root:Your firmware is outdated - latest is 0.12. Suggested to update firmware, as you may experience errors
-See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
-```
-
-##### **Upgrading Firmware**
-
-See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
+To learn how to check your SAM3U firmware version and how to upgrade, go to {doc}`../firmware`.
 
 ---
 
-##### **Erase Pins**
+#### **Erase Pins**
 
 If you are unable to connect to the ChipWhisperer-Lite to erase its firmware, the SAM3U firmware
 can also be erased by shorting JP2 while the Lite is on. With the USB connector
@@ -344,34 +312,11 @@ see D2 and D9 lit dimly, indicating that the firmware has been erased.
 ![eraseexample](Images/lite-erase-jumper.jpg)
 
 ---
-##### **Linux usbserial module Workaround**
-
-  There is an issue in some versions of Linux, where the SAM3U is not
-  assigned a serial port when it enters bootloader mode. Here are some
-  steps to resolve this issue (Note. this is not a permanent fix, you must
-  go through these steps each time you put your ChipWhisperer into
-  bootloader mode.). These steps assume you've already put ChipWhisperer
-  into bootloader mode.
-
-  1.  Unplug your ChipWhisperer (Leave unplugged until instructed
-      otherwise)
-  2.  Reboot your computer
-  3.  Once logged in again, open a terminal session
-  4.  Run this command: `sudo modprobe usbserial vendor=0x3eb
-      product=0x6124`
-  5.  Plug your ChipWhisperer back in
-  6.  Check that a serial port is now open using: `ls -l /dev/ttyUSB*`
-
-  ![ttyUSB\_example.png](Images/ttyUSB_example.png "ttyUSB_example.png")
-
-  You should now be able to program the bootloader from ChipWhisperer
-  Capture through the port you created
-
 #### **Generating Partial Reconfig Files**
 
-The Lite uses partial reconfiguration to adjust the phase offset for glitch width/offset.
+The Lite uses partial reconfiguration of its FPGA bitfile to adjust the phase offset for glitch width/offset.
 
-If you're doing a custom bitstream and want to generate these files, it can be done as follows:
+If you're doing a custom FPGA bitfile and want to generate these files (in order to retain glitch width/offset setting capabilities), it can be done as follows:
 
 * Get the .bit file built (from directory hardware/capture/chipwhisperer-lite/hdl, you'd run the commands in makeprojects_win.bat, then open the project in ISE & build the bitstream)
 * Run the script generate_reconfig_dicts.py in that same directory. This script takes a LONG time to run, as it generates bitstreams for each option.
@@ -379,6 +324,12 @@ If you're doing a custom bitstream and want to generate these files, it can be d
 * Make a backup of `chipwhisperer/hardware/capture/chipwhisperer-lite/cwlite_firmware.zip` and `chipwhisperer/software/chipwhisperer/hardware/firmware/`
 * Replace `chipwhisperer/hardware/capture/chipwhisperer-lite/cwlite_firmware.zip` with this new file.
 * Open `chipwhisperer/software/chipwhisperer/hardware/firmware/generate_firmware_files.py` and, within `file_list`, comment out every entry except the one containing `cwlite.py`. After this, run `generate_firmware_files.py`.
+
+```{note}
+The file locations above are out of date since content was moved to the chipwhisperer-capture repository.
+Contact us for updated instructions!
+```
+
 
 ---
 ## Schematic

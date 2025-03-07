@@ -458,7 +458,7 @@ interface as the ChipWhisperer Capture hardware:
 {doc}`../firmware`.
 
 There is also a Cortex Debug Connector located near the USB-B connector that 
-can be used to program and debug the SAM3U. See [this section](#sam3u-firmware) for SAM3U firmware details.
+can be used to program and debug the SAM3U.
 
 The firmware for the SAM3U is open-source and can be modified as you wish; find it in the [cw305-artix-target repository](https://github.com/newaetech/cw305-artix-target)
 

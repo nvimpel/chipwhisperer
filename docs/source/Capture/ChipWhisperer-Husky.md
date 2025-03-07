@@ -155,9 +155,9 @@ the Jupyter Notebook tutorials.
 
 ### Connectors
 
-#### **Using Glitch Port**
+#### **Glitch/Crowbar Port**
 
-The "CROWBAR" port is used for voltage glitching. It's connected to two
+The "Crowbar" port is used for voltage glitching. It's connected to two
 MOSFET elements, as the following figure shows:
 
 ![](Images/husky_crowbar.png)
@@ -184,9 +184,9 @@ out our [notebook on Husky glitching](https://github.com/newaetech/chipwhisperer
 
 ---
 
-#### **Using Measure Port**
+#### **Measurement Ports**
 
-The "MEASURE" ports are the inputs to the low-noise amplifier and ADC.
+The "Measurement" ports are the inputs to the low-noise amplifier and ADC.
 
 The Husky includes support for both single ended and differential measurements. 
 If you want to use the single ended measurement, it is recommended that you connect
@@ -233,13 +233,64 @@ for the data pins:
 
 These data pins can also be used as trigger inputs for the ChipWhisperer.
 
-### Advanced Usage
+---
 
-Advanced usage is covered in depth in 
+#### **SMB I/O**
+
+The Husky has two additional SMB connectors that can be used for useful inputs/outputs.
+
+The first is a Trigger/Glitch out, allowing you to use the Husky's 
+many different trigger modules with other devices. Examples of this
+include using the Husky to trigger a ChipSHOUTER or an external oscilloscope.
+
+The other SMB connector can be used as either a trigger/clock input,
+or as a clock output.
+
+---
+
+
+### **Upgrading SAM3U Firmware**
+
+When talking about the ChipWhisperer's firmware, there is really two
+parts to this:
+
+1.  The FPGA Bitstream file.
+2.  The SAM3U USB interface chip firmware.
+
+The FPGA bitstream alone is what is normally configured by the
+ChipWhisperer software. This bitstream is always the most
+up-to-date, since it's automatically reloaded by the computer every time
+you power cycle the ChipWhisperer-Husky. The SAM3U firmware is
+not updated automatically, but it tends to change less frequently.
+
+To learn how to check your SAM3U firmware version and how to upgrade, go to {doc}`../firmware`.
+
+---
+
+#### **Erase Pins/Button**
+
+If you are unable to connect to the ChipWhisperer-Husky to erase its firmware, the SAM3U firmware
+can also be erased by shorting SJ1 while the Husky is on. 
+
+**Depending on what revision of the Husky you have,
+you may have an erase button that you can press using a needle or wire. If present, this button will be present
+on the other side of the 20-pin connector from the USB-C connector.**
+
+Otherwise, you must open the Husky to erase it. SJ1 is located on the same side as the 20-pin User IO header, 
+by the 10-pin SAM3U debug header, near the middle of the board. If your Husky has the aforementioned button, SJ1
+won't be present.
+
+
+After shorting the pins or pressing the erase button, unplug and replug the USB connector.
+
+
+### Advanced Features
+
+Advanced features are covered in depth in 
 [our series of Husky-specific demo notebooks](https://github.com/newaetech/chipwhisperer-jupyter/tree/main/demos/husky);
 here we provide a brief overview.
 
-#### _**TraceWhisperer**_
+#### **TraceWhisperer**
 
 Arm Trace is an advanced debug feature of Arm processors allowing
 debug information to be streamed off of a microcontroller while it is running.
@@ -266,7 +317,7 @@ You can also use ChipWhisperer-Husky to trigger based on Arm Trace data, which w
 
 ---
 
-#### _**Streaming Mode**_
+#### **Streaming Mode**
 
 The ChipWhisperer Husky has a streaming mode that allows extremely long
 captures as long as relatively low sampling rates are used. For example,
@@ -320,7 +371,7 @@ slower. For example, 20MS/s at 8-bits per sample is roughly equivalent to 13MS/s
 
 ---
 
-#### __**Multiple Programmable Glitches**__
+#### **Multiple Programmable Glitches**
 
 Often, when glitching, you'll want to target multiple instructions at the same time.
 For example, glitching an RSA signature operation and capturing the malformed signature
@@ -351,7 +402,7 @@ scope.glitch.ext_offset = [50, 200, 500]
 Note that `scope.glitch.width` and `scope.glitch.offset` are shared between these glitches.
 
 ---
-#### _**Trigger Module**_
+#### **Trigger Module**
 
 In total, the ChipWhisperer-Husky has six different trigger methods,
 allowing you to perform power analysis or glitch in a large number of
@@ -483,86 +534,6 @@ to actually trigger. This is covered in detail in
 
 
 ---
-
-#### _**SMB I/O**_
-
-The Husky has two additional SMB connectors that can be used for useful inputs/outputs.
-
-The first is a Trigger/Glitch out, allowing you to use the Husky's 
-many different trigger modules with other devices. Examples of this
-include using the Husky to trigger a ChipSHOUTER or an external oscilloscope.
-
-The other SMB connector can be used as either a trigger/clock input,
-or as a clock output.
-
----
-
-#### _**Upgrading SAM3U Firmware**_
-
-  When talking about the ChipWhisperer's firmware, there is really two
-  parts to this:
-
-  1.  The FPGA Bitstream file.
-  2.  The SAM3U USB interface chip firmware.
-
-  The FPGA bitstream alone is what is normally configured by the
-  ChipWhisperer software. This bitstream is always the most
-  up-to-date, since it's automatically reloaded by the computer every time
-  you power cycle the ChipWhisperer-Husky. The SAM3U firmware is
-  not updated automatically, but it tends to change less frequently.
-
----
-##### **Checking Firmware Version**
-
-The firmware version can be accessed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.fw_version)
-{'major': 0, 'minor': 11, 'debug': 0}
-```
-
-The version of the newest firmware can be printed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.latest_fw)
-{'major': 0, 'minor': 11}
-```
-
-If a firmware update is available, the user will be warned when
-connecting to the scope:
-
-```python
->>> scope = cw.scope()
-WARNING:root:Your firmware is outdated - latest is 0.12. Suggested to update firmware, as you may experience errors
-See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
-```
-
----
-##### **Upgrading Firmware**
-
-See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
-
----
-
-##### **Erase Pins/Button**
-
-If you are unable to connect to the ChipWhisperer-Husky to erase its firmware, the SAM3U firmware
-can also be erased by shorting SJ1 while the Husky is on. 
-
-**Depending on what revision of the Husky you have,
-you may have an erase button that you can press using a needle or wire. If present, this button will be present
-on the other side of the 20-pin connector from the USB-C connector.**
-
-Otherwise, you must open the Husky to erase it. SJ1 is located on the same side as the 20-pin User IO header, 
-by the 10-pin SAM3U debug header, near the middle of the board. If your Husky has the aforementioned button, SJ1
-won't be present.
-
-
-After shorting the pins or pressing the erase button, unplug and replug the USB connector.
 
 ## Errata/Notes
 

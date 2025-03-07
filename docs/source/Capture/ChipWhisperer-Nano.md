@@ -147,9 +147,9 @@ by NewAE.
 ---
 ### Connectors
 
-#### Using Glitch Port
+#### Glitch Port
 
-The glitch port can be activated by increasing `scope.glitch.repeat`:
+The "Glitch" port can be activated by increasing `scope.glitch.repeat`:
 
 ```python
 scope.glitch.repeat = 10 # ~83ns glitch
@@ -158,9 +158,9 @@ scope.glitch.repeat = 0 # no glitch
 ```
 
 ---
-#### **Using Measure Port**
+#### **Measure Port**
 
-  The "MEASURE" port is the input to the low-noise amplifier and ADC.
+  The "Measure" port is the input to the low-noise amplifier and ADC.
 
 --- 
 #### **20-Pin Connector**
@@ -288,41 +288,9 @@ some specific hardware changes relative to the production units:
     front-end. This results in poor analog performance.
 
 ---
-### _**Upgrading SAM3U Firmware**_
+### **Upgrading SAM3U Firmware**
 
-#### **Checking Firmware Version**
-
-The firmware version can be accessed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.fw_version)
-{'major': 0, 'minor': 11, 'debug': 0}
-```
-
-The version of the newest firmware can be printed as follows:
-
-```python
->>> import chipwhisperer as cw
->>> scope = cw.scope()
->>> print(scope.latest_fw)
-{'major': 0, 'minor': 11}
-```
-
-If a firmware update is available, the user will be warned when
-connecting to the scope:
-
-```python
->>> scope = cw.scope()
-WARNING:root:Your firmware is outdated - latest is 0.12. Suggested to update firmware, as you may experience errors
-See https://chipwhisperer.readthedocs.io/en/latest/firmware.html
-```
-
---- 
-#### **Upgrading Firmware**
-
-See {doc}`../firmware` for instructions on how to update the SAM3U firmware.
+To learn how to check your SAM3U firmware version and how to upgrade, go to {doc}`../firmware`.
 
 ---
 
@@ -335,30 +303,6 @@ it.
 
 After shorting the pins, you should
 see no LEDs lit (the ERROR LED may be very dimly lit).
-
----
-#### **Linux usbserial module Workaround**
-
-  There is an issue in some versions of Linux, where the SAM3U is not
-  assigned a serial port when it enters bootloader mode. Here are some
-  steps to resolve this issue (Note. this is not a permanent fix, you must
-  go through these steps each time you put your ChipWhisperer into
-  bootloader mode.). These steps assume you've already put ChipWhisperer
-  into bootloader mode.
-
-  1.  Unplug your ChipWhisperer (Leave unplugged until instructed
-      otherwise)
-  2.  Reboot your computer
-  3.  Once logged in again, open a terminal session
-  4.  Run this command: `sudo modprobe usbserial vendor=0x3eb
-      product=0x6124`
-  5.  Plug your ChipWhisperer back in
-  6.  Check that a serial port is now open using: `ls -l /dev/ttyUSB*`
-
-  ![ttyUSB\_example.png](Images/ttyUSB_example.png "ttyUSB_example.png")
-
-  You should now be able to program the bootloader from ChipWhisperer
-  Capture through the port you created
 
 ---
 ## Schematic
