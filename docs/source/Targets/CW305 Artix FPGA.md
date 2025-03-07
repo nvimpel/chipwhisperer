@@ -353,9 +353,11 @@ The pinout of the header is marked on the PCB. All pins are routed to 3.3V VCC-I
 
 ---
 
-#### ChipWhisperer 20-pin Connector
+#### ChipWhisperer 20-Pin Connector
 
 The bottom right side of the PCB contains a 20-pin connector that follows the standard ChipWhisperer pinout. This connector has ESD diodes present on the PCB to protect both the FPGA from external transients, and from glitches inserted into the FPGA from exiting the board and damaging external test gear.
+
+The 20-pin connector is documented [here](../Capture/20-pin-connector.md).
 
 ---
 

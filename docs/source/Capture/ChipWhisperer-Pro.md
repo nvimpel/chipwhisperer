@@ -201,31 +201,7 @@ input.
 --- 
 #### **20-Pin Connector**
 
-  The 20-pin connector carries power and IO pins between the ChipWhisperer-Lite and 
-  the target board. The pinout is as follows:
-
-  | Number | Name        | Dir | Description                                                  |
-  | ------ | ----------- | --- | ------------------------------------------------------------ |
-  | 1      | \+VUSB (5V) | O   | 5V from power supply.                         |
-  | 2      | GND         | O   | System GND.                                                  |
-  | 3      | \+3.3V      | O   | \+3.3V to Target Device, can be turned off, 200mA available. |
-  | 4      | FPGA-HS1    | I/O | High Speed Input (normally clock in).                        |
-  | 5      | PROG-RESET  | I/O | Target RESET Pin (nRST).                                     |
-  | 6      | FPGA-HS2    | I/O | High Speed Output (normally clock or glitch out).            |
-  | 7      | PROG-MISO   | I/O | SPI input: MISO (for SPI + AVR Programmer).                  |
-  | 8      | NC          | I   | Not connected on CW1200                                      |
-  | 9      | PROG-MOSI   | I/O | SPI output: MOSI (for SPI + AVR Programmer).                 |
-  | 10     | FPGA-TARG1  | I/O | TargetIO Pin 1 - Usually UART TX or RX.                      |
-  | 11     | PROG-SCK    | I/O | SPI output: SCK (for SPI + AVR Programmer).                  |
-  | 12     | FPGA-TARG2  | I/O | TargetIO Pin 2 - Usually UART RX or TX.                      |
-  | 13     | PROG-PDIC   | I/O | PDI Programming Clock (XMEGA Programmer), or CS pin (SPI). Also used for STM32 bootloader   |
-  | 14     | FPGA-TARG3  | I/O | TargetIO Pin 3 - Usually bidirectional IO for smartcard.     |
-  | 15     | PROG-PDID   | I/O | PDI Programming Data (XMEGA Programmer).                     |
-  | 16     | FPGA-TARG4  | I/O | TargetIO Pin 4 - Usually trigger input.                      |
-  | 17     | GND         | O   |                                                              |
-  | 18     | \+3.3V      | O   |                                                              |
-  | 19     | GND         | O   |                                                              |
-  | 20     | \+VUSB (5V) | O   |                                                              |
+The 20-pin connector is documented [here](20-pin-connector.md).
 
 ---
 ### Advanced Usage

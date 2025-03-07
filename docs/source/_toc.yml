@@ -111,6 +111,9 @@ parts:
       - file: Tools/CW506 Advanced Breakout Board
       - file: Tools/CW508 SMA Analog Filters
       - file: Tools/PhyWhisperer
+  - file: Capture/interfaces
+    sections:
+      - file: Capture/20-pin-connector
 - caption: Tips and Tricks
   chapters:
   - file: cw_tips_tricks/intro

@@ -179,32 +179,9 @@ sets a correct reference level. If using any of the official victim
 boards this is done by setting J4 to receive it's reference level from
 "J5-VREF" pin.
 
-### 20-Pin Pinout
+### 20-Pin Connector
 
-The pinout is as follows:
-
-| Number | Name      | Dir | Description                                                                 |
-| ------ | --------- | --- | --------------------------------------------------------------------------- |
-| 1      | \+5V      | I   | \+5V from ChipWhisperer-Capture.                                            |
-| 2      | GND       | I   | System GND.                                                                 |
-| 3      | \+3.3V    | I   | \+3.3V from ChipWhisperer-Capture.                                          |
-| 4      | HS1       | O   | High Speed output (normally clock in to ChipWhisperer-Capture).             |
-| 5      | nRST      | I/O | Target RESET Pin (AVR Programmer).                                          |
-| 6      | HS2       | I   | High Speed input (normally clock or glitch out from ChipWhisperer-Capture). |
-| 7      | MISO      | I/O | SPI input: MISO (for SPI + AVR Programmer).                                 |
-| 8      | VTarget   | O   | Set I/O voltage reference level.                                            |
-| 9      | MOSI      | I/O | SPI output: MOSI (for SPI + AVR Programmer).                                |
-| 10     | TARG1     | I/O | TargetIO Pin 1 - Usually UART TX or RX.                                     |
-| 11     | SCK       | I/O | SPI output: SCK (for SPI + AVR Programmer).                                 |
-| 12     | GPIO2     | I/O | TargetIO Pin 2 - Usually UART RX or TX.                                     |
-| 13     | PROG-PDIC | I/O | PDI Programming Clock (XMEGA Programmer), or CS pin (SPI).                  |
-| 14     | GPIO3     | I/O | TargetIO Pin 3 - Extra I/O.                                                 |
-| 15     | PROG-PDID | I/O | PDI Programming Data (XMEGA Programmer).                                    |
-| 16     | GPIO4     | I/O | TargetIO Pin 4 - Usually trigger output.                                    |
-| 17     | GND       | O   |                                                                             |
-| 18     | \+3.3V    | O   | \+3.3V from ChipWhisperer-Capture.                                          |
-| 19     | GND       | O   |                                                                             |
-| 20     | \+5V      | O   | \+5V from ChipWhisperer-Capture.                                            |
+The 20-pin connector (J1) is documented [here](../Capture/20-pin-connector.md).
 
 ## Clock Network
 

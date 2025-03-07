@@ -33,7 +33,7 @@ will take the rest of the way towards learning about side channel attacks!
 offering vastly improved performance over a typical asynchronous oscilloscope setup
 * 12-bit 200MS/s ADC for capturing power traces
     - Can be clocked at both the same clock speed as the target, as well as integer multiples of this frequency.
-* +55dB adjustable low noise gain, allowing the Lite to easily measure small signals
+* +55dB adjustable low noise gain, allowing easy measurement of small signals
 * Clock and voltage fault generation via FPGA-based pulse generation
 * XMEGA (PDI), AVR (ISP), SAMBA (Microchip SAM) and STM32F (UART Serial) bootloader built in
 * JTAG/SWD debugging lines on CW 20-pin connector, as well as JTAG compatible 20-pin digital header
@@ -199,44 +199,7 @@ and improves gain/frequency performance.
 --- 
 #### **20-Pin Connector**
 
-  The 20-pin connector carries power and IO pins between the ChipWhisperer-Lite and 
-  the target board. The pinout is as follows:
-
-  | Pin: Func | Pin: Func |
-  | --------- | --------- |
-  | 1: 5V (NC) | 2: GND |
-  | 3: 3.3V | 4: HS1 |
-  | 5: nRST | 6: HS2 |
-  | 7: MISO | 8: DNC |
-  | 9: MOSI | 10: TIO1 |
-  | 11: SCK | 12: TIO2 |
-  | 13: PDIC/CS | 14: TIO3 |
-  | 15: PDID | 16: TIO4 |
-  | 17: GND | 18: 3.3V |
-  | 19: GND | 20: 5V (NC) |
-
-  | Number | Name        | Dir | Description                                                  |
-  | ------ | ----------- | --- | ------------------------------------------------------------ |
-  | 1      | \+VUSB (5V) | O   | Not connected on Husky                                       |
-  | 2      | GND         | O   | System GND.                                                  |
-  | 3      | \+3.3V      | O   | \+3.3V to Target Device, can be turned off, 200mA available. |
-  | 4      | FPGA-HS1    | I/O | High Speed Input (normally clock in).                        |
-  | 5      | PROG-RESET  | I/O | Target RESET Pin (nRST).                                     |
-  | 6      | FPGA-HS2    | I/O | High Speed Output (normally clock or glitch out).            |
-  | 7      | PROG-MISO   | I/O | SPI input: MISO (for SPI + AVR Programmer).                  |
-  | 8      | N/C         | I   | Not connected on Husky                                       |
-  | 9      | PROG-MOSI   | I/O | SPI output: MOSI (for SPI + AVR Programmer).                 |
-  | 10     | FPGA-TARG1  | I/O | TargetIO Pin 1 - Usually UART TX or RX.                      |
-  | 11     | PROG-SCK    | I/O | SPI output: SCK (for SPI + AVR Programmer).                  |
-  | 12     | FPGA-TARG2  | I/O | TargetIO Pin 2 - Usually UART RX or TX.                      |
-  | 13     | PROG-PDIC   | I/O | PDI Programming Clock (XMEGA Programmer), or CS pin (SPI). Also used for STM32 bootloader   |
-  | 14     | FPGA-TARG3  | I/O | TargetIO Pin 3 - Usually bidirectional IO for smartcard.     |
-  | 15     | PROG-PDID   | I/O | PDI Programming Data (XMEGA Programmer).                     |
-  | 16     | FPGA-TARG4  | I/O | TargetIO Pin 4 - Usually trigger input.                      |
-  | 17     | GND         | O   |                                                              |
-  | 18     | \+3.3V      | O   |                                                              |
-  | 19     | GND         | O   |                                                              |
-  | 20     | \+VUSB (5V) | O   | Not connected on Husky                                       |
+The 20-pin connector is documented [here](20-pin-connector.md).
 
 ---
 

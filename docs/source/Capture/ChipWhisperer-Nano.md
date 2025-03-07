@@ -165,31 +165,8 @@ scope.glitch.repeat = 0 # no glitch
 --- 
 #### **20-Pin Connector**
 
-  The 20-pin connector carries power and IO pins between the ChipWhisperer-Nano and 
-  the target board. The pinout is as follows:
+The 20-pin connector is documented [here](20-pin-connector.md).
 
-  | Number | Name        | Dir | Description                                                  |
-  | ------ | ----------- | --- | ------------------------------------------------------------ |
-  | 1      | \+VUSB (5V) | O   | Not Connected on ChipWhisperer-Nano.                         |
-  | 2      | GND         | O   | System GND.                                                  |
-  | 3      | \+3.3V      | O   | \+3.3V to Target Device, 200mA available.                    |
-  | 4      | FPGA-HS1    | I/O | High Speed Input Clock In                                    |
-  | 5      | PROG-RESET  | I/O | Target RESET Pin (nRST)                                      |
-  | 6      | FPGA-HS2    | I/O | High Speed Output Clock Out                                  |
-  | 7      | PROG-MISO   | I/O | Unused                                                       |
-  | 8      | VTarget     | I   | Drive this pin with desired I/O voltage in range 1.5V-5V.    |
-  | 9      | PROG-MOSI   | I/O | Unused                                                       |
-  | 10     | FPGA-TARG1  | I/O | TargetIO Pin 1 - UART RX or user output IO                   |              
-  | 11     | PROG-SCK    | I/O | Unused                                                       |
-  | 12     | FPGA-TARG2  | I/O | TargetIO Pin 2 - UART TX or user output IO.                  |
-  | 13     | PROG-PDIC   | I/O | Used for putting STM32 into bootloader mode                  |
-  | 14     | FPGA-TARG3  | I/O | TargetIO Pin 3 - User output IO.                             |
-  | 15     | PROG-PDID   | I/O | User output IO                                               |
-  | 16     | FPGA-TARG4  | I/O | TargetIO Pin 4 - Trigger Input.                              |
-  | 17     | GND         | O   |                                                              |
-  | 18     | \+3.3V      | O   |                                                              |
-  | 19     | GND         | O   |                                                              |
-  | 20     | \+VUSB (5V) | O   | Not Connected on ChipWhisperer-Nano.                         |
 
 ---
 ### **Examples of Tutorials you can Run**

@@ -5,7 +5,7 @@ title: Overview & Comparison
 # Targets
 
 ChipWhisperer's various targets take the difficulty out of setting up hardware for side channel attacks!
-In addition to interfacing with ChipWhisperer's 20-pin connector and SMA-connectors, these target boards
+In addition to interfacing with ChipWhisperer's [20-pin connector](../Capture/20-pin-connector.md) and SMA-connectors, these target boards
 already have necessary side channel modifications (shunt resistor, capacitor removal, etc.) integrated
 into the board, so there's no need to reach for your soldering iron or utility knife!
 

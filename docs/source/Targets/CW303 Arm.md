@@ -76,8 +76,7 @@ The following shows several of the connectors available on the CW303.
 #### 20-Pin Connector
 
 J2 is a 20-pin connector, which uses the standard NewAE 20-pin
-connector pinout. See the ChipWhisperer-Lite documentation for
-details.
+connector pinout, documented [here](../Capture/20-pin-connector.md).
 
 #### SMA Glitch
 
