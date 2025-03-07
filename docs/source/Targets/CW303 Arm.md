@@ -71,56 +71,56 @@ Note that this may adversely affect clock glitching in particular. Flash latency
 
 ### Connectors
 
-The following shows several of the connectors available on the CW301.
+The following shows several of the connectors available on the CW303.
 
-**20-Pin Connector**
+#### 20-Pin Connector
 
-    J2 is a 20-pin connector, which uses the standard NewAE 20-pin
-    connector pinout. See the ChipWhisperer-Lite documentation for
-    details.
+J2 is a 20-pin connector, which uses the standard NewAE 20-pin
+connector pinout. See the ChipWhisperer-Lite documentation for
+details.
 
-**SMA Glitch**
+#### SMA Glitch
 
-    The SMA glitch connector allows VCC glitches be inserted into the
-    VCC pin. This is done by shorting the resistive shunt R66. By
-    default it connects to the SMA measure connector, but can be
-    disconnected with the solder jumpers.
+The SMA glitch connector allows VCC glitches be inserted into the
+VCC pin. This is done by shorting the resistive shunt R66. By
+default it connects to the SMA measure connector, but can be
+disconnected with the solder jumpers.
 
-**SMA Measure**
+#### SMA Measure
 
-    The SMA measure connector allows power measurements to be taken
-    across resistive shunt R66. By default it connects to the SMA glitch
-    connector, but can be disconnected with the solder jumpers.
+The SMA measure connector allows power measurements to be taken
+across resistive shunt R66. By default it connects to the SMA glitch
+connector, but can be disconnected with the solder jumpers.
 
-**JP13**
+#### JP13
 
-    JP13 provides a pinout with a few extra IO pins,
-    as well as JTAG/SWD debug pins.
+JP13 provides a pinout with a few extra IO pins,
+as well as JTAG/SWD debug pins.
 
 ---
 
 ### Solder Jumpers
 
 
-**SJ3**
+#### SJ3
 
-    Connects the output of the VCC filter to the STM32F3 VCC network.
-    Soldered by default.
+Connects the output of the VCC filter to the STM32F3 VCC network.
+Soldered by default.
 
-**SJ4**
+#### SJ4
 
-    Connects the SMA Measure header to the resistive shunt. Soldered by
-    default.
+Connects the SMA Measure header to the resistive shunt. Soldered by
+default.
 
-**SJ5**
+#### SJ5
 
-    Connects the SMA Glitch header to the resistive shunt. Soldered by
-    default.
+Connects the SMA Glitch header to the resistive shunt. Soldered by
+default.
 
-**SJ7**
+#### SJ7
 
-    Connects the VCC of the STM32F3 board to VREF on 20-pin header.
-    Soldered by default.
+Connects the VCC of the STM32F3 board to VREF on 20-pin header.
+Soldered by default.
 
 ---
 
