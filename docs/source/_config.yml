@@ -59,6 +59,10 @@ sphinx:
     todo_include_todos: true
     myst_heading_anchors: 3
     suppress_warnings: [mystnb.unknown_mime_type]
+    notfound_urls_prefix: "/en/latest/"
+    notfound_context:
+        title: "Whoops! Page not found."
+        body: "<p>Sorry, this page doesn't exist. Many parts of our documentation have been moved around recently; we've tried to ensure all the links are good but we may have missed some.\n Try the <a href='https://chipwhisperer.readthedocs.io/en/latest/index.html'>home page 🏠 or the <a href='https://chipwhisperer.readthedocs.io/en/latest/search.html'>search page 🔎 </a> to find what you're looking for.\n If you were directed here from one of our links, please file an <a href='https://github.com/newaetech/chipwhisperer/issues'>issue</a> to tell us about it.</p>"
 
   extra_extensions:
     - sphinx.ext.napoleon
@@ -70,4 +74,5 @@ sphinx:
     - sphinx_examples
     - hoverxref.extension
     - sphinx.ext.autodoc
+    - notfound.extension
 
