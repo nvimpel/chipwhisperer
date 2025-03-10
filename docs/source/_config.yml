@@ -41,7 +41,6 @@ sphinx:
   config:
     autodoc_warningiserror: false
     nitpicky: true
-    nitpick_ignore: ('py:class', 'optional')
     napoleon_google_docstring: true
     napoleon_numpy_docstring: true
     napoleon_include_init_with_doc: false
