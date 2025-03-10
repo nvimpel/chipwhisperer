@@ -10,7 +10,7 @@
 ## Background
 
 The CW506 is a simple but powerful breakout board for devices using
-NewAE Technology's [20-Pin Connector](https://rtfm.newae.com/Capture/ChipWhisperer-Lite/#20-pin-connector)
+NewAE Technology's [20-Pin Connector](../Capture/20-pin-connector.md).
 standard. Almost all of our target boards and capture hardware feature
 this connector, making the breakout board widely applicable to our
 product line.
