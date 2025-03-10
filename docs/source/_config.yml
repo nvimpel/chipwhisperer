@@ -60,8 +60,8 @@ sphinx:
     suppress_warnings: [mystnb.unknown_mime_type]
     notfound_urls_prefix: "/en/latest/"
     notfound_context:
-        title: "Whoops! Page not found."
-        body: "<p>Sorry, this page doesn't exist. Many parts of our documentation have been moved around recently; we've tried to ensure all the links are good but we may have missed some.\n Try the <a href='https://chipwhisperer.readthedocs.io/en/latest/index.html'>home page 🏠 or the <a href='https://chipwhisperer.readthedocs.io/en/latest/search.html'>search page 🔎 </a> to find what you're looking for.\n If you were directed here from one of our links, please file an <a href='https://github.com/newaetech/chipwhisperer/issues'>issue</a> to tell us about it.</p>"
+        title: "Page not found."
+        body: "<h1>Whoops! Page Not Found</h1>\n\n<p>Sorry, this page doesn't exist!</p> <p>Many parts of our documentation have been moved around recently; we've tried to ensure all the links are good but we may have missed some.</p> <p>Try the <a href='https://chipwhisperer.readthedocs.io/en/latest/index.html'>home page 🏠 </a> or the <a href='https://chipwhisperer.readthedocs.io/en/latest/search.html'>search page 🔎 </a> to find what you're looking for.</p> <p>If you were directed here from one of our links, please file an <a href='https://github.com/newaetech/chipwhisperer/issues'>issue</a> to tell us about it.</p>"
 
   extra_extensions:
     - sphinx.ext.napoleon
