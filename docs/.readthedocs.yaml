@@ -9,19 +9,17 @@ build:
     pre_build:
       # Generate on-the-fly Sphinx configuration from Jupyter Book's _config.yml
       - "jupyter-book config sphinx docs/source"
+      - "echo \"import sys; sys.path.insert(0, os.path.abspath('./../software'))\" >> docs/source/conf.py"
 
+# TODO: trim submodules to minimum required
 submodules:
   include: all
 
 python:
    install:
    - requirements: docs/requirements.txt
-#   - method: pip
-#     path: .
-
-#formats:
-#  - pdf
-#  - epub
+   - method: pip
+     path: .
 
 sphinx:
   configuration: docs/source/conf.py
