@@ -75,3 +75,6 @@ sphinx:
     - sphinx.ext.autodoc
     - notfound.extension
 
+  local_extensions:
+      "chipwhisperer": "./../software"
+
