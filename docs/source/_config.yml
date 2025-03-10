@@ -68,7 +68,6 @@ sphinx:
     - sphinx.ext.napoleon
     - sphinx.ext.todo
     - sphinx_autodoc_typehints
-    - sphinx.ext.intersphinx
     - sphinx_inline_tabs
     - sphinxcontrib.images
     - sphinx_examples
