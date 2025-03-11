@@ -148,4 +148,5 @@ parts:
   chapters:
   - file: Tutorials
   - file: changes
+  - file: contributing
 
