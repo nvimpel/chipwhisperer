@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Test install
+name: Test install and docs build
 
 # Controls when the workflow will run
 on:
@@ -26,3 +26,6 @@ jobs:
         run: |
             pip install -e .
             python -c "import chipwhisperer as cw"
+            pip install -r docs/requirements.txt
+            cd docs
+            make html
