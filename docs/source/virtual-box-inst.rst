@@ -1,12 +1,17 @@
 .. _install-virtual-machine:
 
-########################
-Virtual Machine Installs
-########################
+############################
+Virtual Machine Installation
+############################
 
 Instead of installing natively, you also have the option of using a virtual machine
 image that includes all the required software and will launch Jupyter on boot.
 This image also has all of the OS configuration ready as well.
+
+
+.. note:: Not all `ChipWhisperer releases <https://github.com/newaetech/chipwhisperer/releases>`_
+    include a virtual machine image. Currently, 5.6.1 is the most recent
+    release to include one.
 
 ****************
 VirtualBox Image
