@@ -1,4 +1,4 @@
-jupyter-book
+jupyter-book==1.0.4.post1
 sphinx
 sphinx-rtd-theme
 sphinx-inline-tabs
