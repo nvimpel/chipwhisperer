@@ -200,10 +200,14 @@ This will build the documentation in html form. You can then navigate to the
 `source/_build/html` directory and open `index.html`. This should open the
 website in your browser.
 
+For more details on how the documentation is built and why, go to the 
+[Documentation Site Details page](https://chipwhisperer.readthedocs.io/en/latest/colophon.html#jupyter-book-tips).
 
 Contribution to the documentation is always welcome. To see the effect of
 changes to the documentation it needs to be rebuilt after each change. When
 contributing to the documentation here are some rough guidelines to follow:
+
+### Guidelines for reStructuredText Files
 
   * All directive blocks are indented by four spaces. This makes life easier
     when the text editor you are using is already set for four spaces because
@@ -273,6 +277,16 @@ contributing to the documentation here are some rough guidelines to follow:
       - -, for subsections
       - ^, for subsubsections
       - “, for paragraphs
+
+
+### Guidelines for Markdown Files
+
+- keep in mind that markdown files in the `chipwhisperer-target-cw308t`
+  submodule need to also render on [GitHub](https://github.com/newaetech/chipwhisperer-target-cw308t)
+
+
+More formatting guidelines and tips are on the [Documentation Site Details page](https://chipwhisperer.readthedocs.io/en/latest/colophon.html#jupyter-book-tips).
+
 
 A few useful resources:
 

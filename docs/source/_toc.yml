@@ -149,4 +149,5 @@ parts:
   - file: Tutorials
   - file: changes
   - file: contributing
+  - file: colophon
 
