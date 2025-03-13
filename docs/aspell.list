@@ -1,4 +1,4 @@
-personal_ws-1.1 en 937 
+personal_ws-1.1 en 963 
 ACK
 ADC's
 ADCCLK
@@ -81,6 +81,7 @@ CWPro
 CWTARG
 CY
 Changelog
+CheatSheet
 ChipSHOUTER
 ChipWhisperer
 ChipWhisperer's
@@ -119,6 +120,8 @@ DesignStart
 Digi
 Digikey
 Digilent
+Docstrings
+Docutils
 ECB
 ECC
 EE
@@ -365,7 +368,9 @@ RST
 RSTOUT
 RUW
 RXD
+ReST
 ReadTheDocs
+ReadTheDocs's
 Reconfig
 Repos
 ResyncSAD
@@ -525,6 +530,7 @@ XNORed
 XTAL
 Xacto
 Xilinx
+YAML
 Zadig
 aG
 ack
@@ -546,6 +552,7 @@ autoattribute
 autoclass
 autodata
 autodetects
+autodoc
 autofunction
 automatable
 automethod
@@ -566,10 +573,13 @@ bitshifts
 bitstream
 bitstreams
 bitwise
+blockquote
+blockquoted
 bootloader
 bootloaders
 bootup
 boxboard
+bsfile
 buf
 bypassable
 capacitances
@@ -620,6 +630,7 @@ diffstm
 dir
 distros
 dlen
+docstrings
 dor
 downsampled
 downsampling
@@ -749,6 +760,7 @@ mixcolumns
 mkdir
 mmcm
 modders
+modprobe
 mpsse
 msp
 multimeter
@@ -761,6 +773,7 @@ nTesting
 naeusb
 namedtuple
 natively
+nbparameterize
 nbstripout
 neorv
 netlist
@@ -781,8 +794,10 @@ openadc
 openocd
 osx
 outjob
+overline
 ovf
 pF
+pandoc
 param
 passthrough
 passwdcheck
@@ -798,12 +813,14 @@ plaintexts
 pll
 plugdev
 png
+powershell
 pre
 preloaded
 premade
 prepend
 preprocess
 preprocessing
+preprocessor
 prereqs
 proj
 ps
@@ -818,6 +835,7 @@ pyenv
 pyserial
 rambuf
 reStructured
+reStructuredText
 readDeviceIdInstruction
 readInstruction
 readthedocs
@@ -863,8 +881,10 @@ str
 subbytes
 subdirectory
 submodule
+submodule's
 submodules
 subnet
+subsubsections
 sudo
 swd
 sys
@@ -875,6 +895,7 @@ textout
 textouts
 th
 tk
+toctree
 todo
 toolchain
 tracewhisperer
@@ -890,6 +911,7 @@ txt
 uF
 uart
 ub
+ubuntu
 udev
 udevadm
 ufo
@@ -917,14 +939,17 @@ virtualenv
 vmnetcfg
 vreg
 vscore
+vtarget
 wValue
 waveforms
 wcountermeasures
+whitespace
 wikilink
 writeAutoAddressIncrementSize
 writeAutoAddressIncrementTime
 writeSize
 writeTime
+wsl
 xA
 xACE
 xC
@@ -933,6 +958,7 @@ xacto
 xbf
 xmega
 xml
+yaml
 zadig
 zlib
 zshrc

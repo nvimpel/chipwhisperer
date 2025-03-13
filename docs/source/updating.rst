@@ -12,10 +12,10 @@ commands. Don't forget to update any submodules (e.g. Jupyter) as well.
 .. tip::
     Unsure where ChipWhisperer is installed? Run::
 
-        import chiphwisperer as cw; print(cw.__file__)`
+        import chipwhisperer as cw; print(cw.__file__)`
 
 
-If you installed ChipWhipserer with our :doc:`Windows installer <windows-install>`,
+If you installed ChipWhisperer with our :doc:`Windows installer <windows-install>`,
 you can run the "ChipWhisperer Update" program.
 
 
