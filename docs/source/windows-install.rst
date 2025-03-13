@@ -99,9 +99,6 @@ in your browser:
 Once you see this open, we recommend clicking on :code:`jupyter`, then running through :code:`0 - Introduction to Jupyter Notebooks.ipynb`
 to verify that everything installed correctly. If you run into any issues, please ask on our `forums`_ for help.
 
-======================
-Updating ChipWhisperer
-======================
 
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 

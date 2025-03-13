@@ -15,6 +15,7 @@ parts:
       - file: mac-install
       - file: virtual-box-inst
   - file: starting
+  - file: updating
   - file: support
 - caption: API
   chapters:
