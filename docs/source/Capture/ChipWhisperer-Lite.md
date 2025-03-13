@@ -219,7 +219,7 @@ The following lists jumpers on the ChipWhisperer-Lite Capture Section:
 
   - JP4 is the "RESET" net for the SAM3U processor.
 
-  - JP2 causes the SAM3U processor flash memory to be erased. When the chip is erased a rom-resident bootloader takes over. See section TODO for bootloader details.
+  - JP2 causes the SAM3U processor flash memory to be erased. When the chip is erased a rom-resident bootloader takes over (see [](#erase-pins) for details).
   - JP5 selects the IO voltage for the FPGA bank which connects to the
     20-pin target. By default SJ6 selects this to be 3.3V. It is not
     recommended to change this, as it is easy to damage the FPGA by
@@ -298,6 +298,7 @@ To learn how to check your SAM3U firmware version and how to upgrade, go to {doc
 
 ---
 
+(erase-pins)=
 #### **Erase Pins**
 
 If you are unable to connect to the ChipWhisperer-Lite to erase its firmware, the SAM3U firmware
@@ -308,6 +309,8 @@ it.
 
 After shorting the pins, unplug and replug the USB connector and you should
 see D2 and D9 lit dimly, indicating that the firmware has been erased.
+
+See {doc}`../firmware` for more information on erasing and re-programming ChipWhisperer-Lite firmware.
 
 ![eraseexample](Images/lite-erase-jumper.jpg)
 

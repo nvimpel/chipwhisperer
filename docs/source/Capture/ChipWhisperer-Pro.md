@@ -231,6 +231,8 @@ on the left, JP3 is located to the right of the SAM3U, and has the text `ERASE` 
 
 After shorting the pins, unplug and replug the USB connector.
 
+See {doc}`../firmware` for more information on erasing and re-programming ChipWhisperer-Pro firmware.
+
 ---
 
 ## Advanced Features
