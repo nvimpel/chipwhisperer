@@ -88,8 +88,8 @@ spare others some time and frustration.
 Surprisingly, the Jupyter Book documentation doesn't explain how to do this
 basic thing. There are different ways to do it, but we think that this is
 the proper clean way to do it:
-* to link to `document.rst` from `.md`: `{doc} blah blah <document>`
-* to link to an `.rst` label `.. _label:` from .md: `{ref} blah blah <label>`
+* to link to `document.rst` from `.md`: ``{doc}`blah blah <document>` `` or ``{doc}`document` ``
+* to link to an `.rst` label `.. _label:` from .md: ``{ref}`blah blah <label>` `` or ``{ref}`label` ``
 * to link to an `autodoc`-generated method label from `.md`:
     * in the autodoc-generated html documentation page, look at the anchor link:
       e.g. for
@@ -108,7 +108,7 @@ the proper clean way to do it:
   blockquote
 * in "pure" Sphinx, extra whitespace at the start of a line renders well
   (there was lots of this in pre-Jupyter Book versions of this site), but
-  with Jupyter Book this creates a box
+  with Jupyter Book this creates an ugly box
 
 
 ### Dead Links
