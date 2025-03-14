@@ -54,7 +54,7 @@ Usage examples:
 scope.gain
 ----------
 
-Class to control ADC gain
+Class to control ADC gain.
 
 .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.GainSettings
     :members:
@@ -62,7 +62,7 @@ Class to control ADC gain
 scope.adc
 ---------
 
-Class to control non-gain, non-clock ADC settings
+Class to control non-gain, non-clock ADC settings.
 
 .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings
     :members: 
@@ -116,7 +116,7 @@ scope.clock **(Husky Only)**
 scope.io
 --------
 
-Module to control IO pins
+Module to control IO pins.
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings
     :members:
@@ -124,7 +124,7 @@ Module to control IO pins
 scope.trigger
 -------------
 
-Basic trigger control module
+Basic trigger control module.
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.TriggerSettings
     :members:
