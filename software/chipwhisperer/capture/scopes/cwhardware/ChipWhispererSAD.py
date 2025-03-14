@@ -34,20 +34,20 @@ CODE_READ   = 0x80
 CODE_WRITE  = 0xC0
 
 class ChipWhispererSAD(util.DisableNewAttr):
-    """Communicates with the SAD module inside the CW Pro
+    """Communicates with the SAD module inside the CW Pro.
 
-    This submodule is only available on the ChipWhisperer1200 Pro
+    This submodule is only available on the ChipWhisperer1200 Pro.
 
     Example::
 
-        trace, ret = cw.capture_trace(scope, data, text, key)
-        cw.SAD.reference = trace[400:528]
-        cw.SAD.threshold = 1000
-        cw.SAD.start()
-        cw.trigger.module = 'SAD'
+        trace = cw.capture_trace(scope, data, text, key)
+        scope.SAD.reference = trace[400:528]
+        scope.SAD.threshold = 1000
+        scope.SAD.start()
+        scope.trigger.module = 'SAD'
 
         #SAD trigger active
-        trace, ret = cw.capture_trace(scope, data, text, key)
+        trace = cw.capture_trace(scope, data, text, key)
     """
     _name = 'SAD Trigger Module'
     STATUS_RUNNING_MASK = 1 << 3

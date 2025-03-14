@@ -30,11 +30,11 @@ The :func:`open_project <chipwhisperer.open_project>` and the
 :func:`create_project <chipwhisperer.create_project>` return a
 :class:`Project <chipwhisperer.common.api.ProjectFormat.Project>` instance.
 
-    .. autoclass:: chipwhisperer.common.api.ProjectFormat.Project
-        :members: location, traces, waves, textins, textouts, keys, get_filename, trace_manager, export, save, close
+.. autoclass:: chipwhisperer.common.api.ProjectFormat.Project
+    :members: location, traces, waves, textins, textouts, keys, get_filename, trace_manager, export, save, close
 
-    .. autoclass:: chipwhisperer.common.api.ProjectFormat.Traces
-        :members: append, extend
+.. autoclass:: chipwhisperer.common.api.ProjectFormat.Traces
+    :members: append, extend
 
 .. _api-capture-helpers:
 
@@ -43,12 +43,12 @@ Capture
 
 Before capturing a trace make sure:
 
- #. The :ref:`scope <api-scope>` has been connected.
- #. The :ref:`scope <api-scope>` is configured.
- #. The :ref:`target <api-target>` has been connected.
- #. The :ref:`target <api-target>` is configured.
- #. The :ref:`target <api-target>` has been :ref:`programmed <api-target-program>`
-    with the correct firmware.
+#. The :ref:`scope <api-scope>` has been connected.
+#. The :ref:`scope <api-scope>` is configured.
+#. The :ref:`target <api-target>` has been connected.
+#. The :ref:`target <api-target>` is configured.
+#. The :ref:`target <api-target>` has been :ref:`programmed <api-target-program>`
+   with the correct firmware.
 
 Once you completed these steps you can use the
 :func:`capture_trace <chipwhisperer.capture_trace>` function to complete a
@@ -96,8 +96,8 @@ Key Text Patterns
 There are a few different types of classes for generating key text patterns
 for your capture:
 
-  * :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_Basic`
-  * :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_TVLATTest`
+* :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_Basic`
+* :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_TVLATTest`
 
 .. _api-capture-ktp-basic:
 

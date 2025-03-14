@@ -296,7 +296,9 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         """ Reports differences between two sets of scope settings.
 
         Args:
-            scope_dict1, scope_dict2: dictionaries of scope settings (obtained
+            scope_dict1: dictionary of scope settings (obtained
+                with scope._dict_repr())
+            scope_dict2: dictionary of scope settings (obtained
                 with scope._dict_repr())
 
         """
@@ -327,16 +329,16 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     def default_setup(self, verbose=True, sleep=0.2):
         """Sets up sane capture defaults for this scope
 
-         *  25dB gain
-         *  5000 capture samples
-         *  0 sample offset
-         *  rising edge trigger
-         *  7.37MHz clock output on hs2
-         *  4*7.37MHz ADC clock
-         *  tio1 = serial rx
-         *  tio2 = serial tx
-         *  tio4 = highZ
-         *  CDC settings change off
+        *  25dB gain
+        *  5000 capture samples
+        *  0 sample offset
+        *  rising edge trigger
+        *  7.37MHz clock output on hs2
+        *  4*7.37MHz ADC clock
+        *  tio1 = serial rx
+        *  tio2 = serial tx
+        *  tio4 = highZ
+        *  CDC settings change off
 
         .. versionadded:: 5.1
             Added default setup for OpenADC

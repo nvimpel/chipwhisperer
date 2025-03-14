@@ -224,7 +224,7 @@ class XilinxMMCMDRP(util.DisableNewAttr):
 
 
 class LEDSettings(util.DisableNewAttr):
-    ''' Set source of Husky front-panel LEDs
+    ''' Set source of Husky front-panel LEDs.
     '''
     _name = 'Husky LEDs Setting'
 
@@ -561,12 +561,13 @@ class USERIOSettings(util.DisableNewAttr):
     @property
     def mode(self):
         """Set mode for USERIO pins:
-            "normal": as defined by scope.userio.direction.
-            "trace": for target trace capture.
-            "target_debug_jtag": for target debugging with ChipWhisperer using MPSSE in JTAG mode
-            "target_debug_swd": for target debugging with ChipWhisperer using MPSSE in SWD mode
-            "fpga_debug": for FPGA debug (print the scope.userio object to obtain current signal definition, which is determined by scope.userio.fpga_mode).
-            "swo_trace_plus_debug": pins D0-D2 are used for SWO trace, D3-D7 for fpga_debug.
+
+        * "normal": as defined by scope.userio.direction.
+        * "trace": for target trace capture.
+        * "target_debug_jtag": for target debugging with ChipWhisperer using MPSSE in JTAG mode
+        * "target_debug_swd": for target debugging with ChipWhisperer using MPSSE in SWD mode
+        * "fpga_debug": for FPGA debug (print the scope.userio object to obtain current signal definition, which is determined by scope.userio.fpga_mode).
+        * "swo_trace_plus_debug": pins D0-D2 are used for SWO trace, D3-D7 for fpga_debug.
         """
         if self._last_mode:
             return self._last_mode
@@ -632,9 +633,11 @@ class USERIOSettings(util.DisableNewAttr):
     @property
     def direction(self):
         """Set the direction of the USERIO data pins (D0-D7) with an
-        8-bit integer, where bit <x> determines the direction of D<x>;
-        bit x = 0: D<x> is an input to Husky.
-        bit x = 1: D<x> is driven by Husky.
+        8-bit integer, where bit <x> determines the direction of D<x>:
+
+        * bit x = 0: D<x> is an input to Husky.
+        * bit x = 1: D<x> is driven by Husky.
+
         When scope.userio.mode is not "normal", then this setting is controlled
         by the FPGA and cannot be changed by the user.
         Use with care.
@@ -1265,25 +1268,26 @@ class LASettings(util.DisableNewAttr):
         """The trigger used by the logic analyzer to capture.
 
         There are several different sources:
-         * "glitch": The internal glitch enable trigger, one cycle earlier than the
-                     glitch output seen when scope.glitch.output = 'enable_only'. This
-                     signal is in the MMCM1 clock glitch domain.
-         * "capture": The internal ADC capture trigger.
-         * "glitch_source": The internal manual glitch trigger in the source or target clock
-                            domain (as per scope.glitch.clk_src), which accounts for 
-                            scope.glitch.ext_offset but not scope.glitch.offset. Should
-                            only be used with scope.glitch.trigger_src = 'manual'; may
-                            not fire reliably with other settings.
-         * "glitch_trigger": The internal glitch trigger in the MMCM1 clock domain.
-         * "trigger_glitch": The trigger *for* the glitch module (aka scope.trigger.triggers).
-         * "HS1": The HS1 input clock.
-         * "rising_userio_d[0-7]": a rising edge (0->1) on a USERIO pin
-         * "falling_userio_d[0-7]": a falling edge (1->0) on a USERIO pin
-         * "rising_tio[0-3]": a rising edge (0->1) on a tio pin
-         * "failling_tio[0-3]": a falling edge (0->1) on a tio pin
 
-         In addition, capture can be triggered manually, irrespective of the trigger_source
-         setting, by calling scope.LA.trigger_now()
+        * "glitch": The internal glitch enable trigger, one cycle earlier than the
+          glitch output seen when scope.glitch.output = 'enable_only'. This
+          signal is in the MMCM1 clock glitch domain.
+        * "capture": The internal ADC capture trigger.
+        * "glitch_source": The internal manual glitch trigger in the source or target clock
+          domain (as per scope.glitch.clk_src), which accounts for 
+          scope.glitch.ext_offset but not scope.glitch.offset. Should
+          only be used with scope.glitch.trigger_src = 'manual'; may
+          not fire reliably with other settings.
+        * "glitch_trigger": The internal glitch trigger in the MMCM1 clock domain.
+        * "trigger_glitch": The trigger *for* the glitch module (aka scope.trigger.triggers).
+        * "HS1": The HS1 input clock.
+        * "rising_userio_d[0-7]": a rising edge (0->1) on a USERIO pin
+        * "falling_userio_d[0-7]": a falling edge (1->0) on a USERIO pin
+        * "rising_tio[0-3]": a rising edge (0->1) on a tio pin
+        * "failling_tio[0-3]": a falling edge (0->1) on a tio pin
+
+        In addition, capture can be triggered manually, irrespective of the trigger_source
+        setting, by calling :class:`trigger_now`.
 
         :Getter:
            Return the trigger source currently in use
@@ -1363,46 +1367,47 @@ class LASettings(util.DisableNewAttr):
         """Sets which group of signals are captured.
 
         There are three groups. The signals captured for each group are as follows:
-        'glitch' (group 0):
 
-            #. glitch output
-            #. source clock of glitch module
-            #. glitch internal MMCM1 (offset) output
-            #. glitch internal MMCM2 (width) output
-            #. glitch go internal signal
-            #. capture trigger
-            #. glitch enable
-            #. manual glitch trigger in source clock domain (e.g. signal 1 of this group)
-            #. glitch trigger in MMCM1 clock domain
+        * 'glitch' (group 0):
 
-        'CW 20-pin' (group 1):
+          #. glitch output
+          #. source clock of glitch module
+          #. glitch internal MMCM1 (offset) output
+          #. glitch internal MMCM2 (width) output
+          #. glitch go internal signal
+          #. capture trigger
+          #. glitch enable
+          #. manual glitch trigger in source clock domain (e.g. signal 1 of this group)
+          #. glitch trigger in MMCM1 clock domain
 
-            #. IO1
-            #. IO2
-            #. IO3
-            #. IO4
-            #. HS1
-            #. HS2
-            #. AUX MCX
-            #. TRIG MCX
-            #. ADC sampling clock
+        * 'CW 20-pin' (group 1):
 
-        'USERIO 20-pin' (group 2):
+          #. IO1
+          #. IO2
+          #. IO3
+          #. IO4
+          #. HS1
+          #. HS2
+          #. AUX MCX
+          #. TRIG MCX
+          #. ADC sampling clock
 
-            #. D0
-            #. D1
-            #. D2
-            #. D3
-            #. D4
-            #. D5
-            #. D6
-            #. D7
-            #. CK
+        * 'USERIO 20-pin' (group 2):
 
-        'trigger debug' (group 3)
-        'internal trace 1' (group 4)
-        'internal trace 2' (group 5)
-        'glitch debug' (group 6)
+          #. D0
+          #. D1
+          #. D2
+          #. D3
+          #. D4
+          #. D5
+          #. D6
+          #. D7
+          #. CK
+
+        * 'trigger debug' (group 3) - for development only, definitions in Verilog source
+        * 'internal trace 1' (group 4) - for development only, definitions in Verilog source
+        * 'internal trace 2' (group 5) - for development only, definitions in Verilog source
+        * 'glitch debug' (group 6) - for development only, definitions in Verilog source
 
         :Getter:
            Return the capture group currently in use.

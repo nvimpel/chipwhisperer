@@ -662,10 +662,10 @@ class GPIOSettings(util.DisableNewAttr):
     GPIO_MODE_SERIAL_RX = 4
     GPIO_MODE_SERIAL_IO = 5
 
-    """NOTE: There doesn't seem to be a "true" disabled setting.  That was just used in previous
-    logic to ignore writing GPIO state.  Does it make sense to set disabled to HIGHZ instead of
-    GPIO LOW?
-    """
+    # NOTE: There doesn't seem to be a "true" disabled setting.  That was just used in previous
+    # logic to ignore writing GPIO state.  Does it make sense to set disabled to HIGHZ instead of
+    # GPIO LOW?
+
     TIO_MODE_TRANSLATE = util.EnumTranslationAPI.alloc_instance(
         (
             CWExtraSettings.TIO_MODE_GPIO_LOW,
@@ -787,12 +787,13 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO1 pin.
 
         TIO1 can be used for the following functions:
-         * "serial_rx": UART input
-         * "serial_tx": UART output
-         * "high_z" / None: High impedance input
-         * "gpio_low" / False: Driven output: logic 0
-         * "gpio_high" / True: Driven output: logic 1
-         * "gpio_disabled": Driven output: no effect
+
+        * "serial_rx": UART input
+        * "serial_tx": UART output
+        * "high_z" / None: High impedance input
+        * "gpio_low" / False: Driven output: logic 0
+        * "gpio_high" / True: Driven output: logic 1
+        * "gpio_disabled": Driven output: no effect
 
         Default value is "serial_rx".
 
@@ -825,12 +826,13 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO2 pin.
 
         TIO2 can be used for the following functions:
-         * "serial_rx": UART input
-         * "serial_tx": UART output
-         * "high_z" / None: High impedance input
-         * "gpio_low" / False: Driven output: logic 0
-         * "gpio_high" / True: Driven output: logic 1
-         * "gpio_disabled": Driven output: no effect
+
+        * "serial_rx": UART input
+        * "serial_tx": UART output
+        * "high_z" / None: High impedance input
+        * "gpio_low" / False: Driven output: logic 0
+        * "gpio_high" / True: Driven output: logic 1
+        * "gpio_disabled": Driven output: no effect
 
         Default value is "serial_tx".
 
@@ -862,13 +864,14 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO3 pin.
 
         TIO3 can be used for the following functions:
-         * "serial_rx": UART input
-         * "serial_tx": UART output
-         * "serial_tx_rx": UART 1-wire I/O (for smartcards)
-         * "high_z" / None: High impedance input
-         * "gpio_low" / False: Driven output: logic 0
-         * "gpio_high" / True: Driven output: logic 1
-         * "gpio_disabled": Driven output: no effect
+
+        * "serial_rx": UART input
+        * "serial_tx": UART output
+        * "serial_tx_rx": UART 1-wire I/O (for smartcards)
+        * "high_z" / None: High impedance input
+        * "gpio_low" / False: Driven output: logic 0
+        * "gpio_high" / True: Driven output: logic 1
+        * "gpio_disabled": Driven output: no effect
 
         Default value is "high_z".
 
@@ -900,11 +903,12 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO4 pin.
 
         TIO4 can be used for the following functions:
-         * "serial_tx": UART output
-         * "high_z" / None: High impedance input
-         * "gpio_low" / False: Driven output: logic 0
-         * "gpio_high" / True: Driven output: logic 1
-         * "gpio_disabled": Driven output: no effect
+
+        * "serial_tx": UART output
+        * "high_z" / None: High impedance input
+        * "gpio_low" / False: Driven output: logic 0
+        * "gpio_high" / True: Driven output: logic 1
+        * "gpio_disabled": Driven output: no effect
 
         Default value is "high_z". Typically, this pin is used as a trigger
         input.
@@ -976,9 +980,10 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the PDIC pin output pin.
 
         This is a GPIO pin. The following values are allowed:
-         * "high" / True: logic 1
-         * "low" / False: logic 0
-         * "disabled" / "default" / "high_z" / None: undriven
+
+        * "high" / True: logic 1
+        * "low" / False: logic 0
+        * "disabled" / "default" / "high_z" / None: undriven
 
         :Getter:  Return one of "high", "low", or "high_z". This shows how ChipWhisperer
                 is driving this pin; it does not show its actual logic level.
@@ -1052,9 +1057,9 @@ class GPIOSettings(util.DisableNewAttr):
         :class:`target_pwr` has no effect on how nRST is driven). Otherwise,
         nRST is tristated. 
 
-        .. NOTE:: our target boards pull up nRST to `target_pwr`; if 
-            `nrst_drive_poweroff` is False and nRST is driven low, then setting
-            `target_pwr` to False will cause nRST to pulse as it gets tristated
+        .. NOTE:: Our target boards pull up nRST to `target_pwr`; if 
+            :class:`nrst_drive_poweroff` is False and nRST is driven low, then setting
+            :class:`target_pwr` to False will cause nRST to pulse as it gets tristated
             and pulled up for a brief moment until the target power gets
             sufficiently low to return it to low.
 
@@ -1226,9 +1231,10 @@ class GPIOSettings(util.DisableNewAttr):
         """The clock signal routed to the HS2 high speed output pin.
 
         Allowed clock signals are:
-         * "clkgen": The output from the CLKGEN module
-         * "glitch": The output from the glitch module
-         * "disabled" / None: No clock; output driven low
+
+        * "clkgen": The output from the CLKGEN module
+        * "glitch": The output from the glitch module
+        * "disabled" / None: No clock; output driven low
 
         :Getter:  Return one of "clkgen", "glitch", or "disabled"
 
@@ -1503,29 +1509,33 @@ class TriggerSettings(util.DisableNewAttr):
         scope.trace.trace_mode for how to connect trace pins.)
 
         Pins:
-         * tio1-4: Target I/O pins 1-4. Note that these pins can be in any mode.
-         * nRST: Target I/O pin nRST. Note that these pins can be in any mode.
-         * sma: An auxiliary SMA input, if available (only on CW1200)
+
+        * tio1-4: Target I/O pins 1-4. Note that these pins can be in any mode.
+        * nRST: Target I/O pin nRST. Note that these pins can be in any mode.
+        * sma: An auxiliary SMA input, if available (only on CW1200)
 
         Boolean operations:
-         * OR: True if any inputs are True; False if none are
-         * AND: True if all inputs are True; False if any are not
-         * NAND: False if all inputs are True; True if any are not
+
+        * OR: True if any inputs are True; False if none are
+        * AND: True if all inputs are True; False if any are not
+        * NAND: False if all inputs are True; True if any are not
 
         Note that only one boolean operation can be used over all input pins.
 
         Examples of acceptable trigger inputs:
-         * "tio1"
-         * "tio3 OR tio4"
-         * "tio1 NAND tio2 NAND sma"
-         * "nrst"
+
+        * "tio1"
+        * "tio3 OR tio4"
+        * "tio1 NAND tio2 NAND sma"
+        * "nrst"
 
         Examples of unallowed trigger inputs:
-         * "tio1 tio2"
-         * "tio1 AND tio2 OR tio3"
-         * "tio1 OR tio1"
-         * "tio1 XOR tio2"
-         * "serial-tx"
+
+        * "tio1 tio2"
+        * "tio1 AND tio2 OR tio3"
+        * "tio1 OR tio1"
+        * "tio1 XOR tio2"
+        * "serial-tx"
 
         :Getter:  Return a string describing the trigger mode (see examples)
 
@@ -1618,7 +1628,8 @@ class TriggerSettings(util.DisableNewAttr):
         data and SAD triggers are available too.
 
         Available trigger modules:
-         * 'basic': Trigger on a logic level or edge
+
+        * 'basic': Trigger on a logic level or edge
 
         :Getter: Returns 'basic'
         """
@@ -1645,9 +1656,10 @@ class ProTrigger(TriggerSettings):
         data and SAD triggers are available too.
 
         Available trigger modules:
-         * 'basic': Trigger on a logic level or edge
-         * 'SAD':   Trigger from SAD module (CWPro only)
-         * 'DECODEIO': Trigger from decode_IO module (CWPro only)
+
+        * 'basic': Trigger on a logic level or edge
+        * 'SAD':   Trigger from SAD module (CWPro only)
+        * 'DECODEIO': Trigger from decode_IO module (CWPro only)
 
         :Getter: Return the active trigger module
 
@@ -1881,12 +1893,13 @@ class HuskyTrigger(TriggerSettings):
         data and SAD triggers are available too.
 
         Available trigger modules:
-         * 'basic':        Trigger on a logic level or edge
-         * 'ADC':          Trigger on ADC sample exceeding a threshold
-         * 'SAD':          Trigger from SAD module
-         * 'UART':         Trigger from UART module
-         * 'edge_counter': Trigger after a number of rising/falling edges
-         * 'trace':        Trigger from TraceWhisperer
+
+        * 'basic':        Trigger on a logic level or edge
+        * 'ADC':          Trigger on ADC sample exceeding a threshold
+        * 'SAD':          Trigger from SAD module
+        * 'UART':         Trigger from UART module
+        * 'edge_counter': Trigger after a number of rising/falling edges
+        * 'trace':        Trigger from TraceWhisperer
 
         :Getter: Return the active trigger module
 

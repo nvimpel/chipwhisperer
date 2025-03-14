@@ -36,7 +36,7 @@ Serial Targets
 Simple Serial Target
 --------------------
 
-38400bps ASCII encoded serial. See :doc:`simpleserial` for protocol documentation.
+38400bps ASCII encoded serial. See :doc:`simpleserial` for protocol documentation.::
 
     import chipwhisperer as cw
     scope = cw.scope()
@@ -55,7 +55,7 @@ Supported Targets:
 Simple Serial V2 Target
 -----------------------
 
-230400bps COBS serial. See :doc:`simpleserial` for protocol documentation.
+230400bps COBS serial. See :doc:`simpleserial` for protocol documentation.::
 
     import chipwhisperer as cw
     scope = cw.scope()
@@ -167,7 +167,7 @@ Common Target Methods
 FPGA Advanced Control
 =====================
 
-Advanced IO control for FPGA targets
+Advanced IO control for FPGA targets.
 
 .. _cw305-spi-program:
 
@@ -195,9 +195,9 @@ target boards.  These bootloaders can be accessed via the
 :func:`chipwhisperer.program_target` function. There are multiple programmer
 types available:
 
-  * :class:`programmers.STM32FProgrammer <chipwhisperer.capture.api.programmers.STM32FProgrammer>`
-  * :class:`programmers.XMEGAProgrammer <chipwhisperer.capture.api.programmers.XMEGAProgrammer>`
-  * :class:`programmers.AVRProgrammer <chipwhisperer.capture.api.programmers.AVRProgrammer>`
+* :class:`programmers.STM32FProgrammer <chipwhisperer.capture.api.programmers.STM32FProgrammer>`
+* :class:`programmers.XMEGAProgrammer <chipwhisperer.capture.api.programmers.XMEGAProgrammer>`
+* :class:`programmers.AVRProgrammer <chipwhisperer.capture.api.programmers.AVRProgrammer>`
 
 Example::
 

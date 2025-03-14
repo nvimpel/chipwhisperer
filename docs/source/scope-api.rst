@@ -56,147 +56,135 @@ scope.gain
 
 Class to control ADC gain
 
-    .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.GainSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.GainSettings
+    :members:
 
 scope.adc
 ---------
 
 Class to control non-gain, non-clock ADC settings
 
-    .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings
-        :members: 
-        :exclude-members: stream_mode, segment_cycles, segment_cycle_counter_en, first_error, first_error_state, errors, segments, bits_per_sample
+.. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings
+    :members: 
+    :exclude-members: stream_mode, segment_cycles, segment_cycle_counter_en, first_error, first_error_state, errors, segments, bits_per_sample
         
 
-scope.adc Pro/Husky Only
-^^^^^^^^^^^^^^^^^^^^^^^^
+scope.adc **(Pro/Husky Only)**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following :code:`scope.adc` members are only available on ChipWhisperer-Husky, ChipWhisperer-Pro, or both.
 
-    .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings
-        :noindex:
+.. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings
+    :noindex:
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.stream_mode
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.stream_mode
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segment_cycles
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segment_cycles
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segment_cycle_counter_en
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segment_cycle_counter_en
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.first_error_state
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.first_error_state
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.errors
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.errors
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segments
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.segments
 
-    .. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.bits_per_sample
+.. autoproperty:: chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.bits_per_sample
 
 scope.clock
 -----------
 
-scope.clock (Lite/Pro Only)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+scope.clock **(Lite/Pro Only)**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. warning:: ChipWhisperer-Lite/Pro only. See 
             :attr:`scope.clock (Husky) <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyClock.ChipWhispererHuskyClock>` for Husky clock documentation.
 
 Class to control target/ADC clocks. A block diagram of the clock module is shown below:
 
-    .. thumbnail:: figures/cwlitepro_clock.png
+.. thumbnail:: figures/cwlitepro_clock.png
 
-    .. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.ClockSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes._OpenADCInterface.ClockSettings
+    :members:
 
-scope.clock (Husky Only)
-^^^^^^^^^^^^^^^^^^^^^^^^
+scope.clock **(Husky Only)**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyClock.ChipWhispererHuskyClock
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyClock.ChipWhispererHuskyClock
+    :members:
 
 scope.io
 --------
 
 Module to control IO pins
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings
+    :members:
 
 scope.trigger
 -------------
 
 Basic trigger control module
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.TriggerSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.TriggerSettings
+    :members:
 
-scope.trigger (Pro Only)
+scope.trigger **(Pro Only)**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.ProTrigger
+    :members:
+
+scope.trigger **(Husky Only)**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.ProTrigger
-        :members:
-
-scope.trigger (Husky Only)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.HuskyTrigger
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.HuskyTrigger
+    :members:
 
 scope.glitch
 ------------
 
 Module to control glitching. A block diagram of the module is shown below:
 
-        .. thumbnail:: figures/cwlitepro_glitch.png
+.. thumbnail:: figures/cwlitepro_glitch.png
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
-        :members:
-        :exclude-members: enabled, mmcm_locked, phase_shift_steps, actual_num_glitches, num_glitches
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
+    :members:
+    :exclude-members: enabled, mmcm_locked, phase_shift_steps, actual_num_glitches, num_glitches
 
-scope.glitch (Husky Only)
-^^^^^^^^^^^^^^^^^^^^^^^^^
+scope.glitch **(Husky Only)**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following attributes are only available on, or differ substantially on the ChipWhisperer-Husky
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
-        :noindex:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
+    :noindex:
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.enabled
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.enabled
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.width
-        :noindex:
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.width
+    :noindex:
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.offset
-        :noindex:
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.offset
+    :noindex:
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.clk_src
-        :noindex:
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.clk_src
+    :noindex:
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.phase_shift_steps
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.phase_shift_steps
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.mmcm_locked
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.mmcm_locked
 
-    .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.num_glitches
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.num_glitches
         
 Pro Only Features
 -----------------------
 
 scope.SAD
 ^^^^^^^^^^^^^^
-    Communicates with and drives the Sum of Absolute Differences module on the ChipWhisperer Pro.
 
-    Example for triggering off of some previously collected scope data::
-
-        scope.SAD.reference = trace.wave[1000:1000+128] # change 128 to 32 on Husky
-        scope.SAD.threshold = 5000
-        scope.SAD.start()
-        scope.trigger.module = "SAD"
-        scope.adc.basic_mode = "rising_edge"
-
-        #can now capture as normal
-        trace = cw.capture_trace(scope, target, text, key)
-
-    .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.ChipWhispererSAD
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.ChipWhispererSAD
+    :members:
 
 scope.decode_IO
 ^^^^^^^^^^^^^^^
@@ -212,8 +200,6 @@ Husky Only Features
 
 scope.SAD
 ^^^^^^^^^^^^^^
-    Communicates with and drives the Sum of Absolute Differences module on the ChipWhisperer Husky (API is different
-    from CW-Pro SAD API).
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.HuskySAD
     :members:
@@ -238,7 +224,7 @@ scope.LA
 
 Built in logic analyzer for visualizing internal FPGA signals. Notably can
 be used for visualizing glitch parameters, as in the 
-`Husky Glitch Notebook <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/husky/03%20-%20Husky%20Glitching.ipynb>`_
+`Husky Glitch Notebook <https://github.com/newaetech/chipwhisperer-jupyter/blob/master/demos/husky/03%20-%20Husky%20Glitching.ipynb>`_.
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LASettings
     :members:
@@ -286,22 +272,22 @@ Supported scopes:
     :members:
     :exclude-members: enable_MPSSE, upgrade_firmware
 
-adc
-----
-    .. autoclass:: chipwhisperer.capture.scopes.cwnano.ADCSettings
-        :members:
+scope.adc
+---------
+.. autoclass:: chipwhisperer.capture.scopes.cwnano.ADCSettings
+    :members:
 
-io
-----
+scope.io
+---------
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwnano.GPIOSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwnano.GPIOSettings
+    :members:
 
-glitch
--------
+scope.glitch
+------------
 
-    .. autoclass:: chipwhisperer.capture.scopes.cwnano.GlitchSettings
-        :members:
+.. autoclass:: chipwhisperer.capture.scopes.cwnano.GlitchSettings
+    :members:
 
 .. _api-scope-common:
 

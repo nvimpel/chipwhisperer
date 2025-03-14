@@ -54,23 +54,23 @@ class TraceWhisperer(util.DisableNewAttr):
 
     Connecting depends on the platform:
 
-        (a) CW-Husky case: available as scope.trace, no additional steps needed.
+    (a) CW-Husky case: available as scope.trace, no additional steps needed.
 
-        (b) CW305 (DesignStart) case:
+    (b) CW305 (DesignStart) case:
     
-            import chipwhisperer as cw
-            from chipwhisperer.capture.trace.TraceWhisperer import TraceWhisperer
-            scope = cw.scope()
-            target = cw.target(scope, targets.CW305, bsfile=<valid FPGA bitstream file>)
-            trace = TraceWhisperer(target, scope)
+        import chipwhisperer as cw
+        from chipwhisperer.capture.trace.TraceWhisperer import TraceWhisperer
+        scope = cw.scope()
+        target = cw.target(scope, targets.CW305, bsfile=<valid FPGA bitstream file>)
+        trace = TraceWhisperer(target, scope)
 
-        (c) CW610 (PhyWhisperer) case:
-        
-            import chipwhisperer as cw
-            from chipwhisperer.capture.trace.TraceWhisperer import TraceWhisperer
-            scope = cw.scope()
-            target = cw.target(scope)
-            trace = TraceWhisperer(target)
+    (c) CW610 (PhyWhisperer) case:
+    
+        import chipwhisperer as cw
+        from chipwhisperer.capture.trace.TraceWhisperer import TraceWhisperer
+        scope = cw.scope()
+        target = cw.target(scope)
+        trace = TraceWhisperer(target)
 
     """
 
@@ -152,7 +152,7 @@ class TraceWhisperer(util.DisableNewAttr):
 
     def sendMessage(self, mode, address, payload=None, Validate=False, maxResp=None, readMask=None):
         """ This exists only so that borrowed classes from ChipWhisperer can work. For "native" trace work,
-            use fpga_read() / fpga_write() directly instead.
+            use :class:`fpga_read` / :class:`fpga_write` directly instead.
         """
         if Validate or readMask:
             raise ValueError("Not implemented!")
@@ -334,15 +334,18 @@ class TraceWhisperer(util.DisableNewAttr):
         """Set trace or SWO mode. SWO mode is only available on the Husky and CW610 platforms.
 
         For SWO mode, the following connections are needed, from the target to the Husky or CW610 front header:
-            - TMS to D0
-            - TCK to D1
-            - TDO to D2
+
+        - TMS to D0
+        - TCK to D1
+        - TDO to D2
+
         For trace mode, the following connections are needed, from the target to the Husky or CW610 front header:
-            - TRACEDATA[0] to D4
-            - TRACEDATA[1] to D5
-            - TRACEDATA[2] to D6
-            - TRACEDATA[3] to D7
-            - TRACECLOCK   to CK
+
+        - TRACEDATA[0] to D4
+        - TRACEDATA[1] to D5
+        - TRACEDATA[2] to D6
+        - TRACEDATA[3] to D7
+        - TRACECLOCK   to CK
 
         Args:
             mode (string): 'parallel' or 'swo'
@@ -683,12 +686,12 @@ class TraceWhisperer(util.DisableNewAttr):
         Error types and their causes:
             * 'presample error': capture trigger occurs before the requested
             * 'SWO internal CDC error': data is coming in faster than it can be
-                    collected; this may be caused by incorrect scope.trace.clock
-                    settings.
+              collected; this may be caused by incorrect scope.trace.clock
+              settings.
             * 'FIFO underflow': host tried to read more samples than are
-                    available.
+              available.
             * 'FIFO overflow': exceeded sample storage capacity; shorten the
-                    capture.
+              capture.
  
         """
         stat = ""
