@@ -104,7 +104,8 @@ the proper clean way to do it:
 
 ### Formatting
 * markdown blockquoted headings `>#` (which rendered well on our
-  https://rtfm.newae.com site) do not render nicely here; omit the
+  https://rtfm.newae.com site) do not render nicely here and prevent that
+  section from being included in the table of contents; omit the
   blockquote
 * in "pure" Sphinx, extra whitespace at the start of a line renders well
   (there was lots of this in pre-Jupyter Book versions of this site), but
