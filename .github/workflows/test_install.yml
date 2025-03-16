@@ -33,4 +33,6 @@ jobs:
             cp ../../contributing.md ./
             git submodule update --init --force -- chipwhisperer-target-cw308t cw_tips_tricks
             python conf.py
+            mkdir -p _build/doctrees
+            mkdir -p _build/html
             python -m sphinx -T -b html _build/doctrees -d language=en _build/html
