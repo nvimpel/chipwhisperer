@@ -120,7 +120,7 @@ def check_for_updates() -> str:
         other_logger.info("ChipWhisperer up to date")
         return latest_version
     else:
-        other_logger.warning("ChipWhisperer update available! See https://chipwhisperer.readthedocs.io/en/latest/index.html#install for updating instructions")
+        other_logger.warning("ChipWhisperer update available! See https://chipwhisperer.readthedocs.io/en/latest/updating.html for updating instructions")
         return latest_version
 
 # try:

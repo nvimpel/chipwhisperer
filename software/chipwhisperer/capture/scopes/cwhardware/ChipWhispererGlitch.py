@@ -164,9 +164,10 @@ class GlitchSettings(util.DisableNewAttr):
         """The clock signal that the glitch DCM is using as input.
 
         This DCM can be clocked from three different sources:
-         * "target": The HS1 clock from the target device (can also be AUX clock for Husky)
-         * "clkgen": The CLKGEN DCM output (N/A for Husky)
-         * "pll": Husky's on-board PLL clock (Husky only)
+
+        * "target": The HS1 clock from the target device (can also be AUX clock for Husky)
+        * "clkgen": The CLKGEN DCM output (N/A for Husky)
+        * "pll": Husky's on-board PLL clock (Husky only)
 
         :Getter:
            Return the clock signal currently in use
@@ -439,22 +440,23 @@ class GlitchSettings(util.DisableNewAttr):
         """The trigger signal for the glitch pulses.
 
         The glitch module can use four different types of triggers:
-         * "continuous": Constantly trigger glitches. The following
-            scope.glitch parameters have no bearing in this mode: ext_offset,
-            repeat, num_glitches.
-         * "manual": Only trigger glitches by calling :code:`manual_trigger()`. The
-            following scope.glitch parameters have no bearing in this mode:
-            ext_offset, num_glitches. In this mode, calling :code:`scope.arm()` will
-            trigger a glitch as well.
-         * "ext_single": Use the trigger module. Once the scope is armed, one
-            set of glitch events is emitted when the trigger condition is
-            satisfied. Subsequent trigger conditions are ignored unless the
-            scope is re-armed.
-         * "ext_continuous": Use the trigger module. A set of glitch events is
-            emitted each time the trigger condition is satisfied, whether or
-            not the scope is armed.
 
-         .. warning:: calling :code:`scope.arm()` in manual gitch mode will cause a glitch to trigger.
+        * "continuous": Constantly trigger glitches. The following
+          scope.glitch parameters have no bearing in this mode: ext_offset,
+          repeat, num_glitches.
+        * "manual": Only trigger glitches by calling :code:`manual_trigger()`. The
+          following scope.glitch parameters have no bearing in this mode:
+          ext_offset, num_glitches. In this mode, calling :code:`scope.arm()` will
+          trigger a glitch as well.
+        * "ext_single": Use the trigger module. Once the scope is armed, one
+          set of glitch events is emitted when the trigger condition is
+          satisfied. Subsequent trigger conditions are ignored unless the
+          scope is re-armed.
+        * "ext_continuous": Use the trigger module. A set of glitch events is
+          emitted each time the trigger condition is satisfied, whether or
+          not the scope is armed.
+
+        .. warning:: calling :code:`scope.arm()` in manual gitch mode will cause a glitch to trigger.
 
         :Getter: Return the current trigger source.
 
@@ -482,9 +484,9 @@ class GlitchSettings(util.DisableNewAttr):
         If the glitch module is in "ext_single" trigger mode, it must be armed
         when the scope is armed. There are two timings for this event:
 
-         * "no_glitch": The glitch module is not armed. Gives a moderate speedup to capture.
-         * "before_scope": The glitch module is armed first.
-         * "after_scope": The scope is armed first. This is the default.
+        * "no_glitch": The glitch module is not armed. Gives a moderate speedup to capture.
+        * "before_scope": The glitch module is armed first.
+        * "after_scope": The scope is armed first. This is the default.
 
         This setting may be helpful if trigger events are happening very early.
 
@@ -612,15 +614,16 @@ class GlitchSettings(util.DisableNewAttr):
         There are 5 ways that the glitch module can combine the clock with its
         glitch pulses:
 
-         * "clock_only": Output only the original input clock.
-         * "glitch_only": Output only the glitch pulses - do not use the clock.
-         * "clock_or": Output is high if either the clock or glitch are high.
-         * "clock_xor": Output is high if clock and glitch are different.
-         * "enable_only": Output is high for glitch.repeat cycles.
+        * "clock_only": Output only the original input clock.
+        * "glitch_only": Output only the glitch pulses - do not use the clock.
+        * "clock_or": Output is high if either the clock or glitch are high.
+        * "clock_xor": Output is high if clock and glitch are different.
+        * "enable_only": Output is high for glitch.repeat cycles.
 
         Some of these settings are only useful in certain scenarios:
-         * Clock glitching: "clock_or" or "clock_xor"
-         * Voltage glitching: "glitch_only" or "enable_only"
+
+        * Clock glitching: "clock_or" or "clock_xor"
+        * Voltage glitching: "glitch_only" or "enable_only"
 
         :Getter: Return the current glitch output mode (one of above strings)
 

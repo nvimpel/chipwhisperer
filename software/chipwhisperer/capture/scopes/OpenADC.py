@@ -42,11 +42,6 @@ CODE_READ              = 0x80
 CODE_WRITE             = 0xC0
 
 class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
-    DEFAULT_GAIN_DB = 25
-    DEFAULT_ADC_SAMPLES = 5000
-    DEFAULT_CLOCKGEN_FREQ = 7.37e6
-    DEFAULT_ADC_MUL = 4
-
     """OpenADC scope object.
 
     This class contains the public API for the OpenADC hardware, including the
@@ -69,40 +64,46 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     scope submodules (scope.gain, scope.adc, scope.clock, scope.io,
     scope.trigger, and scope.glitch):
 
-     *  :attr:`scope.gain <chipwhisperer.capture.scopes._OpenADCInterface.GainSettings>`
-     *  :attr:`scope.adc <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings>`
-     *  :attr:`scope.clock <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings>`
-     *  :attr:`scope.io <chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings>`
-     *  :attr:`scope.trigger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.TriggerSettings>`
-     *  :attr:`scope.glitch (Lite/Pro) <chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings>`
-     *  :meth:`scope.default_setup <.OpenADC.default_setup>`
-     *  :meth:`scope.con <.OpenADC.con>`
-     *  :meth:`scope.dis <.OpenADC.dis>`
-     *  :meth:`scope.arm <.OpenADC.arm>`
-     *  :meth:`scope.get_last_trace <.OpenADC.get_last_trace>`
-     *  :meth:`scope.get_serial_ports <.ChipWhispererCommonInterface.get_serial_ports>`
+    *  :attr:`scope.gain <chipwhisperer.capture.scopes._OpenADCInterface.GainSettings>`
+    *  :attr:`scope.adc <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings>`
+    *  :attr:`scope.clock <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings>`
+    *  :attr:`scope.io <chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings>`
+    *  :attr:`scope.trigger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.TriggerSettings>`
+    *  :attr:`scope.glitch (Lite/Pro) <chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings>`
+    *  :meth:`scope.default_setup <.OpenADC.default_setup>`
+    *  :meth:`scope.con <.OpenADC.con>`
+    *  :meth:`scope.dis <.OpenADC.dis>`
+    *  :meth:`scope.arm <.OpenADC.arm>`
+    *  :meth:`scope.get_last_trace <.OpenADC.get_last_trace>`
+    *  :meth:`scope.get_serial_ports <.ChipWhispererCommonInterface.get_serial_ports>`
 
     If you have a CW1200 ChipWhisperer Pro, you have access to some additional features:
 
-     * :attr:`scope.SAD <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.ChipWhispererSAD>`
-     * :attr:`scope.DecodeIO <chipwhisperer.capture.scopes.cwhardware.ChipWhispererDecodeTrigger.ChipWhispererDecodeTrigger>`
-     * :attr:`scope.adc.stream_mode <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.stream_mode>`
+    * :attr:`scope.SAD <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.ChipWhispererSAD>`
+    * :attr:`scope.DecodeIO <chipwhisperer.capture.scopes.cwhardware.ChipWhispererDecodeTrigger.ChipWhispererDecodeTrigger>`
+    * :attr:`scope.adc.stream_mode <chipwhisperer.capture.scopes._OpenADCInterface.TriggerSettings.stream_mode>`
 
     If you have a CW-Husky, you have access to even more additional features:
-     * :attr:`scope.SAD <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.HuskySAD>`
-     * :attr:`scope.LA <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LASettings>`
-     * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer>`
-     * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.UARTTrigger>`
-     * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
-     * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyError>`
-     * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
-     * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`
-     * :attr:`scope.LEDs <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LEDSettings>`
+
+    * :attr:`scope.SAD <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.HuskySAD>`
+    * :attr:`scope.LA <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LASettings>`
+    * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer>`
+    * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.UARTTrigger>`
+    * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
+    * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyError>`
+    * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
+    * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`
+    * :attr:`scope.LEDs <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LEDSettings>`
 
     Inherits from :class:`chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface`
     """
 
     _name = "ChipWhisperer/OpenADC"
+    DEFAULT_GAIN_DB = 25
+    DEFAULT_ADC_SAMPLES = 5000
+    DEFAULT_CLOCKGEN_FREQ = 7.37e6
+    DEFAULT_ADC_MUL = 4
+
 
     # TODO: This should reside in a base clock class if common code is refactored out of HW specific
     # classes.
@@ -296,7 +297,9 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         """ Reports differences between two sets of scope settings.
 
         Args:
-            scope_dict1, scope_dict2: dictionaries of scope settings (obtained
+            scope_dict1: dictionary of scope settings (obtained
+                with scope._dict_repr())
+            scope_dict2: dictionary of scope settings (obtained
                 with scope._dict_repr())
 
         """
@@ -327,16 +330,16 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     def default_setup(self, verbose=True, sleep=0.2):
         """Sets up sane capture defaults for this scope
 
-         *  25dB gain
-         *  5000 capture samples
-         *  0 sample offset
-         *  rising edge trigger
-         *  7.37MHz clock output on hs2
-         *  4*7.37MHz ADC clock
-         *  tio1 = serial rx
-         *  tio2 = serial tx
-         *  tio4 = highZ
-         *  CDC settings change off
+        *  25dB gain
+        *  5000 capture samples
+        *  0 sample offset
+        *  rising edge trigger
+        *  7.37MHz clock output on hs2
+        *  4*7.37MHz ADC clock
+        *  tio1 = serial rx
+        *  tio2 = serial tx
+        *  tio4 = highZ
+        *  CDC settings change off
 
         .. versionadded:: 5.1
             Added default setup for OpenADC

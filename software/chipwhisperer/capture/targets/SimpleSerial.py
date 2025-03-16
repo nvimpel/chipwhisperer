@@ -53,19 +53,19 @@ class SimpleSerial(TargetTemplate, util.DisableNewAttr):
     For more help use the help() function with one of the submodules
     (target.baud, target.write, target.read, ...).
 
-      * :attr:`target.baud <.SimpleSerial.baud>`
-      * :meth:`target.write <.SimpleSerial.write>`
-      * :meth:`target.read <.SimpleSerial.read>`
-      * :meth:`target.in_waiting <.SimpleSerial.in_waiting>`
-      * :meth:`target.in_waiting_tx <.SimpleSerial.in_waiting_tx>`
-      * :meth:`target.simpleserial_wait_ack <.SimpleSerial.simpleserial_wait_ack>`
-      * :meth:`target.simpleserial_write <.SimpleSerial.simpleserial_write>`
-      * :meth:`target.simpleserial_read <.SimpleSerial.simpleserial_read>`
-      * :meth:`target.simpleserial_read_witherrors <.SimpleSerial.simpleserial_read_witherrors>`
-      * :meth:`target.set_key <.SimpleSerial.set_key>`
-      * :meth:`target.close <.SimpleSerial.close>`
-      * :meth:`target.con <.SimpleSerial.con>`
-      * :meth:`target.get_simpleserial_commands <.SimpleSerial.get_simpleserial_commands>`
+    * :attr:`target.baud <.SimpleSerial.baud>`
+    * :meth:`target.write <.SimpleSerial.write>`
+    * :meth:`target.read <.SimpleSerial.read>`
+    * :meth:`target.in_waiting <.SimpleSerial.in_waiting>`
+    * :meth:`target.in_waiting_tx <.SimpleSerial.in_waiting_tx>`
+    * :meth:`target.simpleserial_wait_ack <.SimpleSerial.simpleserial_wait_ack>`
+    * :meth:`target.simpleserial_write <.SimpleSerial.simpleserial_write>`
+    * :meth:`target.simpleserial_read <.SimpleSerial.simpleserial_read>`
+    * :meth:`target.simpleserial_read_witherrors <.SimpleSerial.simpleserial_read_witherrors>`
+    * :meth:`target.set_key <.SimpleSerial.set_key>`
+    * :meth:`target.close <.SimpleSerial.close>`
+    * :meth:`target.con <.SimpleSerial.con>`
+    * :meth:`target.get_simpleserial_commands <.SimpleSerial.get_simpleserial_commands>`
 
     .. warning::
         The CWLite, CW1200, and CWNano have a 128 byte read buffer and a 128
@@ -504,12 +504,14 @@ class SimpleSerial(TargetTemplate, util.DisableNewAttr):
                 rv: If 'ack' in command, includes return value
 
         Example:
-            Reading the output of one of the glitch tests when no error:
+            Reading the output of one of the glitch tests when no error::
+
                 resp = target.simpleserial_read_witherrors('r', 4)
                 print(resp)
                 >{'valid': True, 'payload': CWbytearray(b'c4 09 00 00'), 'full_response': 'rC4090000\n', 'rv': 0}
 
-            Reading the output of one of the glitch tests when an error happened:
+            Reading the output of one of the glitch tests when an error happened::
+
                 resp = target.simpleserial_read_witherrors('r', 4)
                 print(resp)
                 >{'valid': False, 'payload': None, 'full_response': '\x00\x00\x00\x00\x00\x00\x00rRESET   \n', 'rv': None}
