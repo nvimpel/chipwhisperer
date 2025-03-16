@@ -73,7 +73,7 @@ Installing Compilers In WSL:
 
 ChipWhisperer uses WSL for building target firmware. This part of the install is independent from the
 rest of the install process, and can easily be completed before or after running the installer. To install
-the target compilers, make sure you have the :ref:`prerequisites installed <_win_prereqs>`, then:
+the target compilers, make sure you have the :ref:`prerequisites installed <win_prereqs>`, then:
 
 1. Run WSL
 2. Run :code:`sudo apt update`.
@@ -102,6 +102,16 @@ to verify that everything installed correctly. If you run into any issues, pleas
 ======================
 Updating ChipWhisperer
 ======================
+
+.. warning:: Updating ChipWhisperer may overwrite any changes you've made to the ChipWhisperer or ChipWhisperer Jupyter
+  folders.
+
+Installers for ChipWhisperer are only built every time we do a stable release. As the time between releases can be
+quite lengthy, you may want to update ChipWhisperer before the next release. The easiest way to do this is to use the
+:code:`ChipWhisperer-Update` application, which automates the process.
+
+During this process, we try to save changes made to the ChipWhisperer and ChipWhisperer-Jupyter repoisitores. If this
+process fails, the user will be notified and asked if they wish to continue. If they do, changes may be lost.
 
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 
