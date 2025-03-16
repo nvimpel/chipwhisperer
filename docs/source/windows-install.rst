@@ -61,30 +61,30 @@ If you want to run a native Windows installation of ChipWhisperer, your best
 bet is to run the Windows installer, which takes care of getting the 
 prerequisites for you. The steps for using the installer are as follows:
 
- * Navigate to the `ChipWhisperer release page <https://github.com/newaetech/chipwhisperer/releases>`_ on Github.
+ 1. Navigate to the `ChipWhisperer release page <https://github.com/newaetech/chipwhisperer/releases>`_ on Github.
 
  .. image:: _images/win-installer-1.png
     :width: 800
 
- * Find the latest ChipWhisperer Windows install executable (currently 
+ 2. Find the latest ChipWhisperer Windows install executable (currently 
    :code:`Chipwhisperer.v6.0.0.exe`)
 
- * Run the installer. A summary of the installation is given on the second page.
+ 3. Run the installer. A summary of the installation is given on the second page.
 
    .. image:: _images/win-installer-2.png
     :width: 800
 
- * Run the executable and choose the path you want to install ChipWhisperer at. 
+ 4. Run the executable and choose the path you want to install ChipWhisperer at. 
    You must have read/write permissions for the location you install to, so 
    avoid installing in a location like :code:`C:\Program Files` or the like. The 
    default install location (the user's home directory) will work for most users.
 
- * Choose whether or not you want to create a desktop shortcut for running 
+ 5. Choose whether or not you want to create a desktop shortcut for running 
    ChipWhisperer.
 
- * Wait for the installation to finish. Additional windows will pop up during the installation to setup Python and install WSL compilers.
+ 6. Wait for the installation to finish. Additional windows will pop up during the installation to setup Python and install WSL compilers.
 
- * Some additional checks are run after the installation has completed. If any issues arise, you will be notified via a message box.
+ 7. Some additional checks are run after the installation has completed. If any issues arise, you will be notified via a message box.
 
 .. _Installing_Compilers_In_WSL:
 
