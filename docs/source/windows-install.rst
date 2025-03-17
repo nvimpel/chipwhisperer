@@ -144,6 +144,7 @@ is to simply reboot your computer, but you can also run the following command in
 the chipwhisperer and jupyter folders via the CW Compiler Environment:
 
 .. code:: bash
+
   git config --global --add safe.directory $(pwd)
   cd jupyter
   git config --global --add safe.directory $(pwd)
