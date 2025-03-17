@@ -12,7 +12,7 @@ V6.0.0
     * Move example traces to https://github.com/newaetech/chipwhisperer-traces
     * Change from `setup.py` to `pyproject.toml`
     * GPIO/Glitch API refactor by @DJShepherd 
-    * improved IO/memory performance by @DJShepherd 
+    * Improved IO/memory performance by @DJShepherd 
 
   New Features:
     * Add ChipWhisperer-Husky-Plus support
@@ -39,6 +39,10 @@ V6.0.0
     * Add firmware erase ability to firmware installer
     * Add FPGA initb read method
     * numicro8051 support by @nikitalita 
+    * Greatly improved SAD trigger performance on Husky (512 samples @ 200MHz)
+    * Improved SAD interface for Husky
+    * Added SAD explorer
+    * Added new demo for [Husky SAD](https://github.com/newaetech/chipwhisperer-jupyter/blob/main/demos/husky/06%20-%20Husky%20SAD%20Triggering.ipynb)
 
   Fixes:
     * Fix inconsistent phase between target and ADC clock when using extclk source
