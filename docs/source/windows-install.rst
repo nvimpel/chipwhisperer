@@ -61,30 +61,29 @@ If you want to run a native Windows installation of ChipWhisperer, your best
 bet is to run the Windows installer, which takes care of getting the 
 prerequisites for you. The steps for using the installer are as follows:
 
- 1. Navigate to the `ChipWhisperer release page <https://github.com/newaetech/chipwhisperer/releases>`_ on Github.
+1. Navigate to the `ChipWhisperer release page <https://github.com/newaetech/chipwhisperer/releases>`_ on Github.
 
- .. image:: _images/win-installer-1.png
-    :width: 800
+.. image:: _images/win-installer-1.png
+  :width: 800
 
- 2. Find the latest ChipWhisperer Windows install executable (currently 
-   :code:`Chipwhisperer.v6.0.0.exe`)
+2. Find the latest ChipWhisperer Windows install executable (currently :code:`Chipwhisperer.v6.0.0.exe`)
 
- 3. Run the installer. A summary of the installation is given on the second page.
+3. Run the installer. A summary of the installation is given on the second page.
 
-   .. image:: _images/win-installer-2.png
-    :width: 800
+.. image:: _images/win-installer-2.png
+  :width: 800
 
- 4. Run the executable and choose the path you want to install ChipWhisperer at. 
-   You must have read/write permissions for the location you install to, so 
-   avoid installing in a location like :code:`C:\Program Files` or the like. The 
-   default install location (the user's home directory) will work for most users.
+4. Run the executable and choose the path you want to install ChipWhisperer at. 
+You must have read/write permissions for the location you install to, so 
+avoid installing in a location like :code:`C:\\Program Files` or the like. The 
+default install location (the user's home directory) will work for most users.
 
- 5. Choose whether or not you want to create a desktop shortcut for running 
-   ChipWhisperer.
+5. Choose whether or not you want to create a desktop shortcut for running 
+ChipWhisperer.
 
- 6. Wait for the installation to finish. Additional windows will pop up during the installation to setup Python and install WSL compilers.
+6. Wait for the installation to finish. Additional windows will pop up during the installation to setup Python and install WSL compilers.
 
- 7. Some additional checks are run after the installation has completed. If any issues arise, you will be notified via a message box.
+7. Some additional checks are run after the installation has completed. If any issues arise, you will be notified via a message box.
 
 .. _Installing_Compilers_In_WSL:
 
@@ -137,9 +136,24 @@ Python in WSL, USB devices aren't available in WSL. As such, the installer doesn
 
 .. image:: _images/cw-compiler-env.png
 
-=============
+*************
 Common Issues
-=============
+*************
+
+=======================================================
+Updater Fails Due to Dubious Ownership/Unsafe Directory
+=======================================================
+
+The most common cause of this error is not rebooting after installing your WSL distro,
+as all files will be owned by root until this is done. The easiest way to fix this
+is to simply reboot your computer, but you can also run the following command in
+the chipwhisperer and jupyter folders via the CW Compiler Environment:
+
+.. code:: bash
+  git config --global --add safe.directory $(pwd)
+  cd jupyter
+  git config --global --add safe.directory $(pwd)
+
 
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 
