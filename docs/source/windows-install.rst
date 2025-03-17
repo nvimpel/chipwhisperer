@@ -130,10 +130,6 @@ Python in WSL, USB devices aren't available in WSL. As such, the installer doesn
 
 .. image:: _images/cw-compiler-env.png
 
-=============
-Common Issues
-=============
-
 *************
 Common Issues
 *************
