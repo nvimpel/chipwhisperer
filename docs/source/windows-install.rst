@@ -110,15 +110,12 @@ to verify that everything installed correctly. If you run into any issues, pleas
 Chipwhisperer Updater
 ======================
 
-.. warning:: Updating ChipWhisperer may overwrite any changes you've made to the ChipWhisperer or ChipWhisperer Jupyter
-  folders.
-
 Installers for ChipWhisperer are only built every time we do a stable release. As the time between releases can be
 quite lengthy, you may want to update ChipWhisperer before the next release. The easiest way to do this is to use the
 :code:`ChipWhisperer-Updater` application, which automates the process.
 
-During this process, we try to save changes made to the ChipWhisperer and ChipWhisperer-Jupyter repoisitores. If this
-process fails, the user will be notified and asked if they wish to continue. If they do, changes may be lost.
+.. warning:: During this process, we try to save changes made to the ChipWhisperer and ChipWhisperer-Jupyter repoisitores. If this
+  process fails, the user will be notified and asked if they wish to continue. If they do, changes may be lost.
 
 =======================
 CW Compiler Environment
@@ -136,6 +133,24 @@ Python in WSL, USB devices aren't available in WSL. As such, the installer doesn
 =============
 Common Issues
 =============
+
+*************
+Common Issues
+*************
+
+=======================================================
+Updater Fails Due to Dubious Ownership/Unsafe Directory
+=======================================================
+
+The most common cause of this error is not rebooting after installing your WSL distro,
+as all files will be owned by root until this is done. The easiest way to fix this
+is to simply reboot your computer, but you can also run the following command in
+the chipwhisperer and jupyter folders via the CW Compiler Environment:
+
+.. code:: bash
+  git config --global --add safe.directory $(pwd)
+  cd jupyter
+  git config --global --add safe.directory $(pwd)
 
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 
