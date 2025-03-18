@@ -269,7 +269,8 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO1 pin.
 
         TIO1 can be used for the following functions:
-          * "serial_rx": UART input
+
+        * "serial_rx": UART input
 
         Default value is "serial_rx".
 
@@ -293,7 +294,8 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO2 pin.
 
         TIO2 can be used for the following functions:
-          * "serial_tx": UART output
+
+        * "serial_tx": UART output
 
         Default value is "serial_tx".
 
@@ -317,10 +319,11 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO3 pin.
 
         TIO3 can be used for the following functions:
-          * "high_z" / None: High impedance input
-          * "gpio_low" / False: Driven output: logic 0
-          * "gpio_high" / True: Driven output: logic 1
-          * "gpio_disabled": Driven output: no effect
+
+        * "high_z" / None: High impedance input
+        * "gpio_low" / False: Driven output: logic 0
+        * "gpio_high" / True: Driven output: logic 1
+        * "gpio_disabled": Driven output: no effect
 
         Default value is "high_z".
 
@@ -341,7 +344,8 @@ class GPIOSettings(util.DisableNewAttr):
         """The function of the Target IO4 pin.
 
         TIO4 can be used for the following functions:
-          * "high_z" / None: High impedance input
+
+        * "high_z" / None: High impedance input
 
         Default value is "high_z". Typically, this pin is used as a trigger
         input.
@@ -363,9 +367,10 @@ class GPIOSettings(util.DisableNewAttr):
         """The state of the PDIC pin output pin.
 
         This is a GPIO pin. The following values are allowed:
-          * "high" / True: logic 1
-          * "low" / False: logic 0
-          * "disabled" / "default" / "high_z" / None: undriven
+
+        * "high" / True: logic 1
+        * "low" / False: logic 0
+        * "disabled" / "default" / "high_z" / None: undriven
 
         :Getter: Return one of "high", "low", or "high_z"
 
@@ -528,16 +533,16 @@ class CWNano(util.DisableNewAttr, ChipWhispererCommonInterface):
     For more help about scope settings, try help() on each of the ChipWhisperer
     scope submodules (scope.adc, scope.io, scope.glitch):
 
-      * :attr:`scope.adc <chipwhisperer.capture.scopes.cwnano.ADCSettings>`
-      * :attr:`scope.io <chipwhisperer.capture.scopes.cwnano.GPIOSettings>`
-      * :attr:`scope.glitch <chipwhisperer.capture.scopes.cwnano.GlitchSettings>`
-      * :meth:`scope.default_setup <.CWNano.default_setup>`
-      * :meth:`scope.con <.CWNano.con>`
-      * :meth:`scope.dis <.CWNano.dis>`
-      * :meth:`scope.get_last_trace <.CWNano.get_last_trace>`
-      * :meth:`scope.arm <.CWNano.arm>`
-      * :meth:`scope.capture <.CWNano.capture>`
-      * :meth:`scope.get_serial_ports <chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface.get_serial_ports>`
+    * :attr:`scope.adc <chipwhisperer.capture.scopes.cwnano.ADCSettings>`
+    * :attr:`scope.io <chipwhisperer.capture.scopes.cwnano.GPIOSettings>`
+    * :attr:`scope.glitch <chipwhisperer.capture.scopes.cwnano.GlitchSettings>`
+    * :meth:`scope.default_setup <.CWNano.default_setup>`
+    * :meth:`scope.con <.CWNano.con>`
+    * :meth:`scope.dis <.CWNano.dis>`
+    * :meth:`scope.get_last_trace <.CWNano.get_last_trace>`
+    * :meth:`scope.arm <.CWNano.arm>`
+    * :meth:`scope.capture <.CWNano.capture>`
+    * :meth:`scope.get_serial_ports <chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface.get_serial_ports>`
 
     Inherits from :class:`chipwhisperer.capture.api.cwcommon.ChipWhispererCommonInterface`
     """
@@ -580,12 +585,12 @@ class CWNano(util.DisableNewAttr, ChipWhispererCommonInterface):
     def default_setup(self):
         """ Sets up sane capture defaults for this scope
 
-          * 7.5MHz ADC clock
-          * 7.5MHz output clock
-          * 5000 capture samples
-          * tio1 = serial rx
-          * tio2 = serial tx
-          * glitch module off
+        * 7.5MHz ADC clock
+        * 7.5MHz output clock
+        * 5000 capture samples
+        * tio1 = serial rx
+        * tio2 = serial tx
+        * glitch module off
 
         .. versionadded:: 5.1
             Added default setup for CWNano
@@ -602,10 +607,10 @@ class CWNano(util.DisableNewAttr, ChipWhispererCommonInterface):
         self.glitch.ext_offset = 0
 
     def vglitch_setup(self, glitcht=None, default_setup=True):
-        """Sets up sane defaults for voltage glitch
+        """Sets up sane defaults for voltage glitch:
 
-        repeat = 1
-        ext_offset = 0
+        * repeat = 1
+        * ext_offset = 0
         """
         if default_setup:
             self.default_setup()

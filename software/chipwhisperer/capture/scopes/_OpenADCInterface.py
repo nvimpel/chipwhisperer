@@ -1647,7 +1647,7 @@ class TriggerSettings(util.DisableNewAttr):
 
     @property
     def fifo_state(self):
-        """Husky only, for debugging: return the state of the Husky FIFO FSM.
+        """Husky only, for debugging; state of the Husky FIFO FSM.
         """
         if not self._is_husky:
             raise ValueError("For CW-Husky only.")
@@ -1810,11 +1810,11 @@ class TriggerSettings(util.DisableNewAttr):
         There are four possible modes:
          * "normal": Trigger line & logic work as expected.
          * "enable": Capture starts with rising edge, but writing samples
-                     is enabled by active-high state of trigger line.
+           is enabled by active-high state of trigger line.
          * "segment": Capture starts with rising edge, and writes `trigger.samples`
-                     to buffer on each rising edge, stopping when the buffer
-                     is full. For this to work adc.samples must be a multiple
-                     of 3 (will be enforced by API).
+           to buffer on each rising edge, stopping when the buffer
+           is full. For this to work adc.samples must be a multiple
+           of 3 (will be enforced by API).
 
         .. warning:: The "enable" and "segment" modes requires you to fill
                     the **full buffer** (~25K on CW-Lite, ~100K on CW-Pro).
@@ -1893,14 +1893,14 @@ class TriggerSettings(util.DisableNewAttr):
         Multiple segments are useful in two scenarios:
 
         #. Capturing only subsections of a power trace, to allow longer
-            effective captures.  After a trigger event, the requested number of
-            samples is captured every 'segment_cycles' clock cycles, 'segments'
-            times. Set 'segment_cycle_counter_en' to 1 for this segment mode.
+           effective captures.  After a trigger event, the requested number of
+           samples is captured every 'segment_cycles' clock cycles, 'segments'
+           times. Set 'segment_cycle_counter_en' to 1 for this segment mode.
         #. Speeding up capture times by capturing 'segments' power traces from
-            a single arm + capture event. Here, the requested number of samples
-            is captured at every trigger event, without having to re-arm and
-            download trace data between every trigger event. Set
-            'segment_cycle_counter_en' to 0 for this segment mode.
+           a single arm + capture event. Here, the requested number of samples
+           is captured at every trigger event, without having to re-arm and
+           download trace data between every trigger event. Set
+           'segment_cycle_counter_en' to 0 for this segment mode.
 
         .. warning:: when capturing multiple segments with presamples, the total number of samples 
             per segment must be a multiple of 3. Incorrect sample data will be obtained if this is not 
@@ -1950,27 +1950,27 @@ class TriggerSettings(util.DisableNewAttr):
 
         Error types and their causes:
             * 'presample error': capture trigger occurs before the requested
-                    number of presamples have been collected. Reduce 
-                    scope.adc.presamples or delay the capture trigger.
+              number of presamples have been collected. Reduce 
+              scope.adc.presamples or delay the capture trigger.
             * 'ADC clipped': gain is too high; reduce it (scope.gain) or disable 
-                    this error (scope.adc.clip_errors_disabled).
+              this error (scope.adc.clip_errors_disabled).
             * 'gain too low error': gain is "too low" (4 bits or more of the ADC's
-                    dynamic range did not get used); increase it (scope.gain) or 
-                    disable this error (scope.adc.lo_gain_errors_disabled).
+              dynamic range did not get used); increase it (scope.gain) or 
+              disable this error (scope.adc.lo_gain_errors_disabled).
             * 'invalid downsample setting': using downsampling (aka decimating) with
-                    presamples and multiple segments is not allowed.
+              presamples and multiple segments is not allowed.
             * 'segmenting error': the condition for starting the capture of the next
-                    segment came true before the capture of the current segment
-                    completed. Reduce the segment size and/or increase the time
-                    between segments.
+              segment came true before the capture of the current segment
+              completed. Reduce the segment size and/or increase the time
+              between segments.
             * 'fast FIFO underflow': shouldn't occur in isolation without
-                    other errors being flagged.
+              other errors being flagged.
             * 'fast FIFO overflow': data is coming in fast than it's being read;
-                    reduce scope.clock.adc_freq.
+              reduce scope.clock.adc_freq.
             * 'slow FIFO underflow': host tried to read more ADC samples than are
-                    available.
+              available.
             * 'slow FIFO overflow': data is coming in faster than it's being
-                    read; reduce scope.clock.adc_freq.
+              read; reduce scope.clock.adc_freq.
 
         To fully understand the four different FIFO errors (fast/slow
         over/underflows), some background on Husky's sample storage
@@ -2078,7 +2078,9 @@ class TriggerSettings(util.DisableNewAttr):
         scope.adc.samples. If they are too close, capture will fail (indicated by
         the blinking red lights and scope.adc.errors showing either a
         segmenting error or a FIFO over/underflow error). 
+
         When presamples = 0, segment_cycles >= samples + 10.
+
         When presamples > 0, segment_cycles >= samples + presamples AND segment_cycles >= samples + 10.
 
         :Getter: Return the current value of segment_cycles.
@@ -2525,11 +2527,11 @@ class ClockSettings(util.DisableNewAttr):
 
         The ADC can be clocked by one of five possible sources:
 
-         * "clkgen_x1": CLKGEN output via DCM
-         * "clkgen_x4": CLKGEN output via DCM with x4 clk multiplier
-         * "extclk_x1": External clock input via DCM
-         * "extclk_x4": External clock input via DCM with x4 clk multiplier
-         * "extclk_dir": External clock input with no DCM
+        * "clkgen_x1": CLKGEN output via DCM
+        * "clkgen_x4": CLKGEN output via DCM with x4 clk multiplier
+        * "extclk_x1": External clock input via DCM
+        * "extclk_x4": External clock input via DCM with x4 clk multiplier
+        * "extclk_dir": External clock input with no DCM
 
         :Getter: Return the current ADC clock source (one of five strings above)
 

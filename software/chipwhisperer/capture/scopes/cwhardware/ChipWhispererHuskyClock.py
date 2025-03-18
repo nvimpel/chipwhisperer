@@ -1264,14 +1264,14 @@ class ChipWhispererHuskyClock(util.DisableNewAttr):
 
         * The minimum output frequency is 5MHz.
         * The maximum is 200MHz (Husky) or 250MHz (Husky Plus); exceeding
-            this violates the maximum frequency allowed by both the FPGA and
-            the ADC.
+          this violates the maximum frequency allowed by both the FPGA and
+          the ADC.
         * You may not get exactly the requested frequency. Husky gets as close
-            as possible to the requested frequency, and a warning is issued if
-            the generated clock differs from the requested clock by more than
-            scope.clock.pll._freq_warning_limit (which defaults to 0.2%).
-            Whether you get the requested frequency depends on both the
-            requested frequency itself and adc_mul.
+          as possible to the requested frequency, and a warning is issued if
+          the generated clock differs from the requested clock by more than
+          scope.clock.pll._freq_warning_limit (which defaults to 0.2%).
+          Whether you get the requested frequency depends on both the
+          requested frequency itself and adc_mul.
 
         :Getter: Return the calculated target clock frequency in Hz
 
@@ -1607,11 +1607,11 @@ class ChipWhispererHuskyClock(util.DisableNewAttr):
 
         The ADC can be clocked by one of five possible sources:
 
-         * "clkgen_x1": CLKGEN output via DCM
-         * "clkgen_x4": CLKGEN output via DCM with x4 clk multiplier
-         * "extclk_x1": External clock input via DCM
-         * "extclk_x4": External clock input via DCM with x4 clk multiplier
-         * "extclk_dir": External clock input with no DCM
+        * "clkgen_x1": CLKGEN output via DCM
+        * "clkgen_x4": CLKGEN output via DCM with x4 clk multiplier
+        * "extclk_x1": External clock input via DCM
+        * "extclk_x4": External clock input via DCM with x4 clk multiplier
+        * "extclk_dir": External clock input with no DCM
 
         :Getter: Return the current ADC clock source (one of five strings above)
 

@@ -1,13 +1,7 @@
 # Contributing
 
-If you're curious about contributing to ChipWhisperer, be it software or hardware, this is the
-document for you!
-
-The ChipWhisperer [software](https://github.com/newaetech/chipwhisperer) is documented using sphinx and lives on
-ReadTheDocs. However, NewAE Technology Inc. also develops hardware for
-side-channel analysis and embedded hardware security fun. The documentation
-for the hardware is on a [separate site](https://rtfm.newae.com). The tutorials are also
-located on ReadTheDocs and are auto-generated based on the jupyter notebooks.
+If you're curious about contributing to ChipWhisperer, be it software or
+hardware, this is the document for you!
 
 Contribution to the project is always welcome. We are a small team and
 fixing everything right away or making those enhancements you dream of
@@ -20,8 +14,14 @@ take out a pull request. We will discuss the changes then.
 
 ## Hardware
 
-We're not currently accepting direct modifications to our hardware docs, but may in the future.
-For now, please make a thread on our [forums](https://forum.newae.com)
+Hardware source is spread across several repositories:
+  * ChipWhisperer-Lite, -Pro, and -Nano: [chipwhisperer-capture repository](https://github.com/newaetech/chipwhisperer-capture)
+  * ChipWhisperer Husky firmware: [chipwhisperer-husky repository](https://github.com/newaetech/chipwhisperer-husky)
+  * ChipWhisperer Husky FPGA: [chipwhisperer-husky-fpga repository](https://github.com/newaetech/chipwhisperer-husky-fpga)
+  * CW308/312 Targets: [chipwhisperer-target-cw308t repository](https://github.com/newaetech/chipwhisperer-target-cw308t)
+
+If you are having trouble finding what you're looking for, [ask us!](https://chipwhisperer.readthedocs.io/en/latest/support.html).
+
 
 ## Software
 
@@ -167,58 +167,47 @@ def is_done(self):
     ...
 ```
 
-### Software Documentation
+## Documentation
 
-The software documentation is written using Sphinx.
-Building the documentation requires sphinx, sphinx images and pypandoc. 
-This can be installed using
+Documentation is built with [Jupyter Book](https://jupyterbook.org/en/stable/intro.html) (v1).
+We use a mix of Markdown, reStructuredText, and Jupyter Notebook source
+files[^1]:
+
+  * Markdown is used for everything in the "Hardware" section.
+  * The "Tips and Tricks" section uses a mix of Markdown and Notebooks.
+  * reStructuredText is used elsewhere.
+
+
+Build requirements can be installed using:
 
 ```bash
-    python -m pip install sphinx
-    python -m pip install sphinxcontrib-images
-    python -m pip install pypandoc
+    python -m pip install -r chipwhisperer/docs/requirements.txt
 ```
 
-You can then navigate to the `chipwhisperer/docs` folder and run
+You will also need the following submodules:
+  * `chipwhisperer/docs/chipwhisperer-target-cw308t`
+  * `chipwhisperer/docs/cw_tips_tricks`
+
+
+You can then build the documentation site locally by going to the
+`chipwhisperer/docs` folder and running:
 
 ```bash
-    make html
+    jb build source
 ```
 
-This command does a few things:
+This will build the documentation in html form. You can then navigate to the
+`source/_build/html` directory and open `index.html`. This should open the
+website in your browser.
 
-  * Loads the sphinx configuration file.
-
-  * Runs a build hook called `create_tutorial_files` it can be found
-    in the `conf.py` file in the `docs/` folder. The function
-    copies over the `img` directory from the `tutorials/` directory
-    into the `docs/tutorials` folder. It then creates auto-linked
-    tutorial files in the `docs/tutorials` for every tutorials in the
-    `tutorials` submodule, based on the tutorial id, scope and target.
-
-    This function also deletes the `docs/tutorials/img`, and removes
-    all `.rst` files in the `docs/tutorials` folder. It is better
-    not to put anything in these folders unless it is auto-generated
-    each time the build is run.
-
-    You should see the **Generating tutorial stubs with links...** message
-    from the build hook as part of the build.
-
-  * Runs a build hook called `generate_contributing`, which
-    downloads and installs pandoc using pypandoc, and converts
-    this document into an `.rst` file for inclusion in the
-    sphinx build.
-
-  * Carries out the rest of the normal sphinx build process.
-
-This will build the documentation in html form. You can then navigate to
-the `_build` directory and open `index.html`. This should open the website
-in your browser.
+For more details on how the documentation is built and why, go to the 
+[Documentation Site Details page](https://chipwhisperer.readthedocs.io/en/latest/colophon.html#jupyter-book-tips).
 
 Contribution to the documentation is always welcome. To see the effect of
-changes to the documentation it needs to be rebuilt after each change. This
-is done using the sphinx-build command. When contributing to the documentation
-here are some rough guidelines to follow:
+changes to the documentation it needs to be rebuilt after each change. When
+contributing to the documentation here are some rough guidelines to follow:
+
+### Guidelines for reStructuredText Files
 
   * All directive blocks are indented by four spaces. This makes life easier
     when the text editor you are using is already set for four spaces because
@@ -289,12 +278,29 @@ here are some rough guidelines to follow:
       - ^, for subsubsections
       - “, for paragraphs
 
+
+### Guidelines for Markdown Files
+
+- keep in mind that markdown files in the `chipwhisperer-target-cw308t`
+  submodule need to also render on [GitHub](https://github.com/newaetech/chipwhisperer-target-cw308t)
+
+
+More formatting guidelines and tips are on the [Documentation Site Details page](https://chipwhisperer.readthedocs.io/en/latest/colophon.html#jupyter-book-tips).
+
+
 A few useful resources:
 
   * [Restructured Text and Sphinx CheatSheet](http://openalea.gforge.inria.fr/doc/openalea/doc/_build/html/source/sphinx/rest_syntax.html)
   * [Example Doc Strings \(Google Style Guide\)](https://www.sphinx-doc.org/en/1.5/ext/example_google.html)
   * [Napolean \(Google Style to ReST preprocessor\)](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html)
   * [reStructuredText - Docutils ](http://docutils.sourceforge.net/rst.html)
+  * [Jupyter Book](https://jupyterbook.org/en/stable/intro.html)
+
+
+[^1]: This mix exists for historical reasons: API documentation originated
+  in .rst, hardware documentation originated in .md. Jupyter Book was chosen
+  in part for its good support for both of these, as well as the notebooks
+  that are used in our Tips & Tricks.
 
 ## Testing
 
@@ -430,3 +436,4 @@ auto discover script yet so just run:
     python test_api.py
 
 ```
+
