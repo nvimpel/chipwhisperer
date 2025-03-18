@@ -467,9 +467,36 @@ class SimpleSerial2(TargetTemplate):
 
         return command_list
 
+    def read_cmd_dict(self, cmd=None, pay_len=None, timeout=250, flush_on_err=None):
+        """Read and decode simpleserial-v2 command. Returns a dict containing the different
+        parts of the unstuffed packet.
+
+        Has the form: :code:`{'cmd': int, 'dlen': int, 'data': CWBytearray, 'crc': int}`
+
+        Args:
+            cmd (str, optional): Expected start of the command. Will warn the user if
+                the received command does not start with this string. Defaults to None
+            pay_len (int, optional): Expected length of the returned bytearray in number
+                of bytes. If None, uses the length field of the packet to
+                determine how much data to read
+            timeout (int, optional): Value to use for timeouts during initial
+                read of expected data in ms. If 0, block until all expected
+                data is returned. Defaults to 250.
+            flush_on_err (bool/None, optional): If True, reset/flush the serial lines.
+                If False, don't. If None, determine via whether or not flush_on_err
+                was True or False when passed to con()
+        """
+        packet = self.read_cmd(cmd, pay_len, timeout, flush_on_err)
+        rtn = {}
+        rtn['cmd'] = packet[1]
+        rtn['len'] = packet[2]
+        rtn['data'] = bytearray(packet[3:-2])
+        rtn['crc'] = packet[-1]
+        return rtn
 
     def read_cmd(self, cmd=None, pay_len=None, timeout=250, flush_on_err=None):
-        """Read and decode simpleserial-v2 command
+        """Read and decode simpleserial-v2 command. Returns the full unstuffed packet, 
+        unlike simpleserial_read, which only returns the data portion of the packet.
 
         Args:
             cmd (str, optional): Expected start of the command. Will warn the user if
@@ -756,7 +783,7 @@ class SimpleSerial2(TargetTemplate):
         return self.__repr__()
 
     def _dict_repr(self):
-        rtn = OrderedDict()
+        rtn = {}
         rtn['output_len'] = self.output_len
 
         rtn['baud']     = self.baud
