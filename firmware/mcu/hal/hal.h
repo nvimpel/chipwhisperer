@@ -197,12 +197,7 @@ void platform_init(void);
     
 #endif
 
-__attribute__((weak)) void led_ok(unsigned int status)
-{
-}
-
-__attribute__((weak)) void led_error(unsigned int status)
-{
-}
+void led_ok(unsigned int status);
+void led_error(unsigned int status);
 
 #endif //HAL_H_

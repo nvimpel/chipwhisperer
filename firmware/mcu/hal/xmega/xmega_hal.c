@@ -40,6 +40,26 @@ void platform_init(void)
  #endif
 }
 
+#if PLATFORM == CW303
+void led_error(unsigned int status)
+{
+    if (status) {
+        PORTA.OUTCLR = PIN6_bm;
+    } else {
+        PORTA.OUTSET = PIN6_bm;
+    }
+}
+
+void led_ok(unsigned int status)
+{
+    if(status) {
+        PORTA.OUTCLR = PIN5_bm;
+    } else {
+        PORTA.OUTSET = PIN5_bm;
+    }
+}
+#endif
+
 #if HWCRYPTO
 #include "XMEGA_AES_driver.h"
 static uint8_t enckey[16];
