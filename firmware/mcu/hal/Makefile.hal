@@ -311,6 +311,7 @@ endif
     endif
   endif
 
+  SRC += hal.c
   include $(HALPATH)/$(HAL)/Makefile.$(HAL)
   CDEFS += -DHAL_TYPE=HAL_$(HAL) -DPLATFORM=$(PLATFORM)
 #endif

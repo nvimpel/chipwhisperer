@@ -16,25 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef XMEGA_HAL_H_
-#define XMEGA_HAL_H_
+#include "hal.h"
 
-//Generic Platform
-#include "uart.h"
+__attribute__((weak)) void led_ok(unsigned int status)
+{
+}
 
-//We want to use the AVR ADC-pins, since they have a seperate power rail
-#define trigger_setup() PORTA.DIRSET = PIN0_bm
-#define trigger_high()  PORTA.OUTSET = PIN0_bm
-#define trigger_low()   PORTA.OUTCLR = PIN0_bm
-
-#define init_uart init_uart0
-#define putch output_ch_0
-#define getch input_ch_0
-
-void HW_AES128_Init(void);
-void HW_AES128_LoadKey(uint8_t * key);
-void HW_AES128_Enc(uint8_t * pt);
-
-#endif //AVR_HAL_H_
-
-   
+__attribute__((weak)) void led_error(unsigned int status)
+{
+}
