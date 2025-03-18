@@ -97,7 +97,7 @@ There are a few different types of classes for generating key text patterns
 for your capture:
 
 * :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_Basic`
-* :class:`chipwhisperer.capture.acq_patterns.basic.AcqKeyTextPattern_TVLATTest`
+* :class:`chipwhisperer.capture.acq_patterns.tvlattest.AcqKeyTextPattern_TVLATTest`
 
 .. _api-capture-ktp-basic:
 

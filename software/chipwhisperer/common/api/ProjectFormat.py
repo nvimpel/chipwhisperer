@@ -673,7 +673,7 @@ class Traces:
         """Append a Trace containing the trace and related operation information.
 
         Args:
-            trace (:class:`Trace <chipwhisperer.common.trace.Trace>`): A captured or created trace.
+            trace (:class:`Trace <chipwhisperer.common.traces.Trace>`): A captured or created trace.
             dtype: Numpy data type for storing trace.wave
 
         Raises:
@@ -694,7 +694,7 @@ class Traces:
         """Add all traces in an iterable to the project.
 
         Args:
-            iterable: Any iterable of :class:`Trace <chipwhisperer.common.trace.Trace>` objects.
+            iterable: Any iterable of :class:`Trace <chipwhisperer.common.traces.Trace>` objects.
 
         Raises:
             TypeError: If any of the object in the iterable are not a trace.

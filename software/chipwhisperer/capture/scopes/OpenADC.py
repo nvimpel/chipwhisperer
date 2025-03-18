@@ -87,10 +87,10 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
 
     * :attr:`scope.SAD <chipwhisperer.capture.scopes.cwhardware.ChipWhispererSAD.HuskySAD>`
     * :attr:`scope.LA <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LASettings>`
-    * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer>`
-    * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.UARTTrigger>`
+    * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer.TraceWhisperer>`
+    * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.TraceWhisperer.UARTTrigger>`
     * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
-    * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyError>`
+    * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyErrors>`
     * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
     * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`
     * :attr:`scope.LEDs <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.LEDSettings>`
