@@ -42,32 +42,6 @@ def SIGNEXT(x, b):
     x = x & ((1 << b) - 1)
     return (x ^ m) - m
 
-class MultiGlitchList(list):
-    """Class that behaves like a list, but can set individual elements using a getter/setter
-
-    Useful so that we can do scope.glitch.ext_offset[1] = 5 with Husky multi-glitch
-    """
-    def __setitem__(self, *args, **kwargs):
-        oldval = self._getter()
-        oldval[args[0]] = args[1]
-        self._setter(oldval)
-        pass
-
-    def __repr__(self):
-        oldrepr = super().__repr__()
-        return f"MultiGlitchList({oldrepr})"
-
-    def __init__(self, *args, **kwargs):
-        if "getter" not in kwargs:
-            raise KeyError("MultiGlitchList requires a getter")
-        if "setter" not in kwargs:
-            raise KeyError("MultiGlitchList requires a setter")
-        
-        self._getter = kwargs.pop("getter")
-        self._setter = kwargs.pop("setter")
-        super().__init__(*args, **kwargs)
-        
-
 class GlitchSettings(util.DisableNewAttr):
 
     # Output modes, sorted by ID (FPGA value)
@@ -1009,7 +983,7 @@ class ChipWhispererGlitch(object):
         if type(offsets) is int:
             return offsets
         else:
-            return MultiGlitchList(offsets, setter=self.setTriggerOffset, getter=self.readTriggerOffset)
+            return util.Lister(offsets, setter=self.setTriggerOffset, getter=self.readTriggerOffset)
 
 
     def setGlitchOffsetFine(self, fine):
@@ -1168,7 +1142,7 @@ class ChipWhispererGlitch(object):
         if type(repeats) is int:
             return repeats
         else:
-            return MultiGlitchList(repeats, setter=self.setRepeat, getter=self.readRepeat)
+            return util.Lister(repeats, setter=self.setRepeat, getter=self.readRepeat)
             
 
 

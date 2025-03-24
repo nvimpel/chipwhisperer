@@ -1732,32 +1732,6 @@ class ProTrigger(TriggerSettings):
         self.cwe.oa.sendMessage(CODE_WRITE, "CW_EXTCLK_ADDR", resp2)
 
 
-class SequenceTriggerList(list):
-    """Class that behaves like a list, but can set individual elements using a getter/setter
-
-    Useful so that we can do scope.trigger.<property>[<index>] = <value> with Husky sequenced triggers
-    """
-    def __setitem__(self, *args, **kwargs):
-        oldval = self._getter()
-        oldval[args[0]] = args[1]
-        self._setter(oldval)
-        pass
-
-    def __repr__(self):
-        oldrepr = super().__repr__()
-        return f"SequenceTriggerList({oldrepr})"
-
-    def __init__(self, *args, **kwargs):
-        if "getter" not in kwargs:
-            raise KeyError("SequenceTriggerList requires a getter")
-        if "setter" not in kwargs:
-            raise KeyError("SequenceTriggerList requires a setter")
-        
-        self._getter = kwargs.pop("getter")
-        self._setter = kwargs.pop("setter")
-        super().__init__(*args, **kwargs)
-
-
 class HuskyTrigger(TriggerSettings):
     """Husky trigger object.
     Communicates with all the trigger modules inside CW-Husky.
@@ -1826,7 +1800,7 @@ class HuskyTrigger(TriggerSettings):
         if type(triggers) is str:
             return triggers
         else:
-            return SequenceTriggerList(triggers, setter=self.setMultipleTriggers, getter=self.readMultipleTriggers)
+            return util.Lister(triggers, setter=self.setMultipleTriggers, getter=self.readMultipleTriggers)
 
     def setMultipleTriggers(self, triggers):
         msg = []
@@ -1938,7 +1912,7 @@ class HuskyTrigger(TriggerSettings):
         if type(modules) is str:
             return modules
         else:
-            return SequenceTriggerList(modules, setter=self.setModule, getter=self.readModule)
+            return util.Lister(modules, setter=self.setModule, getter=self.readModule)
 
 
     def setModule(self, modes):
@@ -2024,7 +1998,7 @@ class HuskyTrigger(TriggerSettings):
 
     def get_window_start(self):
         starts = self.read_multiple_window_start()
-        return SequenceTriggerList(starts, setter=self.set_multiple_window_start, getter=self.read_multiple_window_start)
+        return util.Lister(starts, setter=self.set_multiple_window_start, getter=self.read_multiple_window_start)
 
     def read_multiple_window_start(self):
         raw = self.cwe.oa.sendMessage(CODE_READ, "SEQ_TRIGGERS_MINMAX", Validate=False, maxResp=self._window_bytes*(self.max_sequenced_triggers-1)*2)
@@ -2073,7 +2047,7 @@ class HuskyTrigger(TriggerSettings):
 
     def get_window_end(self):
         ends = self.read_multiple_window_end()
-        return SequenceTriggerList(ends, setter=self.set_multiple_window_end, getter=self.read_multiple_window_end)
+        return util.Lister(ends, setter=self.set_multiple_window_end, getter=self.read_multiple_window_end)
 
     def read_multiple_window_end(self):
         raw = self.cwe.oa.sendMessage(CODE_READ, "SEQ_TRIGGERS_MINMAX", Validate=False, maxResp=self._window_bytes*(self.max_sequenced_triggers-1)*2)
