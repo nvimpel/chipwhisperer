@@ -42,7 +42,7 @@
 #include "arm_etm.h"
 
 // At the moment, only 256-bit curves are supported
-const uint16_t size_curve = 32;
+static const uint16_t size_curve = 32;
 
 uint8_t pcsamp_enable;
 
