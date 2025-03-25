@@ -43,6 +43,10 @@ CFLAGS += -D$(EXTRA_OPTS)
 
 ifeq ($(CRYPTO_OPTIONS),)
 CRYPTO_OPTIONS = AES128C
+else
+ifeq ($(CRYPTO_OPTIONS),LTC)
+CFLAGS += -DUSE_TRUSTED_CRYPTO=1
+endif
 endif
 
 #Add simpleserial project to build
