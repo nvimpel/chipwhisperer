@@ -480,9 +480,9 @@ class SimpleSerial2(TargetTemplate):
         """
         cmd = packet[1]
         dlen = packet[2]
-        data = packet[3:-3]
+        data = packet[3:-2]
         crc = packet[-2]
-        return {"cmd" : cmd, "dlen": dlen, "data": data, "crc": crc}
+        return {"cmd" : cmd, "dlen": dlen, "data": data, "crc": crc, "raw": packet}
         pass
 
     def read_cmd(self, cmd=None, pay_len=None, timeout=250, flush_on_err=None, as_dict=False):
