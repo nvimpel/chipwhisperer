@@ -480,13 +480,14 @@ class SimpleSerial2(TargetTemplate):
         """
         cmd = packet[1]
         dlen = packet[2]
-        data = packet[3:-2]
+        data = bytearray(packet[3:-2])
         crc = packet[-2]
         return {"cmd" : cmd, "dlen": dlen, "data": data, "crc": crc, "raw": packet}
         pass
 
     def read_cmd(self, cmd=None, pay_len=None, timeout=250, flush_on_err=None, as_dict=False):
-        """Read and decode simpleserial-v2 command
+        """Read and decode simpleserial-v2 command. Returns the decoded raw packet, with the
+        preceding and following null bytes present.
 
         Args:
             cmd (str, optional): Expected start of the command. Will warn the user if
@@ -502,6 +503,14 @@ class SimpleSerial2(TargetTemplate):
                 was True or False when passed to con()
             as_dict (bool, optional): If True, return as a dict specifying each part of the SSV2 packet. Otherwise, return
                 the raw unstuffed packet. Defaults to false
+
+        Return:
+            The return will either be the raw decoded packet, or a dictionary specifying the different SSV2 fields
+            if as_dict is true. For example, a no error ack packet will be returned as either:
+                
+                bytearray([0x00, 0x65, 0x01, 0x00, 0xEB, 0x00])
+                # or
+                {'cmd': 0x65, 'dlen': 0x01, 'data': bytearray([0x00]), 'crc': 0xEB, 'raw': []} # raw same as above
         """
         tmp = None
         min_len = 5 # minimum length of packet (0x00, cmd, dlen, crc, 0x00)
