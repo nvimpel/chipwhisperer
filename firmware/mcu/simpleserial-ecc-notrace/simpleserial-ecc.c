@@ -444,21 +444,24 @@ uint8_t run_add(uint8_t* unused, uint8_t unused_len)
    // There's no helper to add points in uECC
    // Implementing the solution from https://github.com/kmackay/micro-ecc/issues/31
    uECC_word_t z[uECC_MAX_WORDS];
+   uECC_word_t copy_P[2 * uECC_MAX_WORDS];
 
-   uECC_vli_set(Q, P, size_curve);
-   uECC_vli_set(Q + uECC_MAX_WORDS, P + uECC_MAX_WORDS,  size_curve);   
+   uECC_vli_set(copy_P, P, curve->num_words);
+   uECC_vli_set(copy_P + uECC_MAX_WORDS, P + uECC_MAX_WORDS, curve->num_words);
+   uECC_vli_set(Q, H, curve->num_words);
+   uECC_vli_set(Q + uECC_MAX_WORDS, H + uECC_MAX_WORDS,  curve->num_words);
 
 #ifdef FW_TRIGGER
    trigger_high();
 #endif
 
-   XYcZ_add(P, P + uECC_MAX_WORDS, H, H + uECC_MAX_WORDS, curve);
+   XYcZ_add(copy_P, copy_P + uECC_MAX_WORDS, Q, Q + uECC_MAX_WORDS, curve);
 
    // Find final 1/Z value
-   uECC_vli_modMult_fast(z, P, Q + uECC_MAX_WORDS, curve);
-   uECC_vli_modInv(z, z, curve->p, size_curve);
-   uECC_vli_modMult_fast(z, z, Q, curve);
-   uECC_vli_modMult_fast(z, z, P + size_curve, curve);
+   uECC_vli_modMult_fast(z, P, copy_P + uECC_MAX_WORDS, curve);
+   uECC_vli_modInv(z, z, curve->p, curve->num_words);
+   uECC_vli_modMult_fast(z, z, copy_P, curve);
+   uECC_vli_modMult_fast(z, z, P + uECC_MAX_WORDS, curve);
 
    apply_z(Q, Q + uECC_MAX_WORDS, z, curve);
 
