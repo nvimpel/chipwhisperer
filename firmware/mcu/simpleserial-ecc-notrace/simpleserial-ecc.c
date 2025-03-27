@@ -285,7 +285,7 @@ uint8_t run_add(uint8_t* unused, uint8_t unused_len)
 }
 
 
-uint8_t reset(uint8_t* x, uint8_t len) {
+static void set_default_curve(void) {
    // Resets curve to NIST secp256r1
    static const uint8_t P[] = {
       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -314,7 +314,6 @@ uint8_t reset(uint8_t* x, uint8_t len) {
    memcpy(curve_b, B, size_curve);
    memcpy(curve_gen_x, Gx, size_curve);
    memcpy(curve_gen_y, Gy, size_curve);
-   return 0x00;
 }
 
 #else
@@ -469,13 +468,20 @@ uint8_t run_add(uint8_t* unused, uint8_t unused_len)
 }
 
 
+static void set_default_curve(void) {
+   return;
+}
+
+
+#endif
+
+
 uint8_t reset(uint8_t* x, uint8_t len)
 {
-    // Reset key here if needed
+   set_default_curve();
 	return 0x00;
 }
 
-#endif
 
 uint8_t info(uint8_t* x, uint8_t len)
 {
@@ -498,6 +504,7 @@ int main(void)
     platform_init();
     init_uart();
     trigger_setup();
+    set_default_curve();
 
     simpleserial_init();
     simpleserial_addcmd('k', 32, run_pmul);

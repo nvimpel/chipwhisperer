@@ -5,7 +5,7 @@
 #include "hal.h"
 
 
-#define MAX_SS_CMDS 16
+#define MAX_SS_CMDS 32
 static int num_commands = 0;
 
 #define MAX_SS_LEN 256
