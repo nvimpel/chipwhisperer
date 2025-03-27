@@ -286,7 +286,7 @@ uint8_t ss_get_commands(uint8_t *x, uint8_t len)
         repr_cmd_buf[i].flags = commands[i].flags;
     }
 
-    simpleserial_put('r', num_commands * 0x03, (void *) repr_cmd_buf);
+    simpleserial_put('r', num_commands * sizeof (ss_cmd_repr), (void *) repr_cmd_buf);
     return 0x00;
 }
 
