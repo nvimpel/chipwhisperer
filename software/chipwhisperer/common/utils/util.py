@@ -886,12 +886,36 @@ class EnumTranslationAPI(EnumTranslationToHW, HWToEnumTranslation):
 
 class Lister(list):
     """Class that behaves like a list, but can set individual elements using a getter/setter.
+    Example use::
+
+        class BetterLister():
+            def __init__(self):
+                self._XYZ = [None]*10
+
+            @property
+            def XYZ(self):
+                XYZ = self.readXYZ()
+                return Lister(XYZ, setter=self.setXYZ, getter=self.readXYZ)
+
+            @XYZ.setter
+            def XYZ(self, value):
+                self.setXYZ(value)
+
+            def setXYZ(self, XYZ):
+                self._XYZ = XYZ
+
+            def readXYZ(self):
+                return self._XYZ
+                
+        d = DemoLister()
+        d.XYZ[2] = 199
+        d.XYZ[2:4] = [0,1]
+
     """
     def __setitem__(self, *args, **kwargs):
         oldval = self._getter()
         oldval[args[0]] = args[1]
         self._setter(oldval)
-        pass
 
     def __repr__(self):
         oldrepr = super().__repr__()
@@ -906,4 +930,6 @@ class Lister(list):
         self._getter = kwargs.pop("getter")
         self._setter = kwargs.pop("setter")
         super().__init__(*args, **kwargs)
+
+
 
