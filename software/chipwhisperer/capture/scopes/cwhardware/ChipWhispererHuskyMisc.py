@@ -312,8 +312,116 @@ class HuskyErrors(ChipWhispererSAMErrors):
         self.trace.errors = 0
 
 
+class USERIOPin(util.DisableNewAttr):
+    ''' Control Husky's USERIO (20-pin front connector) interface, one pin at a time.
+    Everything that this class does can also be done by 
+    :class:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`,
+    but the API of this class makes it easier to change a single USERIO pin's properties.
+
+    Example::
+
+        scope.userio.pin[0].direction = 1
+        scope.userio.pin[0].drive_data = 1
+        scope.userio.pin[0].drive_data = 0
+        scope.userio.pin[0].drive_data = 1
+
+    '''
+    _name = 'USERIO Pin'
+
+    def __init__(self, userio, pin_number):
+        super().__init__()
+        self.parent = userio
+        self.pin_number = pin_number
+        self.disable_newattr()
+
+    def _dict_repr(self):
+        rtn = {}
+        rtn['function'] = self.function
+        rtn['direction'] = self.direction
+        rtn['drive_data'] = self.drive_data
+        rtn['status'] = self.status
+        rtn['clock_enabled'] = self.clock_enabled
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    @property
+    def function(self):
+        """See :class:`scope.userio.pin_functions <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.pin_functions>`.
+        """
+        return self.parent.pin_functions[self.pin_number]
+
+
+    @property
+    def direction(self):
+        """See :class:`scope.userio.direction <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.direction>`.
+        """
+        return self.parent._direction_list[self.pin_number]
+
+    @direction.setter
+    def direction(self, value):
+        self.parent._direction_list[self.pin_number] = value
+
+
+    @property
+    def drive_data(self):
+        """See :class:`scope.userio.drive_data <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.drive_data>`.
+        """
+        if self.pin_number < 8:
+            return self.parent._drive_data_list[self.pin_number]
+        else:
+            return 'n/a'
+
+    @drive_data.setter
+    def drive_data(self, value):
+        if self.pin_number < 8:
+            self.parent._drive_data_list[self.pin_number] = value
+        else:
+            raise ValueError("Not supported for CK pin.")
+
+    @property
+    def status(self):
+        """See :class:`scope.userio.status <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.status>`.
+        """
+        return self.parent._status_list[self.pin_number]
+
+    @property
+    def clock_enabled(self):
+        """See :class:`scope.userio.clock_enabled <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.clock_enabled>`.
+        """
+        return self.parent._clock_enabled_list[self.pin_number]
+
+    @clock_enabled.setter
+    def clock_enabled(self, value):
+        self.parent._clock_enabled_list[self.pin_number] = value
+
+
+
+
+
 class USERIOSettings(util.DisableNewAttr):
     ''' Control Husky's USERIO (20-pin front connector) interface.
+    Example::
+
+        scope.userio.direction = 0x1ff
+        scope.userio.drive_data = 0x155
+        scope.userio.drive_data = 0x0aa
+
+
+    The methods in this class make it easy to change all USERIO pin properties
+    simultaneously. If you are modifying the properties of a single pin, you
+    may find the 
+    :class:`scope.userio.pin[x] <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin>`
+    methods more appealing, i.e.::
+
+        scope.userio.pin[0].direction = 1
+        scope.userio.pin[0].drive_data = 1
+        scope.userio.pin[0].drive_data = 0
+
     '''
     _name = 'USERIO Control'
 
@@ -511,12 +619,18 @@ class USERIOSettings(util.DisableNewAttr):
                                   'trigger 3 window',
                                   'unused']]
 
+    trace_pins = ['TMS', 'TCK', 'TDO/SWO', 'unused', 'TRACEDATA[0]', 'TRACEDATA[1]', 'TRACEDATA[2]', 'TRACEDATA[3]', 'TRACECLOCK']
+
     def __init__(self, oaiface : OAI.OpenADCInterface, trace):
         super().__init__()
         self._last_mode = None
         self._drive_data = 0
         self.oa = oaiface
         self._trace = trace
+        self.pins = []
+        for pin in range(9):
+            self.pins.append(USERIOPin(self, pin))
+        self.clocks_supported = self._check_clocks()
         self.disable_newattr()
 
     def _dict_repr(self):
@@ -525,30 +639,24 @@ class USERIOSettings(util.DisableNewAttr):
         if self.mode in ['fpga_debug', 'swo_trace_plus_debug']:
             rtn['fpga_mode'] = self.fpga_mode
         rtn['direction'] = self.direction
+        rtn['clock_enabled'] = self.clock_enabled
         rtn['drive_data'] = self.drive_data
         rtn['status'] = self.status
         pins_rtn = {}
-        trace_pins = ['TMS', 'TCK', 'TDO/SWO', 'unused', 'TRACEDATA[0]', 'TRACEDATA[1]', 'TRACEDATA[2]', 'TRACEDATA[3]', 'TRACECLOCK']
         for i in range(9):
-            if self.mode == 'trace':
-                info = trace_pins[i]
-            elif self.mode == 'swo_trace_plus_debug':
-                if i < 3:
-                    info = trace_pins[i]
-                else:
-                    info = self.fpga_mode_definitions[self.fpga_mode][1][i]
-            elif self.direction & 2**i:
-                info = 'Husky-driven, '
-                if self.mode == 'normal':
-                    info += 'value = %d' % ((self.status >> i) & 0x01)
-                else:
-                    info = self.fpga_mode_definitions[self.fpga_mode][1][i]
+            info = '{0:{width}s}'.format(self.pin_functions[i], width=len(max(self.pin_functions, key=len)))
+            if self._direction_list[i]:
+                info += ', Husky- driven'
             else:
-                info = 'Target-driven, value = %d' % ((self.status >> i) & 0x01)
+                info += ', Target-driven'
+            info += ', status = %d' % self._status_list[i]
+            info += ', clock_enabled = %d' % self._clock_enabled_list[i]
             if i < 8:
-                pins_rtn['pin D%d' % i] = info
+                info += ', drive = %d' % self._drive_data_list[i]
+            if i < 8:
+                pins_rtn['D%d' % i] = info
             else:
-                pins_rtn['pin CK'] = info
+                pins_rtn['CK'] = info
         rtn['Individual pins'] = pins_rtn
         return rtn
 
@@ -630,10 +738,38 @@ class USERIOSettings(util.DisableNewAttr):
             self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_SELECT", [setting])
 
 
+    def _setter_check_and_transform(self, value, num_bits, maxvalue):
+        """Common code used by many of this class's properties.
+        """
+        if type(value) is list:
+            # sanity check:
+            if any(not i in [0,1] for i in value) or len(value) != num_bits:
+                raise ValueError("Can't set value to %s" % value)
+            data = 0
+            for i,d in enumerate(value):
+                if d:
+                    data += 2**i
+        else:
+            data = value
+        if not data in range(0, maxvalue+1):
+            raise ValueError("Out of range! Must be integer 0-%d; got %d" % (maxvalue, data))
+        return data
+
+    def _reader_2list(self, value, num_bits):
+        """Common code used by many of this class's properties.
+        """
+        data = [0]*num_bits
+        for i in range(num_bits):
+            if value & 2**i:
+                data[i] = 1
+        return data
+
+
     @property
     def direction(self):
-        """Set the direction of the USERIO data pins (D0-D7) with an
-        8-bit integer, where bit <x> determines the direction of D<x>:
+        """Set the direction of the USERIO data pins (D0-D7) and clock pin with an
+        9-bit integer, where bit <x> determines the direction of D<x> and bit 8
+        determines the direction of CK.
 
         * bit x = 0: D<x> is an input to Husky.
         * bit x = 1: D<x> is driven by Husky.
@@ -642,14 +778,78 @@ class USERIOSettings(util.DisableNewAttr):
         by the FPGA and cannot be changed by the user.
         Use with care.
         """
-        return self.oa.sendMessage(CODE_READ, "USERIO_CW_DRIVEN", maxResp=1)[0]
+        return int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CW_DRIVEN", maxResp=2), byteorder='little')
 
     @direction.setter
     def direction(self, setting):
-        if not setting in range(0, 256):
-            raise ValueError("Must be integer 0-255")
+        if not setting in range(0, 512):
+            raise ValueError("Must be integer 0-511")
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_CW_DRIVEN", [setting])
+            self.oa.sendMessage(CODE_WRITE, "USERIO_CW_DRIVEN", int.to_bytes(setting, length=2, byteorder='little'), Validate=False)
+
+    @property
+    def _direction_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].direction).
+        """
+        direction = self._read_direction()
+        return util.Lister(direction, setter=self._set_direction, getter=self._read_direction)
+
+    @_direction_list.setter
+    def _direction_list(self, value):
+        self._set_direction(value)
+
+    def _set_direction(self, direction):
+        data = self._setter_check_and_transform(direction, 9, 511)
+        self.direction = data
+
+    def _read_direction(self):
+        return self._reader_2list(self.direction, 9)
+
+    @property
+    def clock_enabled(self):
+        """Enable clock output.
+        9-bit integer, where bit <x> enables the clock on D<x> and bit 8
+        enables the clock on CK.
+        Clocks are not available on all bits: see scope.userio.clocks_supported
+        for a binary representation of which USERIO pins can output a clock.
+
+        """
+        return int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CLOCK_OUT", maxResp=2), byteorder='little')
+
+    @clock_enabled.setter
+    def clock_enabled(self, setting):
+        if setting & (self.clocks_supported ^ 0x1ff):
+            raise ValueError("Clocks supported only on pins: %s" % bin(self.clocks_supported))
+        else:
+            self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", int.to_bytes(setting, length=2, byteorder='little'), Validate=False)
+
+    @property
+    def _clock_enabled_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].clock_enabled).
+        """
+        clock_enabled = self._read_clock_enabled()
+        return util.Lister(clock_enabled, setter=self._set_clock_enabled, getter=self._read_clock_enabled)
+
+    @_clock_enabled_list.setter
+    def _clock_enabled_list(self, value):
+        self._set_clock_enabled(value)
+
+    def _set_clock_enabled(self, clock_enabled):
+        data = self._setter_check_and_transform(clock_enabled, 9, 511)
+        self.clock_enabled = data
+
+    def _read_clock_enabled(self):
+        return self._reader_2list(self.clock_enabled, 9)
+
+    def _check_clocks(self):
+        """To see which USERIO pins can be configured as a clock, write all ones to USERIO_CLOCK_OUT and
+        read back.
+        """
+        self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0xff, 0xff])
+        readback = int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CLOCK_OUT", maxResp=2), byteorder='little')
+        self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0, 0])
+        return readback
+
 
     @property
     def drive_data(self):
@@ -658,12 +858,27 @@ class USERIOSettings(util.DisableNewAttr):
         return self._drive_data
 
     @drive_data.setter
-    def drive_data(self, setting):
-        if not setting in range(0, 256):
-            raise ValueError("Must be integer 0-255")
-        else:
-            self._drive_data = setting
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", [setting])
+    def drive_data(self, value):
+        self._set_drive_data(value)
+
+    @property
+    def _drive_data_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].drive_data).
+        """
+        drive_data = self._read_drive_data()
+        return util.Lister(drive_data, setter=self._set_drive_data, getter=self._read_drive_data)
+
+    @_drive_data_list.setter
+    def _drive_data_list(self, value):
+        self._set_drive_data(value)
+
+    def _set_drive_data(self, drive_data):
+        data = self._setter_check_and_transform(drive_data, 8, 255)
+        self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", [data])
+        self._drive_data = data
+
+    def _read_drive_data(self):
+        return self._reader_2list(self.drive_data, 8)
 
     @property
     def status(self):
@@ -671,6 +886,39 @@ class USERIOSettings(util.DisableNewAttr):
         """
         raw = self.oa.sendMessage(CODE_READ, "USERIO_READ", maxResp=2)
         return int.from_bytes(raw, byteorder='little')
+
+    @property
+    def _status_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].status).
+        """
+        return self._reader_2list(self.status, 9)
+
+    @property
+    def pin_functions(self):
+        """Returns informative list of functions for USERIO pins, as currently
+        configured by :class:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>` properties.
+        """
+        functions = []
+        for i in range(9):
+            if self.mode == 'trace':
+                function = self.trace_pins[i]
+
+            elif self.mode == 'swo_trace_plus_debug':
+                if i < 3:
+                    function = self.trace_pins[i]
+                else:
+                    function = self.fpga_mode_definitions[self.fpga_mode][1][i]
+
+            elif self.mode == 'fpga_debug':
+                function = self.fpga_mode_definitions[self.fpga_mode][1][i]
+
+            elif self.mode == 'normal':
+                if self._clock_enabled_list[i] and self._direction_list[i]:
+                    function = 'clock output'
+                else:
+                    function = 'data I/O'
+            functions.append(function)
+        return functions
 
 
 
