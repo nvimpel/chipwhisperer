@@ -253,6 +253,9 @@ scope.userio
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings
     :members:
 
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin
+    :members:
+
 scope.XADC
 ^^^^^^^^^^
 
