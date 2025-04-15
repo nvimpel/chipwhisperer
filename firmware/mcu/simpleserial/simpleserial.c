@@ -8,7 +8,6 @@
 #define MAX_SS_CMDS 16
 static int num_commands = 0;
 
-#define MAX_SS_LEN 256
 
 //#define SS_VER_1_0 0
 //#define SS_VER_1_1 1
@@ -37,6 +36,8 @@ uint8_t ss_crc(uint8_t *buf, uint8_t len)
 #if SS_VER == SS_VER_2_0
 #error "SS_VER_2_0 is deprecated! Use SS_VER_2_1 instead."
 #elif SS_VER == SS_VER_2_1
+
+#define MAX_SS_LEN 249
 
 int hex_decode(int len, char* ascii_buf, uint8_t* data_buf)
 {
@@ -248,6 +249,8 @@ void simpleserial_put(char c, uint8_t size, uint8_t* output)
 
 
 #else
+
+#define MAX_SS_LEN 64
 
 typedef struct ss_cmd
 {
