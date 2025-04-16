@@ -676,9 +676,16 @@ class USERIOSettings(util.DisableNewAttr):
 
 class XADCSettings(util.DisableNewAttr):
     ''' Husky FPGA XADC temperature and voltage monitoring.
-    XADC alarms are sticky and shut down generated clocks and SAD logic; the
-    error condition must be manually cleared (scope.XADC.status = 0) to re-enable
+    XADC alarms are sticky and shut down generated clocks, glitching, and SAD logic; the
+    error condition must be manually cleared (by setting :class:`status` to 0) to re-enable
     shutdown logic.
+
+    Some of the alarm thresholds can be adjusted, but do so with care. The
+    default thresholds are set to keep the Husky FPGA within its recommended operating range.
+    If you move the thresholds beyond this range, you can irreversibly damage your Husky.
+
+    Use :class:`vcc_limits()` for a full report on VCC limits and observed values.
+
     '''
     _name = 'Husky XADC Setting'
 
@@ -691,16 +698,48 @@ class XADCSettings(util.DisableNewAttr):
     def _dict_repr(self):
         rtn = {}
         rtn['status'] = self.status
-        rtn['current temperature [C]'] = '%.1f' % self.temp
-        rtn['maximum temperature [C]'] = '%.1f' % self.max_temp
-        rtn['user temperature alarm trigger [C]'] = '%.1f' % self.temp_trigger
-        rtn['user temperature reset trigger [C]'] = '%.1f' % self.temp_reset
-        rtn['device temperature alarm trigger [C]'] = '%.1f' % self.ot_temp_trigger
-        rtn['device temperature reset trigger [C]'] = '%.1f' % self.ot_temp_reset
-        rtn['vccint'] = '%.3f' % self.vccint
-        rtn['vccaux'] = '%.3f' % self.vccaux
-        rtn['vccbram'] = '%.3f' % self.vccbram
+        rtn['temp'] = '%.1f [C]' % self.temp
+        rtn['max_temp'] = '%.1f [C]' % self.max_temp
+        rtn['temp_trigger'] = '%.1f [C]' % self.temp_trigger
+        rtn['temp_reset'] = '%.1f [C]' % self.temp_reset
+        rtn['ot_temp_trigger'] = '%.1f [C]' % self.ot_temp_trigger
+        rtn['ot_temp_reset'] = '%.1f [C]' % self.ot_temp_reset
+        rtn['vccint'] = '%.3f [V]' % self.vccint
+        rtn['vccaux'] = '%.3f [V]' % self.vccaux
+        rtn['vccbram'] = '%.3f [V]' % self.vccbram
         return rtn
+
+    def vcc_limits(self):
+        """Pretty print of limits and observed values for all FPGA VCC rails.
+        'margin' shows how close a rail has come to exceeding either of its limits
+        (negative values meaning that a limit was exceeded).
+        To get the constituent measurements as floats, use :class:`get_vcc_limit()` and :class:`get_vcc()`.
+        Note that min/max values are latched until :class:`user_reset()` is called.
+        """
+        print('        | lower | upper | minimum  | maximum  |          |        ')
+        print('rail    | limit | limit | seen     | seen     | current  | margin ')
+        print('--------+-------+-------+----------+----------+----------+--------')
+        for rail in ['vccint', 'vccaux', 'vccbram']:
+            lower = self.get_vcc_limit(rail, 'lower')
+            upper = self.get_vcc_limit(rail, 'upper')
+            vmin = self.get_vcc(rail, 'min')
+            vcur = self.get_vcc(rail, 'current')
+            vmax = self.get_vcc(rail, 'max')
+            margin = min(upper-vmax, vmin-lower)
+            if vmin < lower:
+                minstat = '❌'
+            else:
+                minstat = '✅'
+            if vmax > upper:
+                maxstat = '❌'
+            else:
+                maxstat = '✅'
+            if vcur > upper or vcur < lower:
+                curstat = '❌'
+            else:
+                curstat = '✅'
+            print('%7s | %.3f | %.3f | %s %.3f | %s %.3f | %s %.3f | %.3f' % (rail, lower, upper, minstat, vmin, maxstat, vmax, curstat, vcur, margin))
+
 
     def __repr__(self):
         return util.dict_to_str(self._dict_repr())
@@ -711,6 +750,7 @@ class XADCSettings(util.DisableNewAttr):
     @property
     def status(self):
         """Read XADC alarm status bits
+
         :Getter: Returns status string.
 
         :Setter: Clear the status error bits (they are sticky).
@@ -739,24 +779,25 @@ class XADCSettings(util.DisableNewAttr):
 
     @property
     def temp(self):
-        """Returns the current FPGA temperature.
+        """Returns the current FPGA temperature (in celcius).
         """
-        return self.get_temp(0)
+        return self._get_temp(0)
 
     @property
     def max_temp(self):
-        """Returns the highest observed FPGA temperature.
+        """Returns the highest observed FPGA temperature (in celcius) since last power-up
+        or :class:`user_reset()` call.
         """
-        return self.get_temp(32)
+        return self._get_temp(32)
 
     @property
     def temp_trigger(self):
         """FPGA user temperature trigger.
         If the FPGA temperature exceeds this value, an error is flagged, and
         all clock-generating modules are shut down until the temperature
-        returns below temp_reset (since they are very power hungry).
+        returns below :class:`temp_reset` (since they are very power hungry).
         """
-        return self.get_temp(0x50)
+        return self._get_temp(0x50)
 
     @temp_trigger.setter
     def temp_trigger(self, temp):
@@ -766,9 +807,9 @@ class XADCSettings(util.DisableNewAttr):
     def temp_reset(self):
         """FPGA user temperature reset.
         When the FPGA temperature returns below this value, the error condition
-        triggered by temp_trigger is cleared.
+        triggered by :class:`temp_trigger` is cleared.
         """
-        return self.get_temp(0x54)
+        return self._get_temp(0x54)
 
     @temp_reset.setter
     def temp_reset(self, temp):
@@ -779,20 +820,21 @@ class XADCSettings(util.DisableNewAttr):
         """FPGA over-temperature trigger.
         If the FPGA temperature exceeds this value, an error is flagged, and
         all clock-generating modules are shut down until the temperature
-        returns below ot_temp_reset (since they are very power hungry).
+        returns below :class:`ot_temp_reset` (since they are very power hungry).
         Read-only.
         """
-        return self.get_temp(0x53)
+        return self._get_temp(0x53)
 
     @property
     def ot_temp_reset(self):
         """FPGA over-temperature reset.
         When the FPGA temperature returns below this value, the error condition
-        triggered by ot_temp_trigger is cleared.
+        triggered by :class:`ot_temp_trigger` is cleared.
+        Read-only.
         """
-        return self.get_temp(0x57)
+        return self._get_temp(0x57)
 
-    def get_temp(self, addr=0):
+    def _get_temp(self, addr=0):
         """Read XADC temperature.
 
         Args:
@@ -821,23 +863,28 @@ class XADCSettings(util.DisableNewAttr):
     @property
     def vccint(self):
         """Returns the current VCCint value.
+        Use :class:`get_vcc()` to get max/min values seen.
         """
         return self.get_vcc('vccint')
 
     @property
     def vccaux(self):
         """Returns the current VCCaux value.
+        Use :class:`get_vcc()` to get max/min values seen.
         """
         return self.get_vcc('vccaux')
 
     @property
     def vccbram(self):
         """Returns the current VCCbram value.
+        Use :class:`get_vcc()` to get max/min values seen.
         """
         return self.get_vcc('vccbram')
 
     def get_vcc(self, rail='vccint', value='current'):
-        """Read XADC vcc.
+        """Read XADC VCC. 
+        Can report current value, or minimum/maximum value seen
+        since power-up / last :class:`user_reset()` call.
 
         Args:
             rail (string): 'vccint', 'vccaux', or 'vccbram'
@@ -869,8 +916,8 @@ class XADCSettings(util.DisableNewAttr):
         raw = self.drp.read(addr)
         return (raw>>4)/4096 * 3 # ref: UG480
 
-    def _get_vcc_limit(self, rail='vccint', limit='upper'):
-        """Get XADC vcc limit.
+    def get_vcc_limit(self, rail='vccint', limit='upper'):
+        """Get XADC VCC upper or lower limit (for firing alarm).
 
         Args:
             rail (string): 'vccint', 'vccaux', or 'vccbram'
@@ -924,7 +971,13 @@ class XADCSettings(util.DisableNewAttr):
         self.drp.write(addr, raw)
 
     def _enable_vcc_alarms(self, enable):
-        """Enable or disable XADC vcc alarms.
+        """Enable or disable XADC VCC alarms. Use with care!
+
+        Disabling VCC alarms removes an important layer of protection.
+        Instead of disabling the VCC alarms, consider adjusting the limits
+        with _set_vcc_limit(), or, if the target power-up is what is causing
+        the alarms, adjusting the soft power-on parameters with
+        scope.io.cwe.setHuskySoftPowerOnParameters().
         """
         addr = 0x41
         val = self.drp.read(addr)
@@ -937,10 +990,9 @@ class XADCSettings(util.DisableNewAttr):
             val |= mask_disable
         self.drp.write(addr, val)
 
-    def _user_reset(self):
-        """Do a user reset of the XADC.
-        This will not clear scope.XADC.errors (use scope.XADC.status = 0 for this), but it will
-        clear stored min/max temperature and voltage measurements.
+    def user_reset(self):
+        """Reset XADC: clears stored min/max temperature and voltage measurements.
+        Does not clear active error flags; set :class:`status` to 0 to clear error flags.
         """
         self.drp.write(0x03, 0xeeee) # (ref: UG480, "XADC JTAG Reset")
 

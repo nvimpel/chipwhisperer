@@ -71,7 +71,7 @@ scope.errors.clear()
 verbose = False
 cw.scope_logger.setLevel(cw.logging.ERROR) # don't want to see warnings when setting clock past its specifications
 
-scope.XADC._user_reset() # reset max/min stats
+scope.XADC.user_reset() # reset max/min stats
 scope.sc.reset_fpga()
 scope.adc.clip_errors_disabled = True
 scope.adc.lo_gain_errors_disabled = True
