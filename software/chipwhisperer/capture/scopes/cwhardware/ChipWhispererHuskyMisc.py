@@ -977,7 +977,7 @@ class XADCSettings(util.DisableNewAttr):
         Instead of disabling the VCC alarms, consider adjusting the limits
         with _set_vcc_limit(), or, if the target power-up is what is causing
         the alarms, adjusting the soft power-on parameters with
-        scope.io.cwe.setHuskySoftPowerOnParameters().
+        :meth:`scope.io.husky_soft_poweron  <chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings.husky_soft_poweron>`
         """
         addr = 0x41
         val = self.drp.read(addr)
