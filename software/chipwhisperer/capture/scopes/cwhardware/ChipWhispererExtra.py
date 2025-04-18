@@ -1373,11 +1373,13 @@ class GPIOSettings(util.DisableNewAttr):
             alarms firing when the target is powered on.
 
         Args:
-            pwm_cycles1: 8-bit int, number of PWM periods in phase 1 of the soft power-on
-            pwm_cycles2: 8-bit int, number of PWM periods in phase 2 of the soft power-on
-            pwm_period: 16-bit int, number of 96 MHz clock cycles in one PWM period
-            pwm_off_time1: 16-bit int, in phase 1, number of clock cycles in one PWM period where power is off
-            pwm_off_time2: 16-bit int, in phase 2, number of clock cycles in one PWM period where power is off
+            settings: list of 5 parameters as follows:
+
+                * pwm_cycles1: 8-bit int, number of PWM periods in phase 1 of the soft power-on
+                * pwm_cycles2: 8-bit int, number of PWM periods in phase 2 of the soft power-on
+                * pwm_period: 16-bit int, number of 96 MHz clock cycles in one PWM period
+                * pwm_off_time1: 16-bit int, in phase 1, number of clock cycles in one PWM period where power is off
+                * pwm_off_time2: 16-bit int, in phase 2, number of clock cycles in one PWM period where power is off
 
         The soft power-on sequence lasts (pwm_cycles1 + pwm_cycles2) * pwm_period cycles of the 96 MHz USB clock.
         To better understand, consider this example (these are not necessarily good values!):
@@ -1411,7 +1413,8 @@ class GPIOSettings(util.DisableNewAttr):
         return self.cwe.getHuskySoftPowerOnParameters()
 
     @husky_soft_poweron.setter
-    def husky_soft_poweron(self, pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2):
+    def husky_soft_poweron(self, settings):
+        pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2 = settings
         self.cwe.setHuskySoftPowerOnParameters(pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2)
 
 
