@@ -1198,9 +1198,6 @@ class ChipWhispererGlitch(object):
         Cause a single glitch event to occur. Depending on setting of scope.glitch.repeat this may mean
         multiple glitches in a row
         """
-        if self._is_husky:
-            if not self.getMMCMLocked():
-                raise ValueError('Cannot glitch because clocks are not locked!')
         resp = self.oa.sendMessage(CODE_READ, "CLOCKGLITCH_SETTINGS", Validate=False, maxResp=8)
         resp[5] = resp[5] | (1 << 7)
         self.oa.sendMessage(CODE_WRITE, "CLOCKGLITCH_SETTINGS", resp, Validate=False)
