@@ -283,8 +283,7 @@ endif
   else ifeq ($(PLATFORM),CW308_NEORV32)
   HAL = neorv32
   PLTNAME = iCE40 Target with neorv softcore
-  else ifeq ($(PLATFORM), CW308_SAM4S)
-  $(warning WARNING: CW308_SAM4S is deprecated, use CW312_SAM4S instead.)
+  else ifeq ($(PLATFORM), CW308_SAM4S)  # CW308_SAM4S is deprecated, use CW312_SAM4S instead.
   HAL = sam4s
   PLTNAME = Microchip SAM4S
   EXTRAPATH=
