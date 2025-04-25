@@ -551,7 +551,7 @@ clean_objs :
 	@$(REMOVE) $(SRC:.c=.i)
 
 # Target: clean project.
-clean: begin clean_print clean_all_objs clean_list end
+clean: begin clean_print clean_all_objs clean_list
 
 clean_print :
 	@$(ECHO_BLANK)
