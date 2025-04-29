@@ -154,7 +154,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-variable -Wno-strict-prototypes -Wno-missing-prototypes
-CFLAGS += -Wno-pointer-sign -Wno-unused-value -Wno-implicit-function-declaration
+CFLAGS += -Wno-pointer-sign -Wno-unused-value
 
 
 #---------------- Compiler Options C++ ----------------
