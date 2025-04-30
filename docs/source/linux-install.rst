@@ -130,8 +130,8 @@ so that pyenv starts properly with your terminal:
     #apply these changes to current terminal
     source ~/.bashrc 
 
-With that done, install a version of Python. Anything >= 3.7 should work,
-but we'll grab 3.9.5 here and make an env called cw:
+With that done, install a version of Python. Anything >= 3.9 should work,
+so we'll grab 3.9.5 here and make an env called cw:
 
 .. code:: bash
 
