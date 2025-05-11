@@ -1,4 +1,4 @@
-chipwhisperer @ file:///C:/Users/alexl/code/chipwhisperer
+chipwhisperer
 colorama==0.4.6
 configobj==5.0.9
 Cython==3.0.11

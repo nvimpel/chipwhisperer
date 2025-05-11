@@ -522,12 +522,6 @@ class CWExtraSettings:
 
     def setHuskySoftPowerOnParameters(self, pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2):
         """Sets the soft power-on PWM parameters.
-
-        Args:
-            pwm_cycles1 (8-bit int): this plus pwm_cycles2 is the number of PWM on/off cycles before power is fully on
-            pwm_cycles2 (8-bit int): this plus pwm_cycles1 is the number of PWM on/off cycles before power is fully on
-            pwm_period (16-bit int): number of cycles in PWM period
-            pwm_off_time1 (16-bit int): number of cycles in PWM period where power is off, for the first pwm_cycles1
         """
         if not self._is_husky:
             raise ValueError("For Husky only")
@@ -1355,6 +1349,74 @@ class GPIOSettings(util.DisableNewAttr):
         """Disables and reenables the glitch mosfets that were previously enabled.
         """
         self.cwe.vglitch_reset(delay)
+
+
+    @property
+    def husky_soft_poweron(self):
+        """Sets the target soft power-on PWM parameters.
+        When the target is powered on (when :class:`target_pwr` goes from
+        :code:`False` to :code:`True`), the target power on the 20-pin
+        connector +3.3V pin doesn't simply go from 0V to 3.3V; instead, a
+        series of pulses is applied, so that the 3.3V line goes up gently with
+        minimal overshoot. Without this, a target's sudden power draw can cause
+        Husky's VCC lines to go out of their recommended operating ranges, which 
+        triggers :class:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
+        errors and everything that this entails (some Husky logic gets shutdown
+        as a protective measure).
+
+        The soft power-on parameters are tuned for NewAE targets. If you use a
+        different target, you may need to tweak these parameters in order to
+        get a smooth, error-free target power-on.
+
+        Warning:
+            Inappropriate values can result in :class:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
+            alarms firing when the target is powered on.
+
+        Args:
+            settings: list of 5 parameters as follows:
+
+                * pwm_cycles1: 8-bit int, number of PWM periods in phase 1 of the soft power-on
+                * pwm_cycles2: 8-bit int, number of PWM periods in phase 2 of the soft power-on
+                * pwm_period: 16-bit int, number of 96 MHz clock cycles in one PWM period
+                * pwm_off_time1: 16-bit int, in phase 1, number of clock cycles in one PWM period where power is off
+                * pwm_off_time2: 16-bit int, in phase 2, number of clock cycles in one PWM period where power is off
+
+        The soft power-on sequence lasts (pwm_cycles1 + pwm_cycles2) * pwm_period cycles of the 96 MHz USB clock.
+        To better understand, consider this example (these are not necessarily good values!):
+
+        * pwm_period = 100
+        * pwm_cycles1 = 50
+        * pwm_cycles2 = 20
+        * pwm_off_time1 = 90
+        * pwm_off_time2 = 95
+
+        When the target is powered on, power is then applied as follows:
+
+        1. first 90 cycles (pwm_off_time1): power is off
+        2. next 10 cycles (pwm_period - pwm_off_time1): power is ON
+        3. repeat steps 1 and 2 50 (pwm_cycles1) times
+        4. next 95 cycles (pwm_off_time2): power is off
+        5. next 5 cycles (pwm_period - pwm_off_time2): power is ON
+        6. repeat steps 4 and 5 20 (pwm_cycles2) times
+        7. keep power ON
+
+        The default values are as follows:
+
+        * pwm_period = 2000
+        * pwm_cycles1 = 35
+        * pwm_cycles2 = 0
+        * pwm_off_time1 = 1995
+        * pwm_off_time2 = 0
+
+        """
+
+        return self.cwe.getHuskySoftPowerOnParameters()
+
+    @husky_soft_poweron.setter
+    def husky_soft_poweron(self, settings):
+        pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2 = settings
+        self.cwe.setHuskySoftPowerOnParameters(pwm_cycles1, pwm_cycles2, pwm_period, pwm_off_time1, pwm_off_time2)
+
 
     def reset_target(self, initial_state=1, reset_state=0, reset_delay=0.01, postreset_delay=0.01):
         raise NotImplementedError()

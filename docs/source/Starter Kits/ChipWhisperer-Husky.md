@@ -21,7 +21,7 @@ also comes with multiple targets (a CW312T-ICE40 and a CW312T-SAM4S).
 * [ChipWhisperer-Husky](../Capture/ChipWhisperer-Husky.md)
 * [CW313](../Targets/CW313.md)
 * [CW312T-ICE40](../chipwhisperer-target-cw308t/CW312T_ICE40UP/README.md)
-* [CW308T-SAM5S](../chipwhisperer-target-cw308t/CW312T_ATSAM4S/README.md)
+* [CW308T-SAM4S](../chipwhisperer-target-cw308t/CW312T_ATSAM4S/README.md)
 * 20-pin breakout cable
 * 20-pin IDC ribbon cable x2
 * 12" SMA-SMA cable x2

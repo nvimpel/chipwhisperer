@@ -198,7 +198,7 @@ def common_xadc_check(scope, verbose=False, error_msg=''):
         for rail, nominal in zip(['vccint', 'vccaux', 'vccbram'],  [1.0, 1.8, 1.0]):
             for worst,limit in zip(['min', 'max'], ['lower', 'upper']):
                 vseen = scope.XADC.get_vcc(rail, worst)
-                vlimit = scope.XADC._get_vcc_limit(rail, limit)
+                vlimit = scope.XADC.get_vcc_limit(rail, limit)
                 if worst == 'min':
                     vmargin = vseen - vlimit
                 else:

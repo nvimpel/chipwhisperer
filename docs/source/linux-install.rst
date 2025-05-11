@@ -109,7 +109,8 @@ Next, we need to create a virtual environment:
 
     python3 -m venv ~/.cwvenv # place this anywhere you like, but don't forget to update path in the next step
 
-You can then activate this environment as follows:
+With that done, install a version of Python. Anything >= 3.9 should work,
+so we'll grab 3.9.5 here and make an env called cw:
 
 .. code:: bash
 

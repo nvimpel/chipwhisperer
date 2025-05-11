@@ -143,7 +143,8 @@ Your callback can be registered in both V1 and V2 in ``main()`` by
    simpleserial_addcmd(cmd, cmd_len, my_callback);
 
 **By default, V1 does not support variable length commands, so V1 will
-ignore all packets that don’t send** ``cmd_len`` **bytes of data**.
+ignore all packets that don’t send** ``cmd_len`` **bytes of data unless
+specified as a variable length command.**
 
 To wait for a packet, use ``simpleserial_get()`` after registering your
 commands:
@@ -347,8 +348,29 @@ You can specify ``scmd`` in Python using the ``send_cmd()`` method:
 V1 variable length commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As of version 6.0 of ChipWhisperer, V1 variable length commands must be
-constructed manually. See the Protocol Details for packet details
+As ChipWhisperer 6.1, you can use V1 variable length commands by registering a callback
+in C using ``simpleserial_addcmd_flags()``:
+
+.. code:: c
+
+    uint8_t get_key(uint8_t *data, uint8_t len)
+    {
+        if (len == 16) {/* AES128 stuff */}
+        else if (len == 32) {/* AES256 stuff */}
+    }
+
+
+    simpleserial_addcmd_flags('k', 16, get_key, CMD_FLAG_LEN);
+
+You can send variable length commands in Python by specifying ``var_len=True`` when
+calling ``simpleserial_write()``:
+
+.. code:: python
+
+    target.simpleserial_write('k', key, var_len=True)
+
+.. warning:: You must manually keep track of variable length and non-variable length commands
+    in V1 and mixing them up will cause communication errors.
 
 Protocol Details
 ----------------

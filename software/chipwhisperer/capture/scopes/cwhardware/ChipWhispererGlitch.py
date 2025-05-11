@@ -127,11 +127,8 @@ class GlitchSettings(util.DisableNewAttr):
     def manual_trigger(self) -> None:
         """Manually trigger the glitch output.
 
-        This trigger is most useful in Manual trigger mode, where this is the
-        only way to cause a glitch.
-
-        Note that for ChipWhisperer-Husky, this method will only cause a glitch
-        in manual mode, while on the Lite/Pro, this method will always insert a glitch.
+        This method only inserts a glitch in manual trigger mode. In this
+        mode, it is likewise the only way to insert a glitch.
         """
         self.cwg.glitchManual()
         
