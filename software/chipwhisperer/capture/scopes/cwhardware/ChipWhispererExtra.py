@@ -1314,6 +1314,8 @@ class GPIOSettings(util.DisableNewAttr):
         high-powered MOSFET shorts the power-rail to ground when the glitch
         module's output is active.
 
+        Can be more effective than :class:`glitch_lp` for power-hungry targets.
+
         .. warning:: Use with caution - ensure that the glitch module is properly
             configured before enabling this setting, as it is possible to
             permanently damage hardware with this output.
@@ -1332,8 +1334,9 @@ class GPIOSettings(util.DisableNewAttr):
     def glitch_lp(self):
         """Whether the low-power crowbar MOSFET is enabled.
 
-        This is the low-power version of glitch_hp - see that documentation
-        for more details.
+        This is the low-power version of :class:`glitch_hp`.
+
+        Has a faster response than :class:`glitch_hp`.
 
         .. warning:: Use with caution - ensure that the glitch module is properly
             configured before enabling this setting, as it is possible to
