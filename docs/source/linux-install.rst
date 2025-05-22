@@ -21,8 +21,8 @@ should get you up and running:
 
     sudo apt update && sudo apt upgrade
 
-    sudo apt install libusb-dev make git avr-libc gcc-avr \
-        gcc-arm-none-eabi libusb-1.0-0-dev usbutils python3 python3-venv
+    sudo apt install make git avr-libc gcc-avr \
+        gcc-arm-none-eabi libusb-1.0-0-dev usbutils python3 python3-venv python3-dev
 
     cd ~/
     git clone https://github.com/newaetech/chipwhisperer
@@ -95,13 +95,13 @@ Python
 The recommended way to use Python with ChipWhisperer is to install everything in a
 virtual environment. Luckily, Python makes this easy!
 
-The first step is to grab python and python-venv packages:
+The first step is to grab the python, python-dev, and python-venv packages:
 
 ..
 
 .. code:: bash
 
-	sudo apt install python3 python3-venv
+	sudo apt install python3 python3-venv python3-dev
 
 Next, we need to create a virtual environment:
 
