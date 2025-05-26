@@ -84,19 +84,131 @@ class XilinxDRP(util.DisableNewAttr):
 
 
 class XilinxMMCMDRP(util.DisableNewAttr):
-    ''' Methods for dynamically programming Xilinx MMCM via its DRP.
-        Husky only.
+    ''' Methods for dynamically programming Xilinx MMCM/PLL via its DRP.
+    Husky only.
+    Reference: XAPP888.
     '''
     _name = 'Xilinx MMCM DRP'
-    def __init__(self, drp):
+
+    def __init__(self, drp, max_freq=200e6, vco_min=600e6, vco_max=1200e6):
         super().__init__()
         self.drp = drp
+        self._warning_frequency = max_freq
+        # Note: for Husky's FPGA, VCO range is 600-1200 MHz for MMCMs, 800-1600 MHz for PLLs
+        self.vco_min = vco_min
+        self.vco_max = vco_max
+        self.mul_range = list(range(2, 127))
+        self.div_range = list(range(1, 112))
+        self.sec_div_range = list(range(1, 127))
+        self.sec_div_range.append(1)
         self.disable_newattr()
 
+
+    def set_freqs(self, ifreq, ofreqs, threshold=0.01):
+        """Calculate Multiply & Divide settings based on input frequency.
+        Computing a closest match for multiple arbitrary frequencies is not straightforward, and "closest match"
+        may not be what the user wants anyways. So we first pick all the settings that get us closest to the first
+        clock frequency. We then move onto the next clock, and so on.
+        User can always manually specify PLL settings to get a different outcome.
+        """
+        using_bests = False
+        actual_freqs = []
+        bests = []
+        for c, clock in enumerate(ofreqs):
+            if clock is None:
+                bests.append([[None, None, None]])
+                continue
+            if clock > self._warning_frequency:
+                scope_logger.warning("""
+                    Requested clock frequency exceeds specification (250 MHz). 
+                    This may or may not work, depending on temperature, voltage, and luck.
+                    It may not work reliably.
+                    You can adjust the _warning_frequency property if you don't want
+                    to see this message anymore.
+                    """)
+            lowerror = 1e99
+            next_bests = []
+            next_best_div_range = []
+            next_best_mul_range = []
+            if using_bests:
+                div_range = best_div_range
+            else:
+                div_range = self.div_range
+
+            for i,maindiv in enumerate(div_range):
+                mmin = int(np.ceil(self.vcomin/ifreq*maindiv))
+                mmax = int(np.ceil(self.vcomax/ifreq*maindiv))
+                if using_bests:
+                    mul_range = [best_mul_range[i]]
+                else:
+                    mul_range = self.mul_range
+                for mul in range(mmin,mmax+1):
+                    if mul/maindiv < self.vcomin/ifreq or mul/maindiv > self.vcomax/ifreq or mul not in mul_range:
+                        continue
+                    for secdiv in self.sec_div_range:
+                        calcfreq = ifreq*mul/maindiv/secdiv
+                        err = abs(clock - calcfreq)
+                        if err < lowerror:
+                            lowerror = err
+                            next_bests = [[mul, maindiv, secdiv]]
+                            next_best_div_range = [maindiv]
+                            next_best_mul_range = [mul]
+                        elif err == lowerror:
+                            next_bests.append([mul, maindiv, secdiv])
+                            next_best_div_range.append(maindiv)
+                            next_best_mul_range.append(mul)
+
+            if next_bests == []:
+                scope_logger.error("Couldn't find a legal div/mul combination")
+            else:
+                using_bests = True
+
+            best_div_range = next_best_div_range
+            best_mul_range = next_best_mul_range
+            bests.append(next_bests)
+            scope_logger.debug('set_freqs progress for clock %d: best_div_range = %s' % (c, best_div_range))
+            scope_logger.debug('set_freqs progress for clock %d: best_mul_range = %s' % (c, best_mul_range))
+
+
+        # almost done! now we've got mul and maindiv; for each clock we go back to find the corresponding sec_div,
+        # then we can report all generated clock frequencies vs requested frequencies
+        mul, maindiv, secdiv = next_bests[0]
+        self.set_mul(mul)
+        self.set_main_div(maindiv)
+        for c, clock in enumerate(ofreqs):
+            if clock is None:
+                # there doesn't seem to be a way to turn off the clock, 
+                # so let's set secondary divider to max value when user specifies "None" for the frequency
+                self.set_sec_div(max(self.sec_div_range), c)
+                continue
+            # find secdiv:
+            secdiv = None
+            for b in bests[c]:
+                if b[0] == mul and b[1] == maindiv:
+                    secdiv = b[2]
+                    break
+            if secdiv is None:
+                raise ValueError('Internal error, could not find secdiv. There is a bug somewhere in this function.')
+            actual_freq = ifreq * mul / maindiv / secdiv
+            if abs(actual_freq-clock)/clock*100 > threshold:
+                warning = '*** outside of tolerance threshold***'
+            else:
+                warning = ''
+            message = 'Clock %d: requested %4.2f MHz, getting %4.2f MHz %s' % (c, clock/1e6, actual_freq/1e6, warning)
+            scope_logger.info(message)
+            if warning:
+                print(message)
+            self.set_sec_div(secdiv, c)
+        time.sleep(0.1)
+
+
     def set_mul(self, mul):
+        if mul not in self.mul_range:
+            raise ValueError("Multiplier (%d) out of range" % mul)
         muldiv2 = int(mul/2)
         lo = muldiv2
         if mul%2:
+            #scope_logger.warning("Odd multiplier means clock duty cycle will not be 50%")
             hi = lo+1
         else:
             hi = lo
@@ -108,8 +220,8 @@ class XilinxMMCMDRP(util.DisableNewAttr):
 
 
     def set_main_div(self, div):
-        if not isinstance(div, int):
-            raise ValueError("Only integers are supported")
+        if div not in self.div_range:
+            raise ValueError("Divider (%d) out of range" % div)
         # Set main divider:
         if div == 1:
             raw = 0x1000
@@ -117,6 +229,7 @@ class XilinxMMCMDRP(util.DisableNewAttr):
             div2 = int(div/2)
             lo = div2
             if div % 2:
+                #scope_logger.warning("Odd divider means clock duty cycle will not be 50%")
                 hi = lo+1
             else:
                 hi = lo
@@ -126,11 +239,18 @@ class XilinxMMCMDRP(util.DisableNewAttr):
 
 
     def set_sec_div(self, div, clock=0):
-        if not isinstance(div, int):
-            raise ValueError("Only integers are supported")
+        if div not in self.sec_div_range:
+            raise ValueError("Divider (%d) out of range" % div)
+        # Set main divider:
         if clock > 5:
             raise ValueError("Clock must be in range [0,5]")
-        addr = 0x08 + clock*2
+        # pay attention to addressing, it's weird!
+        if clock == 5:
+            addr = 0x06
+        elif clock == 6:
+            addr = 0x12
+        else:
+            addr = 0x08 + clock*2
         # Set secondary divider:
         if div == 1:
             self.drp.write(addr+1, 0x0040)
@@ -138,6 +258,7 @@ class XilinxMMCMDRP(util.DisableNewAttr):
             div2 = int(div/2)
             lo = div2
             if div % 2:
+                #scope_logger.warning("Odd divider means clock duty cycle will not be 50%")
                 hi = lo+1
             else:
                 hi = lo
@@ -206,7 +327,13 @@ class XilinxMMCMDRP(util.DisableNewAttr):
     def get_sec_div(self, clock=0):
         if clock > 5:
             raise ValueError("Clock must be in range [0,5]")
-        addr = 0x08 + clock*2
+        # pay attention to addressing, it's weird!
+        if clock == 5:
+            addr = 0x06
+        elif clock == 6:
+            addr = 0x12
+        else:
+            addr = 0x08 + clock*2
         #  read CLKOUT2 to ensure fractional mode is disabled and check NO_COUNT bit for CLKOUT divider:
         raw = list(int.to_bytes(self.drp.read(addr+1), length=2, byteorder='little'))
         if raw[1] & 0x08:
