@@ -1155,6 +1155,7 @@ class GPIOSettings(util.DisableNewAttr):
         Options:
 
         * "high_z": input: to use as a trigger (scope.trigger.triggers = 'aux') or clock (scope.clock.clkgen_src = 'extclk_aux_io').
+        * "userio_ck": output: provide the same clock that's on USERIO CK.
         * "hs2": output: provide the same clock that's on HS2.
         """
         if not self._is_husky:
@@ -1162,6 +1163,8 @@ class GPIOSettings(util.DisableNewAttr):
         data = self.cwe.oa.sendMessage(CODE_READ, "CW_AUX_IO", Validate=False, maxResp=1)[0]
         if data & 0x01:
             return "hs2"
+        elif data & 0x08:
+            return "userio_ck"
         else:
             return "high_z"
 
@@ -1171,11 +1174,15 @@ class GPIOSettings(util.DisableNewAttr):
             raise ValueError("For CW-Husky only.")
         data = self.cwe.oa.sendMessage(CODE_READ, "CW_AUX_IO", Validate=False, maxResp=1)[0]
         if state == 'high_z':
-            data &= 0xfe
+            data &= 0xf6
         elif state == 'hs2':
+            data &= 0xf7
             data |= 0x01
+        elif state == 'userio_ck':
+            data &= 0xfe
+            data |= 0x08
         else:
-            raise ValueError("Options: high_z, hs2")
+            raise ValueError("Options: high_z, hs2, userio_ck")
         return self.cwe.oa.sendMessage(CODE_WRITE, "CW_AUX_IO", [data])
 
     @property
