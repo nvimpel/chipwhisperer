@@ -90,13 +90,20 @@ class XilinxMMCMDRP(util.DisableNewAttr):
     '''
     _name = 'Xilinx MMCM DRP'
 
-    def __init__(self, drp, max_freq=200e6, vco_min=600e6, vco_max=1200e6):
+    def __init__(self, drp, max_freq=200e6, vco_min=600e6, vco_max=1200e6, fin_min=10e6, fin_max=800e6, fout_min=4.69e6, fout_max=800e6):
         super().__init__()
         self.drp = drp
         self._warning_frequency = max_freq
         # Note: for Husky's FPGA, VCO range is 600-1200 MHz for MMCMs, 800-1600 MHz for PLLs
         self.vco_min = vco_min
         self.vco_max = vco_max
+
+        # For Husky's Artix7 FPGA, these limits are specified in DS181. They are not the same for MMCMs and PLLs; default values are for MMCMs.
+        self.fin_min = fin_min
+        self.fin_max = fin_max
+        self.fout_min = fout_min
+        self.fout_max = fout_max
+
         self.mul_range = list(range(2, 127))
         self.div_range = list(range(1, 112))
         self.sec_div_range = list(range(1, 127))
@@ -112,8 +119,11 @@ class XilinxMMCMDRP(util.DisableNewAttr):
         User can always manually specify PLL settings to get a different outcome.
         """
         using_bests = False
-        actual_freqs = []
         bests = []
+        if ifreq < self.fin_min or ifreq > self.fin_max:
+            scope_logger.warning('PLL input clock frequency out of range (%d, %d)' % (self.fin_min, self.fin_max))
+        if len(ofreqs) > 6:
+            raise ValueError('Too many clocks requested!')
         for c, clock in enumerate(ofreqs):
             if clock is None:
                 bests.append([[None, None, None]])
@@ -126,6 +136,8 @@ class XilinxMMCMDRP(util.DisableNewAttr):
                     You can adjust the _warning_frequency property if you don't want
                     to see this message anymore.
                     """)
+            if clock < self.fout_min or ifreq > self.fout_max:
+                scope_logger.warning('PLL output clock frequency out of range (%d, %d)' % (self.fout_min, self.fout_max))
             lowerror = 1e99
             next_bests = []
             next_best_div_range = []
@@ -136,14 +148,14 @@ class XilinxMMCMDRP(util.DisableNewAttr):
                 div_range = self.div_range
 
             for i,maindiv in enumerate(div_range):
-                mmin = int(np.ceil(self.vcomin/ifreq*maindiv))
-                mmax = int(np.ceil(self.vcomax/ifreq*maindiv))
+                mmin = int(np.ceil(self.vco_min/ifreq*maindiv))
+                mmax = int(np.ceil(self.vco_max/ifreq*maindiv))
                 if using_bests:
                     mul_range = [best_mul_range[i]]
                 else:
                     mul_range = self.mul_range
                 for mul in range(mmin,mmax+1):
-                    if mul/maindiv < self.vcomin/ifreq or mul/maindiv > self.vcomax/ifreq or mul not in mul_range:
+                    if mul/maindiv < self.vco_min/ifreq or mul/maindiv > self.vco_max/ifreq or mul not in mul_range:
                         continue
                     for secdiv in self.sec_div_range:
                         calcfreq = ifreq*mul/maindiv/secdiv
@@ -175,11 +187,14 @@ class XilinxMMCMDRP(util.DisableNewAttr):
         mul, maindiv, secdiv = next_bests[0]
         self.set_mul(mul)
         self.set_main_div(maindiv)
+        actual_freqs = []
         for c, clock in enumerate(ofreqs):
             if clock is None:
                 # there doesn't seem to be a way to turn off the clock, 
                 # so let's set secondary divider to max value when user specifies "None" for the frequency
-                self.set_sec_div(max(self.sec_div_range), c)
+                secdiv = max(self.sec_div_range)
+                self.set_sec_div(secdiv, c)
+                actual_freqs.append(ifreq*mul/maindiv/secdiv)
                 continue
             # find secdiv:
             secdiv = None
@@ -190,16 +205,18 @@ class XilinxMMCMDRP(util.DisableNewAttr):
             if secdiv is None:
                 raise ValueError('Internal error, could not find secdiv. There is a bug somewhere in this function.')
             actual_freq = ifreq * mul / maindiv / secdiv
+            actual_freqs.append(actual_freq)
             if abs(actual_freq-clock)/clock*100 > threshold:
                 warning = '*** outside of tolerance threshold***'
             else:
                 warning = ''
-            message = 'Clock %d: requested %4.2f MHz, getting %4.2f MHz %s' % (c, clock/1e6, actual_freq/1e6, warning)
+            message = 'Clock %d: requested %4.3f MHz, getting %4.3f MHz %s' % (c, clock/1e6, actual_freq/1e6, warning)
             scope_logger.info(message)
             if warning:
                 print(message)
             self.set_sec_div(secdiv, c)
         time.sleep(0.1)
+        return actual_freqs
 
 
     def set_mul(self, mul):
@@ -468,6 +485,8 @@ class USERIOPin(util.DisableNewAttr):
         rtn['drive_data'] = self.drive_data
         rtn['status'] = self.status
         rtn['clock_enabled'] = self.clock_enabled
+        if self.pin_number > 8 - self.parent.num_clocks:
+            rtn['clock'] = self.clock
         return rtn
 
     def __repr__(self):
@@ -525,6 +544,16 @@ class USERIOPin(util.DisableNewAttr):
     @clock_enabled.setter
     def clock_enabled(self, value):
         self.parent._clock_enabled_list[self.pin_number] = value
+
+    @property
+    def clock(self):
+        """See :class:`scope.userio.clocks <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.clocks>`.
+        """
+        return self.parent.clocks[8-self.pin_number]
+
+    @clock.setter
+    def clock(self, value):
+        self.parent.clocks[8-self.pin_number] = value
 
 
 
@@ -757,7 +786,13 @@ class USERIOSettings(util.DisableNewAttr):
         self.pins = []
         for pin in range(9):
             self.pins.append(USERIOPin(self, pin))
+        self.num_clocks = None
         self.clocks_supported = self._check_clocks()
+        self._drp = XilinxDRP(self.oa, "USERIO_DRP_DATA", "USERIO_DRP_ADDR", "USERIO_DRP_RESET")
+        self._pll = XilinxMMCMDRP(self._drp, vco_min=800e6, vco_max=1600e6, fin_min=19e6, fin_max=800e6, fout_min=6.25e6, fout_max=800e6)
+        self._clocks = [None]*self.num_clocks
+        self._clock_source = 0
+        self._clock_source_freq = 96e6
         self.disable_newattr()
 
     def _dict_repr(self):
@@ -767,6 +802,7 @@ class USERIOSettings(util.DisableNewAttr):
             rtn['fpga_mode'] = self.fpga_mode
         rtn['direction'] = self.direction
         rtn['clock_enabled'] = self.clock_enabled
+        rtn['clocks'] = self.clocks
         rtn['drive_data'] = self.drive_data
         rtn['status'] = self.status
         pins_rtn = {}
@@ -780,10 +816,17 @@ class USERIOSettings(util.DisableNewAttr):
             info += ', clock_enabled = %d' % self._clock_enabled_list[i]
             if i < 8:
                 info += ', drive = %d' % self._drive_data_list[i]
+            if i > 8 - self.num_clocks:
+                if self.clocks[8-i] is None:
+                    info += ', clock not set'
+                else:
+                    info += ', clock = %.1f' % self.clocks[8-i]
+
             if i < 8:
                 pins_rtn['D%d' % i] = info
             else:
                 pins_rtn['CK'] = info
+
         rtn['Individual pins'] = pins_rtn
         return rtn
 
@@ -975,7 +1018,135 @@ class USERIOSettings(util.DisableNewAttr):
         self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0xff, 0xff])
         readback = int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CLOCK_OUT", maxResp=2), byteorder='little')
         self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0, 0])
+        self.num_clocks = bin(readback)[2:].count('1')
         return readback
+
+
+    @property
+    def clocks(self):
+        """ Clock frequencies for pins that are configured as clocks.
+        See scope.userio.num_clocks for the number of clock that can be
+        generated. Provide desired clock frequencies as a list; the first
+        element is for the CK pin, then D7 pin, then D6, and so on.
+
+        All clocks are generated from a single PLLE2 FPGA macro, which limits
+        what is possible when requesting multiple clock frequencies. A warning
+        is issued if an actual clock frequency is more than 0.1% off from its
+        requested value; you can also see the actual frequencies by querying
+        this property after assignment: it will report the actual (not
+        requested) frequencies.
+
+        When calculating PLL parameters for multiple clocks, we use an
+        algorithm which prioritizes the requested frequencies in the order that
+        they are specified (e.g. CK first, then D7, then D6...).
+
+        If you have different needs, you can set the PLL's multiply/divide
+        parameters via the methods exposed by the scope.userio._pll object.
+        """
+        return self.get_clocks()
+
+    @clocks.setter
+    def clocks(self, frequencies):
+        if len(frequencies) > self.num_clocks:
+            raise ValueError('Too many clocks!')
+        for i,f in enumerate(frequencies):
+            if f:
+                self._clocks[i] = f
+        if self.clock_source == 'usb':
+            ifreq = 96e6
+        else:
+            ifreq = self.clock_source_freq
+        self._clocks = self._pll.set_freqs(ifreq, self._clocks)
+        if not self.clocks_locked:
+            scope_logger.warning('USERIO PLL is not locked. Generated clocks may not be dependable. (have you set scope.userio.clock_source_freq correctly?)')
+
+    def read_clocks(self):
+        # note: returns *actual set* frequency, not requested frequency
+        return self._clocks
+
+    def get_clocks(self):
+        return util.Lister(self._clocks, setter=self.set_clocks, getter=self.read_clocks)
+
+    def set_clocks(self, clocks):
+        self.clocks = clocks
+
+
+    @property
+    def clock_source(self):
+        """ Set the clock source for the PLL that generates the USERIO output clocks.
+        Args:
+            source (str): "target" or "usb". When set to "target", uses the
+                target clock as defined by scope.clock (i.e. can be either
+                internally or externally generated). The frequency of that
+                clock must be explicitely provided to
+                :class:`clock_source_freq`. When set to "usb", the internal
+                fixed 96 MHz clock is used (:class:`clock_source_freq` does not
+                need to be set in that case).
+
+        .. note:: When this property is updated, PLL parameters are
+            re-calculated to maintain the clock frequencies that were
+            previously *generated*. These may be different from the clock
+            frequencies that were previously *requested*!
+        """
+        if self._clock_source:
+            return 'target'
+        else:
+            return 'usb'
+
+    @clock_source.setter
+    def clock_source(self, source):
+        if source == self.clock_source:
+            change = False
+        else:
+            change = True
+        if source == 'target':
+            raw = 1
+        elif source == 'usb':
+            raw = 0
+        else:
+            raise ValueError()
+        self._clock_source = raw
+        self.oa.sendMessage(CODE_WRITE, 'USERIO_CLKSEL', [raw])
+        if change and self._clocks != [None]*self.num_clocks:
+            # re-set clock frequencies
+            self.clocks = [None]*self.num_clocks
+
+    @property
+    def clock_source_freq(self):
+        """ Specify the target clock frequency.
+        Args:
+            freq (int or float): target clock frequency. When
+                :class:`clock_source` is set to "target", we need to know that
+                clock's frequency in order to calculate the PLL settings that
+                will generate the requested clock frequencies.
+
+        .. note:: When this property is updated, PLL parameters are
+            re-calculated to maintain the clock frequencies that were
+            previously *generated*. These may be different from the clock
+            frequencies that were previously *requested*!
+        """
+        return self._clock_source_freq
+
+    @clock_source_freq.setter
+    def clock_source_freq(self, freq):
+        if freq != self._clock_source_freq:
+            self._clock_source_freq = freq
+            if self._clocks != [None]*self.num_clocks:
+                # re-set clock frequencies
+                self.clocks = [None]*self.num_clocks
+
+
+    @property
+    def clocks_locked(self):
+        """ Indicates whether the PLL that generates the USERIO output clocks
+        is locked. Usually the reason for it to be unlocked is that the PLL
+        parameters bring either the output clocks or the internal VCO out of
+        range.
+        """
+        if self.oa.sendMessage(CODE_READ, "USERIO_CLKSEL", maxResp=1)[0] & 2:
+            return True
+        else:
+            return False
 
 
     @property
