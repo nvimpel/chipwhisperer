@@ -786,7 +786,7 @@ class USERIOSettings(util.DisableNewAttr):
         self.pins = []
         for pin in range(9):
             self.pins.append(USERIOPin(self, pin))
-        self.num_clocks = None
+        self.num_clocks = 1 # note: will get overwritten by _check_clocks(); prevents mypy complaint
         self.clocks_supported = self._check_clocks()
         self._drp = XilinxDRP(self.oa, "USERIO_DRP_DATA", "USERIO_DRP_ADDR", "USERIO_DRP_RESET")
         self._pll = XilinxMMCMDRP(self._drp, vco_min=800e6, vco_max=1600e6, fin_min=19e6, fin_max=800e6, fout_min=6.25e6, fout_max=800e6)
