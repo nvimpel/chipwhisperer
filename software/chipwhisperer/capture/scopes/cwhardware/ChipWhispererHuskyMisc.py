@@ -487,6 +487,8 @@ class USERIOPin(util.DisableNewAttr):
         rtn['clock_enabled'] = self.clock_enabled
         if self.pin_number > 8 - self.parent.num_clocks:
             rtn['clock'] = self.clock
+        else:
+            rtn['clock'] = 'not supported'
         return rtn
 
     def __repr__(self):
@@ -517,17 +519,11 @@ class USERIOPin(util.DisableNewAttr):
     def drive_data(self):
         """See :class:`scope.userio.drive_data <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.drive_data>`.
         """
-        if self.pin_number < 8:
-            return self.parent._drive_data_list[self.pin_number]
-        else:
-            return 'n/a'
+        return self.parent._drive_data_list[self.pin_number]
 
     @drive_data.setter
     def drive_data(self, value):
-        if self.pin_number < 8:
-            self.parent._drive_data_list[self.pin_number] = value
-        else:
-            raise ValueError("Not supported for CK pin.")
+        self.parent._drive_data_list[self.pin_number] = value
 
     @property
     def status(self):
@@ -814,13 +810,14 @@ class USERIOSettings(util.DisableNewAttr):
                 info += ', Target-driven'
             info += ', status = %d' % self._status_list[i]
             info += ', clock_enabled = %d' % self._clock_enabled_list[i]
-            if i < 8:
-                info += ', drive = %d' % self._drive_data_list[i]
+            info += ', drive = %d' % self._drive_data_list[i]
             if i > 8 - self.num_clocks:
                 if self.clocks[8-i] is None:
                     info += ', clock not set'
                 else:
                     info += ', clock = %.1f' % self.clocks[8-i]
+            else:
+                info += ', clock not supported'
 
             if i < 8:
                 pins_rtn['D%d' % i] = info
@@ -1153,13 +1150,17 @@ class USERIOSettings(util.DisableNewAttr):
 
     @property
     def drive_data(self):
-        """8-bit data to drive on the USERIO data bus.
+        """9-bit data to drive on the USERIO data pins and clock pin (clock pin is msb).
         """
         return self._drive_data
 
     @drive_data.setter
     def drive_data(self, value):
-        self._set_drive_data(value)
+        if not value in range(0, 512):
+            raise ValueError("Must be integer 0-511")
+        #self._set_drive_data(value)
+        self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", int.to_bytes(value, length=2, byteorder='little'), Validate=False)
+        self._drive_data = value
 
     @property
     def _drive_data_list(self):
@@ -1173,12 +1174,11 @@ class USERIOSettings(util.DisableNewAttr):
         self._set_drive_data(value)
 
     def _set_drive_data(self, drive_data):
-        data = self._setter_check_and_transform(drive_data, 8, 255)
-        self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", [data])
-        self._drive_data = data
+        data = self._setter_check_and_transform(drive_data, 9, 511)
+        self.drive_data = data
 
     def _read_drive_data(self):
-        return self._reader_2list(self.drive_data, 8)
+        return self._reader_2list(self.drive_data, 9)
 
     @property
     def status(self):
