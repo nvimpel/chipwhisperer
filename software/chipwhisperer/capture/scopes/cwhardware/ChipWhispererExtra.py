@@ -1987,6 +1987,7 @@ class HuskyTrigger(TriggerSettings):
     def window_start(self):
         """Minimum number of clock cycles (of the ADC sampling clock) that must follow trigger #0
         before trigger #1 is allowed to complete the sequence. 0 = no limit.
+
         Args:
             start: 16-bit integer
         """
@@ -2035,6 +2036,7 @@ class HuskyTrigger(TriggerSettings):
     def window_end(self):
         """Maximum number of clock cycles (of the ADC sampling clock) that can follow trigger #0
         before trigger #1 is allowed to complete the sequence. 0 = no limit.
+
         Args:
             end: 16-bit integer
         """

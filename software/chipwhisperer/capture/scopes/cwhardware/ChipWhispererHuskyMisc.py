@@ -1074,6 +1074,7 @@ class USERIOSettings(util.DisableNewAttr):
     @property
     def clock_source(self):
         """ Set the clock source for the PLL that generates the USERIO output clocks.
+
         Args:
             source (str): "target" or "usb". When set to "target", uses the
                 target clock as defined by scope.clock (i.e. can be either
@@ -1114,6 +1115,7 @@ class USERIOSettings(util.DisableNewAttr):
     @property
     def clock_source_freq(self):
         """ Specify the target clock frequency.
+
         Args:
             freq (int or float): target clock frequency. When
                 :class:`clock_source` is set to "target", we need to know that
