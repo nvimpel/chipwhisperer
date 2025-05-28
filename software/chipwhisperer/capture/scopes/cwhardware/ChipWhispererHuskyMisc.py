@@ -833,6 +833,43 @@ class USERIOSettings(util.DisableNewAttr):
     def __str__(self):
         return self.__repr__()
 
+    def config_register_write(self, register, value):
+        """ Convenience function for setting the registers that got merged into USERIO_CONFIG.
+        """
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_CONFIG", maxResp=7)
+        if register == 'USERIO_CLKSEL':
+            raw[0] = value
+        elif register == 'USERIO_DEBUG_SELECT':
+            raw[1] = value
+        elif register == 'USERIO_DEBUG_DRIVEN':
+            raw[2] = value
+        elif register == 'USERIO_CW_DRIVEN':
+            raw[3:5] = int.to_bytes(value, length=2, byteorder='little')
+        elif register == 'USERIO_CLOCK_OUT':
+            raw[5:7] = int.to_bytes(value, length=2, byteorder='little')
+        else:
+            raise ValueError()
+        self.oa.sendMessage(CODE_WRITE, "USERIO_CONFIG", raw)
+
+
+    def config_register_read(self, register):
+        """ Convenience function for reading the registers that got merged into USERIO_CONFIG.
+        """
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_CONFIG", maxResp=7)
+        if register == 'USERIO_CLKSEL':
+            return raw[0]
+        elif register == 'USERIO_DEBUG_SELECT':
+            return raw[1]
+        elif register == 'USERIO_DEBUG_DRIVEN':
+            return raw[2]
+        elif register == 'USERIO_CW_DRIVEN':
+            return int.from_bytes(raw[3:5], byteorder='little')
+        elif register == 'USERIO_CLOCK_OUT':
+            return int.from_bytes(raw[5:7], byteorder='little')
+        else:
+            raise ValueError()
+
+
     @property
     def mode(self):
         """Set mode for USERIO pins:
@@ -847,7 +884,7 @@ class USERIOSettings(util.DisableNewAttr):
         if self._last_mode:
             return self._last_mode
         else:
-            debug = self.oa.sendMessage(CODE_READ, "USERIO_DEBUG_DRIVEN", maxResp=1)[0]
+            debug = self.config_register_read('USERIO_DEBUG_DRIVEN')
             if self._trace:
                 trace = self._trace.enabled
             else:
@@ -866,24 +903,24 @@ class USERIOSettings(util.DisableNewAttr):
     @mode.setter
     def mode(self, setting):
         if setting == 'normal':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [0])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 0)
             self._trace._set_enabled(0)
         elif setting == 'trace':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [0])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 0)
             self._trace._set_enabled(1)
             self._trace._set_userio_dir(3)  # restore default just in case
         elif setting == 'fpga_debug':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [1])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 1)
             self._trace._set_enabled(0)
         elif setting == 'swo_trace_plus_debug':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [1])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 1)
             self._trace._set_enabled(1)
             self._trace._set_userio_dir(0xff-4)
         elif setting == 'target_debug_jtag':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [2])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 2)
             self._trace._set_enabled(0)
         elif setting == 'target_debug_swd':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [6])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 6)
             self._trace._set_enabled(0)
         else:
             raise ValueError("Invalid mode; use normal/trace/fpga_debug/target_debug_jtag/target_debug_swd")
@@ -895,14 +932,14 @@ class USERIOSettings(util.DisableNewAttr):
         are routed to the USERIO pins. Print the scope.userio object to obtain the signal definition
         corresponding to the current fpga_mode setting.
         """
-        return self.oa.sendMessage(CODE_READ, "USERIO_DEBUG_SELECT", maxResp=1)[0]
+        return self.config_register_read('USERIO_DEBUG_SELECT')
 
     @fpga_mode.setter
     def fpga_mode(self, setting):
         if not setting in range(0, 16):
             raise ValueError("Must be integer in [0, 15]")
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_SELECT", [setting])
+            self.config_register_write('USERIO_DEBUG_SELECT', setting)
 
 
     def _setter_check_and_transform(self, value, num_bits, maxvalue):
@@ -945,14 +982,14 @@ class USERIOSettings(util.DisableNewAttr):
         by the FPGA and cannot be changed by the user.
         Use with care.
         """
-        return int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CW_DRIVEN", maxResp=2), byteorder='little')
+        return self.config_register_read('USERIO_CW_DRIVEN')
 
     @direction.setter
     def direction(self, setting):
         if not setting in range(0, 512):
             raise ValueError("Must be integer 0-511")
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_CW_DRIVEN", int.to_bytes(setting, length=2, byteorder='little'), Validate=False)
+            self.config_register_write('USERIO_CW_DRIVEN', setting)
 
     @property
     def _direction_list(self):
@@ -981,14 +1018,14 @@ class USERIOSettings(util.DisableNewAttr):
         for a binary representation of which USERIO pins can output a clock.
 
         """
-        return int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CLOCK_OUT", maxResp=2), byteorder='little')
+        return self.config_register_read('USERIO_CLOCK_OUT')
 
     @clock_enabled.setter
     def clock_enabled(self, setting):
-        if setting & (self.clocks_supported ^ 0x1ff):
+        if setting & (self.clocks_supported ^ 0xFFFF):
             raise ValueError("Clocks supported only on pins: %s" % bin(self.clocks_supported))
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", int.to_bytes(setting, length=2, byteorder='little'), Validate=False)
+            self.config_register_write('USERIO_CLOCK_OUT', setting)
 
     @property
     def _clock_enabled_list(self):
@@ -1012,9 +1049,9 @@ class USERIOSettings(util.DisableNewAttr):
         """To see which USERIO pins can be configured as a clock, write all ones to USERIO_CLOCK_OUT and
         read back.
         """
-        self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0xff, 0xff])
-        readback = int.from_bytes(self.oa.sendMessage(CODE_READ, "USERIO_CLOCK_OUT", maxResp=2), byteorder='little')
-        self.oa.sendMessage(CODE_WRITE, "USERIO_CLOCK_OUT", [0, 0])
+        self.config_register_write('USERIO_CLOCK_OUT', 0xFFFF)
+        readback = self.config_register_read('USERIO_CLOCK_OUT')
+        self.config_register_write('USERIO_CLOCK_OUT', 0x0000)
         self.num_clocks = bin(readback)[2:].count('1')
         return readback
 
@@ -1104,7 +1141,7 @@ class USERIOSettings(util.DisableNewAttr):
         else:
             raise ValueError()
         self._clock_source = raw
-        self.oa.sendMessage(CODE_WRITE, 'USERIO_CLKSEL', [raw])
+        self.config_register_write('USERIO_CLKSEL', raw)
         if change and self._clocks != [None]*self.num_clocks:
             # re-set clock frequencies
             self.clocks = [None]*self.num_clocks
@@ -1142,7 +1179,7 @@ class USERIOSettings(util.DisableNewAttr):
         parameters bring either the output clocks or the internal VCO out of
         range.
         """
-        if self.oa.sendMessage(CODE_READ, "USERIO_CLKSEL", maxResp=1)[0] & 2:
+        if self.config_register_read('USERIO_CLKSEL') & 2:
             return True
         else:
             return False
@@ -1184,7 +1221,7 @@ class USERIOSettings(util.DisableNewAttr):
     def status(self):
         """Returns current value of header pins. LSB=D0, MSB=CK.
         """
-        raw = self.oa.sendMessage(CODE_READ, "USERIO_READ", maxResp=2)
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_DRIVE_DATA", maxResp=2)
         return int.from_bytes(raw, byteorder='little')
 
     @property
