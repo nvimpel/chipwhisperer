@@ -508,10 +508,20 @@ class USERIOPin(util.DisableNewAttr):
     def direction(self):
         """See :class:`scope.userio.direction <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.direction>`.
         """
-        return self.parent._direction_list[self.pin_number]
+        raw = self.parent._direction_list[self.pin_number]
+        if raw:
+            return 'output'
+        else:
+            return 'input'
 
     @direction.setter
     def direction(self, value):
+        if value == 'output':
+            value = 1
+        elif value == 'input':
+            value = 0
+        elif value not in [0,1]:
+            raise ValueError()
         self.parent._direction_list[self.pin_number] = value
 
 
