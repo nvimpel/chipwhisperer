@@ -1269,6 +1269,304 @@ class USERIOSettings(util.DisableNewAttr):
 
 
 
+
+
+class BitBanger (util.DisableNewAttr):
+    ''' Husky bit-banger settings. More than just bit-banging: precisely timed bit-banging
+    with the ability to trigger at a precise time.
+    TODO: example?
+    '''
+    _name = 'Husky Bit-Banger Settings'
+
+    def __init__(self, oaiface : OAI.OpenADCInterface):
+        # oaiface = OpenADCInterface
+        super().__init__()
+        self.oa = oaiface
+        self._trigger_en = 0
+        self._clear_matched = 0
+        self._continuous_clk = 0
+        self._inactive_data = 0
+        self._inactive_state = 0
+        self._trigger_when_matched = 0
+        self._enable_glitch_output = 0
+        self._clk_div = 0
+        self._num_bits = 0
+        self.max_length = self._read_max_pattern()
+        self._pattern_data = []
+        self._pattern_en = []
+        self._pattern_hiz = []
+        self._record_en = []
+        self._trig_bits = []
+        self._clk_en = []
+        self.disable_newattr()
+
+    def _dict_repr(self):
+        rtn = {}
+        rtn['max_length'] = self.max_length
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    def _read_max_pattern(self):
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=3)
+        return raw[1] + (raw[2] << 8)
+
+    @property 
+    def matched(self):
+        """ TODO
+        """
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=1)[0]
+        if raw & 0x01:
+            return True
+        else:
+            return False
+
+    @property 
+    def active(self):
+        """ TODO
+        """
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=1)[0]
+        if raw & 0x02:
+            return True
+        else:
+            return False
+
+
+    def go(self):
+        raw = [0]*6
+        raw[0] = (self.trigger_en << 7) + \
+                 (self.clear_matched << 6)
+        raw[1] = (self.continuous_clk << 7) + \
+                 (self.inactive_data << 6) + \
+                 (self.inactive_state << 5) + \
+                 (self.trigger_when_matched << 3) + \
+                 (self.enable_glitch_output << 2)
+        raw[2] = self.clk_div
+        raw[3] = self.num_bits & 0xFF
+        raw[4] = self.num_bits >> 8
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
+
+    @property 
+    def trigger_en(self):
+        """ Specify whether a trigger can be generated.
+        """
+        return self._trigger_en
+    @trigger_en.setter
+    def trigger_en(self, val):
+        if val not in [0, 1]:
+            raise ValueError()
+        self._trigger_en = val
+
+    @property 
+    def clear_matched(self):
+        """ TODO: not sure this is needed?
+        """
+        return self._clear_matched
+    @clear_matched.setter
+    def clear_matched(self, val):
+        if val not in [0, 1]:
+            raise ValueError()
+        self._clear_matched = val
+
+    @property 
+    def continuous_clk(self):
+        """ Specify whether the clock should run continuously.
+        """
+        return self._continuous_clk
+    @continuous_clk.setter
+    def continuous_clk(self, val):
+        if val not in [0,1]:
+            raise ValueError
+        self._continuous_clk = val
+
+    @property 
+    def inactive_data(self):
+        """ Specify the state of the data line when this module is inactive.
+        """
+        return self._inactive_data
+    @inactive_data.setter
+    def inactive_data(self, val):
+        if val not in [0,1]:
+            raise ValueError
+        self._inactive_data = val
+
+    @property 
+    def inactive_state(self):
+        """ Specify whether the data line is driven when this module is inactive.
+        """
+        return self._inactive_state
+    @inactive_state.setter
+    def inactive_state(self, val):
+        if val not in [0,1]:
+            raise ValueError
+        self._inactive_state = val
+
+    @property 
+    def trigger_when_matched(self):
+        """ Specify whether the observed data needs to match <TODO XXX
+        property name> in order for a trigger to be generated.
+        """
+        return self._trigger_when_matched
+    @trigger_when_matched.setter
+    def trigger_when_matched(self, val):
+        if val not in [0,1]:
+            raise ValueError
+        self._trigger_when_matched = val
+
+    @property 
+    def enable_glitch_output(self):
+        """ TODO - unsure if this will live here?
+        """
+        return self._enable_glitch_output
+    @enable_glitch_output.setter
+    def enable_glitch_output(self, val):
+        if val not in [0,1]:
+            raise ValueError
+        self._enable_glitch_output = val
+
+    @property 
+    def clk_div(self):
+        """ Specify the clock divider TODO need good explanation and example
+        here!
+        """
+        return self._clk_div
+    @clk_div.setter
+    def clk_div(self, val):
+        if val not in range(1, 256):
+            raise ValueError
+        self._clk_div = val
+
+    @property 
+    def num_bits(self):
+        """ Specify the number of bits to send when go() is issued.
+        TODO: explain "bit" = "time slot"
+        """
+        return self._num_bits
+    @num_bits.setter
+    def num_bits(self, val):
+        if val not in range(1, self.max_length):
+            raise ValueError
+        self._num_bits = val
+
+    @property
+    def pattern_data(self):
+        """ TODO
+        """
+        return self._pattern_data
+    @pattern_data.setter
+    def pattern_data(self, val):
+        self._pattern_data = val
+        self.data_setter(val, 'BB_TRIG_PATTERN_DATA')
+
+    @property
+    def pattern_en(self):
+        """ TODO
+        """
+        return self._pattern_en
+    @pattern_en.setter
+    def pattern_en(self, val):
+        self._pattern_en = val
+        self.data_setter(val, 'BB_TRIG_PATTERN_EN')
+
+    @property
+    def pattern_hiz(self):
+        """ TODO
+        """
+        return self._pattern_hiz
+    @pattern_hiz.setter
+    def pattern_hiz(self, val):
+        self._pattern_hiz = val
+        self.data_setter(val, 'BB_TRIG_PATTERN_HIZ')
+
+    @property
+    def record_en(self):
+        """ TODO
+        """
+        return self._record_en
+    @record_en.setter
+    def record_en(self, val):
+        self._record_en = val
+        self.data_setter(val, 'BB_TRIG_RECORD_EN')
+
+    @property
+    def trig_bits(self):
+        """ TODO
+        """
+        return self._trig_bits
+    @trig_bits.setter
+    def trig_bits(self, val):
+        self._trig_bits = val
+        self.data_setter(val, 'BB_TRIG_BITS')
+
+    @property
+    def clk_en(self):
+        """ TODO
+        """
+        return self._clk_en
+    @clk_en.setter
+    def clk_en(self, val):
+        self._clk_en = val
+        self.data_setter(val, 'BB_TRIG_CLK_EN')
+
+
+    def data_setter(self, val, reg):
+        # TODO: size check
+        raw = self.bytes_from_bits(val)
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_REG_SELECT", [self.oa.registers[reg]])
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", raw)
+
+
+    def recorded_data(self, nbytes=8, return_word=True):
+        """ TODO-doc
+        """
+        assert nbytes <= 8
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_REG_SELECT", [self.oa.registers['BB_TRIG_SAVED_DATA']])
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_DATA", maxResp=nbytes)
+        final = []
+        for b in raw:
+            # swap nibbles *and* bit order:
+            fixed = 0
+            for bit in range(8):
+                if b & 2**bit:
+                    fixed += 2**(7-bit)
+            lo = fixed & 0x0F
+            hi = fixed & 0xF0
+            bswap = (hi >> 4) + (lo << 4)
+            final.append(fixed)
+        if return_word:
+            return int.from_bytes(final, byteorder='big')
+        else:
+            return final[::-1]
+
+    @staticmethod
+    def bytes_from_bits(bits):
+        pad = len(bits)%8
+        if pad:
+            pad = 8 - pad
+            pad_value = bits[-1]
+            bits.extend([pad_value]*pad)
+        sum = 0
+        for i,j in enumerate(bits):
+            if j: sum += 2**i
+        return list(int.to_bytes(sum, len(bits)//8, byteorder='little'))
+
+
+
+""" NOTE:
+- open question is how to best provide for 1-wire / SWD / I2C interface on top of this
+    - I suppose that individual classes (one per protocol) that inherit this one make sense?
+    - this would also provide a model for users that wish to modify / extend / etc for these 
+      or other protocols
+
+"""
+
+
+
+
 class XADCSettings(util.DisableNewAttr):
     ''' Husky FPGA XADC temperature and voltage monitoring.
     XADC alarms are sticky and shut down generated clocks and SAD logic; the

@@ -17,7 +17,7 @@ from ...hardware.naeusb.serial import USART
 from .cwhardware import ChipWhispererDecodeTrigger, ChipWhispererExtra, \
      ChipWhispererSAD, ChipWhispererHuskyClock
 from .cwhardware.ChipWhispererHuskyMisc import XilinxDRP, XilinxMMCMDRP, LEDSettings, HuskyErrors, \
-        USERIOSettings, XADCSettings, LASettings, ADS4128Settings
+        USERIOSettings, XADCSettings, LASettings, ADS4128Settings, BitBanger
 from ._OpenADCInterface import OpenADCInterface, HWInformation, GainSettings, TriggerSettings, ClockSettings
 from ..api.cwcommon import ChipWhispererSAMErrors
 
@@ -90,6 +90,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer.TraceWhisperer>`
     * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.TraceWhisperer.UARTTrigger>`
     * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
+    * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.BitBanger>`
     * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyErrors>`
     * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
     * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`
@@ -702,6 +703,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                 except Exception as e:
                     scope_logger.info("TraceWhisperer unavailable " + str(e))
             self.userio = USERIOSettings(self.sc, self.trace)
+            self.bitbanger = BitBanger(self.sc)
             self.SAD = ChipWhispererSAD.HuskySAD(self.sc)
             self.errors = HuskyErrors(self.sc, self.XADC, self.adc, self.clock, self.trace)
             self._is_husky = True
@@ -978,6 +980,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                 rtn['trace'] = self.trace._dict_repr()
             rtn['XADC'] = self.XADC._dict_repr()
             rtn['userio'] = self.userio._dict_repr()
+            rtn['bitbanger'] = self.bitbanger._dict_repr()
             rtn['LEDs'] = self.LEDs._dict_repr()
             rtn['errors'] = self.errors._dict_repr()
 
