@@ -294,12 +294,12 @@ class BitBanger (util.DisableNewAttr):
         self._clk_div = 0
         self._num_bits = 0
         self.max_length = self._read_max_pattern()
-        self._pattern_data = []
-        self._pattern_en = []
-        self._pattern_hiz = []
-        self._record_en = []
-        self._trig_bits = []
-        self._clk_en = []
+        self._pattern_data = [0]*self.max_length
+        self._pattern_en = [1]*self.max_length
+        self._pattern_hiz = [0]*self.max_length
+        self._record_en = [0]*self.max_length
+        self._trig_bits = [0]*self.max_length
+        self._clk_en = [1]*self.max_length
         self.onewire = OneWireHelper(self)
         self.disable_newattr()
 
