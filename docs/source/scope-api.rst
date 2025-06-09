@@ -256,6 +256,17 @@ scope.userio
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin
     :members:
 
+
+scope.bitbanger
+^^^^^^^^^^^^^^^
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger
+    :members:
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.OneWireHelper
+    :members:
+
+
 scope.XADC
 ^^^^^^^^^^
 
