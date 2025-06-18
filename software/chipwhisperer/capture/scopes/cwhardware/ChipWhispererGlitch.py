@@ -209,7 +209,7 @@ class GlitchSettings(util.DisableNewAttr):
     def phase_shift_steps(self) -> int:
         """The number of phase shift steps per target clock period.
         Husky only.
-        To change, modify clock.pll.update_fpga_vco()
+        To change, use :class:`scope.clock.pll.update_fpga_vco()`.
 
         :Getter: Returns the number of steps.
 
