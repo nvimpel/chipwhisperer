@@ -1750,7 +1750,8 @@ class HuskyTrigger(TriggerSettings):
               'UART':           0x03,
               'trace':          0x04,
               'ADC':            0x05,
-              'edge_counter':   0x06
+              'edge_counter':   0x06,
+              'bitbanger':      0x07
               }
 
     def __init__(self, cwextra):
@@ -1881,6 +1882,7 @@ class HuskyTrigger(TriggerSettings):
         * 'UART':         Trigger from UART module
         * 'edge_counter': Trigger after a number of rising/falling edges
         * 'trace':        Trigger from TraceWhisperer
+        * 'bitbanger':    Trigger from bitbanger module
 
         :Getter: Return the active trigger module
 
