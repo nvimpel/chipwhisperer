@@ -632,7 +632,7 @@ class TraceWhisperer(util.DisableNewAttr):
         # Since this also gets used by generic UART, we can't assume that word size is 8 bits.
         # Translate pattern (and mask, if provided) to bytes:
         if len(pattern) > self.pattern_size:
-            raise ValueError('pattern and mask cannot be more than 64 bytes.')
+            raise ValueError('pattern and mask cannot be more than %d bytes.' % self.pattern_size)
         pattern_converted = self._words2bytes(pattern)
         if mask:
             if len(pattern) != len(mask):
