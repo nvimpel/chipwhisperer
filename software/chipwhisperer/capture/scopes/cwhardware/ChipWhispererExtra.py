@@ -778,6 +778,27 @@ class GPIOSettings(util.DisableNewAttr):
     def read_tio_states(self):
         return self.cwe.read_tio_states()
 
+
+    def _tio_bb_trig(self, pin):
+        if self._is_husky:
+            BB_TRIG_PINS = {self.GPIO_PIN_TIO1: 9,
+                            self.GPIO_PIN_TIO2: 10,
+                            self.GPIO_PIN_TIO3: 11,
+                            self.GPIO_PIN_TIO4: 12
+                           }
+            if pin not in BB_TRIG_PINS.keys():
+                return False
+            bb_trig = self.cwe.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+            if bb_trig & 0x0f == BB_TRIG_PINS[pin]:
+                return 'scope.bitbanger.data_pin'
+            elif bb_trig >> 4 == BB_TRIG_PINS[pin]:
+                return 'scope.bitbanger.clock_pin'
+            else:
+                return False
+        else:
+            return False
+
+
     @property
     def tio1_mode(self):
         return self._get_tio_mode(self.GPIO_PIN_TIO1)
@@ -794,6 +815,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_low" / False: Driven output: logic 0
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
+
+        For Husky, TIO1 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
 
         Default value is "serial_rx".
 
@@ -834,6 +864,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
 
+        For Husky, TIO2 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
+
         Default value is "serial_tx".
 
         :Getter:  Return one of the above strings. This shows how ChipWhisperer is 
@@ -873,6 +912,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
 
+        For Husky, TIO3 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
+
         Default value is "high_z".
 
         :Getter:  Return one of the above strings. This shows how ChipWhisperer is 
@@ -909,6 +957,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_low" / False: Driven output: logic 0
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
+
+        For Husky, TIO4 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
 
         Default value is "high_z". Typically, this pin is used as a trigger
         input.
@@ -948,8 +1005,12 @@ class GPIOSettings(util.DisableNewAttr):
         Return:
             The API string that represents the TIO GPIO mode.
         """
-        mode = self._get_tio_mode(tio_num)
-        return self.TIO_MODE_TRANSLATE.api_to_str(mode)
+        bb_override = self._tio_bb_trig(tio_num)
+        if bb_override:
+            return bb_override
+        else:
+            mode = self._get_tio_mode(tio_num)
+            return self.TIO_MODE_TRANSLATE.api_to_str(mode)
 
     def _set_tio_mode(self, tio_num, mode):
         """Internal function to set the current mode of a TIO pin.

@@ -77,7 +77,7 @@ class OneWireHelper(util.DisableNewAttr):
         renbits = [0]*(rst+wait+check+pad)
         return cmdbits, hizbits, penbits, renbits
 
-    def send_rst_pd(self, rst=56, wait=6, check=2, trigger_en=True):
+    def send_rst_pd(self, rst=56, wait=6, check=2, trigger_en=True, trigger_bit=None):
         """ Sends a reset and checks for the target's pulse detect response.
 
         Args:
@@ -85,9 +85,10 @@ class OneWireHelper(util.DisableNewAttr):
             wait (int): after the reset pulse, number of timeslots to wait before checking for the target's response.
             check (int): number of timeslots that the target's response is checked.
             trigger_en (bool): whether a trigger should be issued at the end of the command.
+            trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
 
         """
-        self.sendpacket(self.get_rst_pd(rst=rst, wait=wait, check=check), trigger_en=trigger_en)
+        self.sendpacket(self.get_rst_pd(rst=rst, wait=wait, check=check), trigger_en=trigger_en, trigger_bit=trigger_bit)
         assert self.bb.matched, 'no presence detect'
 
     def sendpacket(self, packet, trigger_en=True, trigger_bit=None, clear_matched=True, timeout=1):
@@ -245,6 +246,8 @@ class BitBanger (util.DisableNewAttr):
 
     Example::
 
+        scope.bitbanger.data_pin = 'TIO1'
+        scope.bitbanger.clock_pin = 'TIO2'
         scope.bitbanger.continuous_clk = False
         scope.bitbanger.inactive_data = 0
         scope.bitbanger.inactive_state = 'high_z'
@@ -278,6 +281,22 @@ class BitBanger (util.DisableNewAttr):
     '''
     _name = 'Husky Bit-Banger Settings'
 
+    PINS = {'USERIO_D0':      0,
+            'USERIO_D1':      1,
+            'USERIO_D2':      2,
+            'USERIO_D3':      3,
+            'USERIO_D4':      4,
+            'USERIO_D5':      5,
+            'USERIO_D6':      6,
+            'USERIO_D7':      7,
+            'USERIO_CK':      8,
+            'TIO1':           9,
+            'TIO2':           10,
+            'TIO3':           11,
+            'TIO4':           12,
+            'disabled':       15
+           }
+
     def __init__(self, oaiface : OAI.OpenADCInterface):
         # oaiface = OpenADCInterface
         super().__init__()
@@ -305,6 +324,8 @@ class BitBanger (util.DisableNewAttr):
 
     def _dict_repr(self):
         rtn = {}
+        rtn['data_pin'] = self.data_pin
+        rtn['clock_pin'] = self.clock_pin
         rtn['max_length'] = self.max_length
         rtn['clk_div'] = self.clk_div
         rtn['drive_edge'] = self.drive_edge
@@ -324,6 +345,78 @@ class BitBanger (util.DisableNewAttr):
     def _read_max_pattern(self):
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=3)
         return raw[1] + (raw[2] << 8)
+
+
+    @property 
+    def data_pin(self):
+        """ Pin to use for data. Cannot be the same as :class:`clock_pin`. Allowed values:
+
+        * USERIO_D[0-7]
+        * USERIO_CK
+        * TIO[1-4]
+        * disabled
+
+        """
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0] & 0x0f
+        for key,value in self.PINS.items():
+            if value == raw:
+                module = key
+                break
+        if not module:
+            raise ValueError('Internal error: unknown pin ID %d' % raw)
+        return module
+
+    @data_pin.setter
+    def data_pin(self, pin):
+        if pin in self.PINS.keys():
+            value = self.PINS[pin]
+        else:
+            msg = 'Invalid pin %s. Must be one of: ' % pin
+            for key in self.PINS.keys():
+                msg = msg + key + ', '
+            raise ValueError(msg)
+        if pin == self.clock_pin:
+            scope_logger.error('Pin %s is already used as a clock; it cannot also be used as data.' % pin)
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+        raw = (raw & 0xf0) | value
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_SELECT", [raw])
+
+    @property 
+    def clock_pin(self):
+        """ Pin to use for clock. Cannot be the same as :class:`data_pin`. Allowed values:
+
+        * USERIO_D[0-7]
+        * USERIO_CK
+        * TIO[1-4]
+        * disabled
+
+        """
+
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0] >> 4
+        for key,value in self.PINS.items():
+            if value == raw:
+                module = key
+                break
+        if not module:
+            raise ValueError('Internal error: unknown pin ID %d' % raw)
+        return module
+
+    @clock_pin.setter
+    def clock_pin(self, pin):
+        if pin in self.PINS.keys():
+            value = self.PINS[pin]
+        else:
+            msg = 'Invalid pin %s. Must be one of: ' % pin
+            for key in self.PINS.keys():
+                msg = msg + key + ', '
+            raise ValueError(msg)
+        if pin == self.data_pin:
+            scope_logger.error('Pin %s is already used for data; it cannot also be used as a clock.' % pin)
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+        raw = (raw & 0x0f) | (value << 4)
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_SELECT", [raw])
+
+
 
     @property 
     def matched(self):

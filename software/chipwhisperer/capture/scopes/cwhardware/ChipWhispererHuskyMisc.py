@@ -481,6 +481,7 @@ class USERIOPin(util.DisableNewAttr):
 
     def _dict_repr(self):
         rtn = {}
+        rtn['name'] = self.name
         rtn['function'] = self.function
         rtn['direction'] = self.direction
         rtn['drive_data'] = self.drive_data
@@ -497,6 +498,18 @@ class USERIOPin(util.DisableNewAttr):
 
     def __str__(self):
         return self.__repr__()
+
+    @property
+    def name(self):
+        """Pin name.
+        """
+        label = 'USERIO_'
+        if self.pin_number < 8:
+            label += 'D%d' % self.pin_number
+        else:
+            label += 'CK'
+        return label
+
 
     @property
     def function(self):
@@ -1241,6 +1254,16 @@ class USERIOSettings(util.DisableNewAttr):
         """
         return self._reader_2list(self.status, 9)
 
+    def _bb_trig(self, pin):
+        bb_trig = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+        if bb_trig & 0x0f == pin:
+            return 'scope.bitbanger.data_pin'
+        elif bb_trig >> 4 == pin:
+            return 'scope.bitbanger.clock_pin'
+        else:
+            return False
+
+
     @property
     def pin_functions(self):
         """Returns informative list of functions for USERIO pins, as currently
@@ -1248,7 +1271,11 @@ class USERIOSettings(util.DisableNewAttr):
         """
         functions = []
         for i in range(9):
-            if self.mode == 'trace':
+            bb_override = self._bb_trig(i)
+            if bb_override:
+                function = bb_override
+
+            elif self.mode == 'trace':
                 function = self.trace_pins[i]
 
             elif self.mode == 'swo_trace_plus_debug':
