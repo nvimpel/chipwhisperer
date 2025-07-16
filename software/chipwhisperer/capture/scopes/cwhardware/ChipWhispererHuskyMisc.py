@@ -465,7 +465,7 @@ class USERIOPin(util.DisableNewAttr):
 
     Example::
 
-        scope.userio.pin[0].direction = 1
+        scope.userio.pin[0].direction = 'output'
         scope.userio.pin[0].drive_data = 1
         scope.userio.pin[0].drive_data = 0
         scope.userio.pin[0].drive_data = 1
@@ -523,7 +523,9 @@ class USERIOPin(util.DisableNewAttr):
         """See :class:`scope.userio.direction <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.direction>`.
         """
         raw = self.parent._direction_list[self.pin_number]
-        if raw:
+        if 'bitbanger.data' in self.function:
+            return 'I/O'
+        elif raw or 'bitbanger.clock' in self.function:
             return 'output'
         else:
             return 'input'
@@ -594,7 +596,7 @@ class USERIOSettings(util.DisableNewAttr):
     :class:`scope.userio.pin[x] <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin>`
     methods more appealing, i.e.::
 
-        scope.userio.pin[0].direction = 1
+        scope.userio.pin[0].direction = 1  # or scope.userio.pin[0].direction = 'output'
         scope.userio.pin[0].drive_data = 1
         scope.userio.pin[0].drive_data = 0
 
@@ -828,11 +830,13 @@ class USERIOSettings(util.DisableNewAttr):
         pins_rtn = {}
         for i in range(9):
             info = '{0:{width}s}'.format(self.pin_functions[i], width=len(max(self.pin_functions, key=len)))
-            if self._direction_list[i]:
-                info += ', Husky- driven'
+            if 'bitbanger.data' in self.pin_functions[i]:
+                info += ', I/O,    '
+            elif self._direction_list[i] or 'bitbanger.clock' in self.pin_functions[i]:
+                info += ', output, '
             else:
-                info += ', Target-driven'
-            info += ', status = %d' % self._status_list[i]
+                info += ', input,  '
+            info += 'status = %d' % self._status_list[i]
             info += ', clock_enabled = %d' % self._clock_enabled_list[i]
             info += ', drive = %d' % self._drive_data_list[i]
             if i > 8 - self.num_clocks:
