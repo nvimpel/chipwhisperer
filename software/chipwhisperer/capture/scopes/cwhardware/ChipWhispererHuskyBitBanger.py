@@ -375,8 +375,8 @@ class BitBanger (util.DisableNewAttr):
             for key in self.PINS.keys():
                 msg = msg + key + ', '
             raise ValueError(msg)
-        if pin == self.clock_pin:
-            scope_logger.error('Pin %s is already used as a clock; it cannot also be used as data.' % pin)
+        if pin == self.clock_pin and pin != 'disabled':
+            raise ValueError('Pin %s is already used as a clock; it cannot also be used as data.' % pin)
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
         raw = (raw & 0xf0) | value
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_SELECT", [raw])
@@ -410,8 +410,8 @@ class BitBanger (util.DisableNewAttr):
             for key in self.PINS.keys():
                 msg = msg + key + ', '
             raise ValueError(msg)
-        if pin == self.data_pin:
-            scope_logger.error('Pin %s is already used for data; it cannot also be used as a clock.' % pin)
+        if pin == self.data_pin and pin != 'disabled':
+            raise ValueError('Pin %s is already used for data; it cannot also be used as a clock.' % pin)
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
         raw = (raw & 0x0f) | (value << 4)
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_SELECT", [raw])
