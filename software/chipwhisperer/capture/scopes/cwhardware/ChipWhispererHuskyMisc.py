@@ -662,7 +662,7 @@ class USERIOSettings(util.DisableNewAttr):
     '''
     _name = 'USERIO Control'
 
-    fpga_mode_definitions = [None]*16 # type: list
+    fpga_mode_definitions = [None]*18 # type: list
 
     # fpga_mode = 0:
     fpga_mode_definitions[0] = ['streaming debug',
@@ -856,6 +856,32 @@ class USERIOSettings(util.DisableNewAttr):
                                   'trigger 3 window',
                                   'unused']]
 
+    # fpga_mode = 16:
+    fpga_mode_definitions[16] = ['SAD debug',
+                                 ['&ready2trigger_all',
+                                  '(refsample_shift_count == 0)',
+                                  'always_armed',
+                                  'shifter_active',
+                                  'active',
+                                  'armed_and_ready_sad',
+                                  'armed_and_ready',
+                                  'trigger',
+                                  'unused']]
+
+    # fpga_mode = 17:
+    fpga_mode_definitions[17] = ['bitbanger debug',
+                                 ['matching',
+                                  'matched',
+                                  'bitrecord',
+                                  'trigger',
+                                  'pattern_en',
+                                  'data_drive',
+                                  'active',
+                                  'trigger_active',
+                                  'unused']]
+
+
+
     trace_pins = ['TMS', 'TCK', 'TDO/SWO', 'unused', 'TRACEDATA[0]', 'TRACEDATA[1]', 'TRACEDATA[2]', 'TRACEDATA[3]', 'TRACECLOCK']
 
     def __init__(self, oaiface : OAI.OpenADCInterface, trace):
@@ -1014,17 +1040,27 @@ class USERIOSettings(util.DisableNewAttr):
         self._last_mode = setting
 
     @property
+    def fpga_mode_options(self):
+        """Lists the category for each :class:`fpga_mode` setting.
+        """
+        for i,d in enumerate(self.fpga_mode_definitions):
+            print('scope.userio.fpga_mode = %2d: %s' % (i, d[0]))
+
+    @property
     def fpga_mode(self):
         """When scope.userio.mode = 'fpga_debug', selects which FPGA signals
-        are routed to the USERIO pins. Print the scope.userio object to obtain the signal definition
-        corresponding to the current fpga_mode setting.
+        are routed to the USERIO pins. See :class:`fpga_mode_options` to see the
+        category of each available setting; print the scope.userio object to
+        obtain the full signal definition corresponding to the current fpga_mode
+        setting.
         """
         return self.config_register_read('USERIO_DEBUG_SELECT')
 
     @fpga_mode.setter
     def fpga_mode(self, setting):
-        if not setting in range(0, 16):
-            raise ValueError("Must be integer in [0, 15]")
+        top_mode = len(self.fpga_mode_definitions)
+        if not setting in range(top_mode):
+            raise ValueError("Must be integer in [0, %d]" % (top_mode-1))
         else:
             self.config_register_write('USERIO_DEBUG_SELECT', setting)
 
