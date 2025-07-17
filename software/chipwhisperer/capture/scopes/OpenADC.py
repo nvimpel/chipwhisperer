@@ -91,7 +91,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer.TraceWhisperer>`
     * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.TraceWhisperer.UARTTrigger>`
     * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
-    * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+    * :attr:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
     * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyErrors>`
     * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
     * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`

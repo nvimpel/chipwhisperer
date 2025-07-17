@@ -1101,7 +1101,7 @@ class USERIOSettings(util.DisableNewAttr):
         * bit x = 0: D<x> is an input to Husky.
         * bit x = 1: D<x> is driven by Husky.
 
-        When scope.userio.mode is not "normal", then this setting is controlled
+        When :class:`mode` is not "normal", then this setting is controlled
         by the FPGA and cannot be changed by the user.
         Use with care.
         """
