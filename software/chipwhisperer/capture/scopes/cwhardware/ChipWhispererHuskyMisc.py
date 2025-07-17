@@ -1164,7 +1164,7 @@ class USERIOSettings(util.DisableNewAttr):
         If you have different needs, you can set the PLL's multiply/divide
         parameters via the methods exposed by the scope.userio._pll object.
         """
-        return self.get_clocks()
+        return self._get_clocks()
 
     @clocks.setter
     def clocks(self, frequencies):
@@ -1181,14 +1181,14 @@ class USERIOSettings(util.DisableNewAttr):
         if not self.clocks_locked:
             scope_logger.warning('USERIO PLL is not locked. Generated clocks may not be dependable. (have you set scope.userio.clock_source_freq correctly?)')
 
-    def read_clocks(self):
+    def _read_clocks(self):
         # note: returns *actual set* frequency, not requested frequency
         return self._clocks
 
-    def get_clocks(self):
-        return util.Lister(self._clocks, setter=self.set_clocks, getter=self.read_clocks)
+    def _get_clocks(self):
+        return util.Lister(self._clocks, setter=self._set_clocks, getter=self._read_clocks)
 
-    def set_clocks(self, clocks):
+    def _set_clocks(self, clocks):
         self.clocks = clocks
 
 
