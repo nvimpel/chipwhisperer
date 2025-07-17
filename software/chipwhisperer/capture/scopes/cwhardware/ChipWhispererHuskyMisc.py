@@ -87,7 +87,9 @@ class XilinxDRP(util.DisableNewAttr):
 class XilinxMMCMDRP(util.DisableNewAttr):
     ''' Methods for dynamically programming Xilinx MMCM/PLL via its DRP.
     Husky only.
-    Reference: XAPP888.
+    References: XAPP888, UG472.
+    Not intended to be directly accessed by user; access should be via the
+    parent object instead.
     '''
     _name = 'Xilinx MMCM DRP'
 
@@ -111,6 +113,55 @@ class XilinxMMCMDRP(util.DisableNewAttr):
         self.sec_div_range.append(1)
         self.disable_newattr()
 
+    def _dict_repr(self):
+        rtn = {}
+        rtn['main_div'] = self.main_div
+        rtn['sec_div'] = self.sec_div
+        rtn['mul'] = self.mul
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    @property
+    def main_div(self):
+        """MMMC/PLL main divider value.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_main_div`.
+        """
+        return self.get_main_div()
+
+    @property
+    def sec_div(self):
+        """MMMC/PLL secondary divider values.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_sec_div`.
+        """
+        divs = []
+        for c in range(6):
+            divs.append(self.get_sec_div(c))
+        return divs
+
+    @property
+    def mul(self):
+        """MMMC/PLL multiplier value.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_mul`.
+        """
+        return self.get_mul()
+
 
     def set_freqs(self, ifreq, ofreqs, threshold=0.01):
         """Calculate Multiply & Divide settings based on input frequency.
@@ -118,6 +169,14 @@ class XilinxMMCMDRP(util.DisableNewAttr):
         may not be what the user wants anyways. So we first pick all the settings that get us closest to the first
         clock frequency. We then move onto the next clock, and so on.
         User can always manually specify PLL settings to get a different outcome.
+
+        Args:
+            ifreq (int or float): PLL input clock frequency in Hz
+            ofreqs (list): requested output clock frequencies in Hz
+
+        Returns:
+            Achieved output clock frequencies in Hz (list).
+
         """
         using_bests = False
         bests = []
