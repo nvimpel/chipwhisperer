@@ -36,7 +36,7 @@ CODE_WRITE = 0xC0
 
 
 class OneWireHelper(util.DisableNewAttr):
-    ''' Helper functions for bit-banging 1-wire interface.
+    ''' Helper functions for bit-banging a 1-wire interface.
     Basic functions for sending a reset/pulse detect, as well as arbitrary reads and writes.
     Meant to be overloaded for your particular target. For example, if the command for reading your target's 
     ROM code is 0x33, and its family code is 0x45, you could do::
@@ -126,6 +126,8 @@ class OneWireHelper(util.DisableNewAttr):
         self.bb.trig_bits = TRG
         self.bb.go()
         self.bb.wait_for_done(timeout)
+
+
 
     @staticmethod
     def crc8(data):
@@ -230,6 +232,7 @@ class OneWireHelper(util.DisableNewAttr):
         romcode = (raw >> 8) & 2**48-1
         if verbose: print('ROM code: 0x%x' % romcode)
         crc = (raw >> 56) & 0xff
+        # TODO: self.crc8 instead?
         calc_crc =  OneWireHelper.crc8(list(int.to_bytes(raw & 2**48-1, length=7, byteorder='little')))
         if calc_crc != crc:
             raise ValueError('Incorrect CRC! Expected 0x%x, got 0x%x' % (calc_crc, crc))
@@ -259,7 +262,6 @@ class BitBanger (util.DisableNewAttr):
 
         scope.bitbanger.pattern_data = [0, 1, 0, 1, 0]
         scope.bitbanger.trig_bits    = [0, 0, 0, 1, 0]
-        scope.bitbanger.clk_en       = [1, 1, 0, 1, 1]
 
         scope.bitbanger.go()
 
@@ -269,8 +271,8 @@ class BitBanger (util.DisableNewAttr):
         clock in : ┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─┛ └─
                    ____╱              ╲╱              ╲╱              ╲╱              ╲╱              ╲____
         bit count:     ╲    bit 0     ╱╲    bit 1     ╱╲    bit 2     ╱╲    bit 3     ╱╲    bit 4     ╱    
-                       ┌───────┐       ┌───────┐                       ┌───────┐       ┌───────┐           
-        clock out: ────┘       └───────┘       └───────────────────────┘       └───────┘       └───────────
+                       ┌───────┐       ┌───────┐       ┌───────┐       ┌───────┐       ┌───────┐           
+        clock out: ────┘       └───────┘       └───────┘       └───────┘       └───────┘       └───────────
                    ____┐               ┌───────────────┐               ┌───────────────┐               ____
         data out :     └───────────────┘               └───────────────┘               └───────────────    
                                                                                ┌───────────────┐           
@@ -318,7 +320,6 @@ class BitBanger (util.DisableNewAttr):
         self._pattern_hiz = [0]*self.max_length
         self._record_en = [0]*self.max_length
         self._trig_bits = [0]*self.max_length
-        self._clk_en = [1]*self.max_length
         self.onewire = OneWireHelper(self)
         self.disable_newattr()
 
@@ -535,8 +536,7 @@ class BitBanger (util.DisableNewAttr):
     @property 
     def continuous_clk(self):
         """ Specify whether the clock should run continuously.
-        If False, the clock is generated only while the bitbanger is active
-        and :class:`clk_en` is set.
+        If False, the clock is generated only while the bitbanger is active.
         """
         return self._continuous_clk
     @continuous_clk.setter
@@ -742,22 +742,6 @@ class BitBanger (util.DisableNewAttr):
     def trig_bits(self, val):
         self._trig_bits = val
         self._data_setter(val, 'BB_TRIG_BITS')
-
-    @property
-    def clk_en(self):
-        """ Time slots where the output clock is enabled.
-        Ignored when :class:`continuous_clk` is set.
-
-        Args:
-            val (list): list of binary values.
-
-        """
-        return self._clk_en
-    @clk_en.setter
-    def clk_en(self, val):
-        self._clk_en = val
-        self._data_setter(val, 'BB_TRIG_CLK_EN')
-
 
     def _data_setter(self, val, reg):
         if len(val) > self.max_length:
