@@ -472,7 +472,7 @@ class BitBanger (util.DisableNewAttr):
                  (self.trigger_when_matched << 3) + \
                  (self.enable_glitch_output << 2) + \
                  (drive << 1) + \
-                 (check << 1)
+                 check
         raw[2] = self.clk_div
         raw[3] = self.num_bits & 0xFF
         raw[4] = self.num_bits >> 8
