@@ -88,45 +88,8 @@ class OneWireHelper(util.DisableNewAttr):
             trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
 
         """
-        self.sendpacket(self.get_rst_pd(rst=rst, wait=wait, check=check), trigger_en=trigger_en, trigger_bit=trigger_bit)
+        self.bb.sendpacket(self.get_rst_pd(rst=rst, wait=wait, check=check), trigger_en=trigger_en, trigger_bit=trigger_bit)
         assert self.bb.matched, 'no presence detect'
-
-    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, clear_matched=True, timeout=1):
-        """ Sends a generic "packet"; waits for it to be sent.
-
-        Args:
-            packet (list): list of lists defining the packet, as returned by :class:`get_rst_pd` or :class:`get_generic_write_read`.
-            trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
-            trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
-            clear_matched (bool): setting for :class:`BitBanger.clear_matched`
-            timeout (int): if the packet is not done being sent after this many seconds, times out.
-
-        """
-        CMD = packet[0]
-        HIZ = packet[1]
-        PEN = packet[2]
-        REN = packet[3]
-        assert len(CMD) <= self.bb.max_length, 'Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks.'
-
-        self.bb.pattern_data = CMD
-        self.bb.pattern_hiz = HIZ
-        self.bb.pattern_en = PEN
-        self.bb.record_en = REN
-        self.bb.clk_en = [0]*len(CMD)
-        self.bb.num_bits = len(CMD)
-        
-        self.bb.trigger_en = trigger_en
-        self.bb.clear_matched = clear_matched
-        TRG = [0]*len(CMD)
-        if trigger_bit is None:
-            TRG[-1] = 1
-        else:
-            TRG[trigger_bit] = 1
-            
-        self.bb.trig_bits = TRG
-        self.bb.go()
-        self.bb.wait_for_done(timeout)
-
 
 
     @staticmethod
@@ -155,7 +118,7 @@ class OneWireHelper(util.DisableNewAttr):
         """
 
         self.send_rst_pd(trigger_en=False)
-        self.sendpacket(OneWireHelper._get_read_rom(read_rom_command))
+        self.bb.sendpacket(OneWireHelper._get_read_rom(read_rom_command))
         romcode = OneWireHelper._check_read_rom(self.bb.recorded_data(), expected_family_code, verbose)
         return hex(romcode)
 
@@ -174,7 +137,7 @@ class OneWireHelper(util.DisableNewAttr):
             gap (int): number of idle timeslots between each byte
 
         Returns:
-            Lists of bits that can be fed to :class:`sendpacket`.
+            Lists of bits that can be fed to :class:`BitBanger.sendpacket`.
         """
 
         cmdbits = []
@@ -239,6 +202,307 @@ class OneWireHelper(util.DisableNewAttr):
         else:
             if verbose: print('Correct CRC: 0x%x' % crc)
         return romcode
+
+
+
+class SWDHelper(util.DisableNewAttr):
+    ''' Helper functions for bit-banging a synchronous SWD interface.
+    Meant to be overloaded for your particular target.
+    Requires bit-level SWD expertise!
+    Be sure to consult the ARM Debug Interface specification
+    that applies to your specific target (e.g. IHI 0031, IHI 0074...).
+    '''
+    _name = 'SWD helper functions'
+
+    def __init__(self, bb):
+        super().__init__()
+        self.bb = bb
+        self.disable_newattr()
+
+    @staticmethod
+    def getpacket(port, op, register, data, pauses=1, check_payload=True):
+        """Get parameters for sending a desired SWD write and/or read transaction.
+        An ACK response of "OK" is expected and can be verified via 
+        :class:`BitBanger.matched`.
+
+        Args:
+            port (str): 'AP' or 'DP'
+            op (str): 'r' (read) or 'w' (write)
+            register (int): 2-bit address field (A[2:3]); instead the register can also
+                be referenced by name for some registers (see code), however these are
+                not guaranteed to be universally correct; they are correct for the RP2350.
+            data (int): 32-bit WDATA / RDATA field
+            pauses (int): number of trailing bits to add at the end
+            check_payload (bool): if True, enable verifying that the WDATA/RDATA portion 
+                matches the "data" argument; use :class:`BitBanger.matched` to later
+                check whether there was a match.
+
+        Returns:
+            Lists of bits that can be fed to :class:`BitBanger.sendpacket`.
+        """
+
+
+        CMD = []
+        HIZ = []
+        PEN = []
+        REN = []
+        if port == 'AP':
+            APnDP = 1
+        else:
+            APnDP = 0
+        if op == 'r':
+            RnW = 1
+        else:
+            RnW = 0
+        if type(register) == int:
+            A = register
+        elif register in ['ABORT', 'CSW', 'IDCODE']:
+            A = 0
+        elif register in ['SELECT']:
+            A = 0b01
+        elif register in ['TAR', 'CTRL/STAT', 'SELECT1']:
+            A = 0b10
+        elif register in ['DRW', 'RDBUFF']:
+            A = 0b11
+
+        # first byte: request
+        req = (APnDP<<6) + (RnW<<5) + (A<<3)
+        p = SWDHelper._parity(req)
+        req += (1<<7) + (p << 2) + 1
+        CMD.append(SWDHelper._reverse(req))
+        HIZ.append(SWDHelper._reverse(0b00000000))
+        PEN.append(SWDHelper._reverse(0b11111111))
+        # now do ACK + WDATA / RDATA + parity:
+        p = SWDHelper._parity(data)
+        if RnW: # read case
+            # shift RDATA into place:
+            REN = [0]*len(CMD)
+            REN.extend([0xF0, 0xFF, 0xFF, 0xFF, 0x0F])
+            CMD.extend(list(int.to_bytes((data << 4) + (p<<36), byteorder='little', length=5)))
+            # insert turn + ACK OK bits:
+            CMD[1] = CMD[1] + 3 # ACK bits
+            HIZ.extend([0xff]*5)
+            # drive trailing bits (low)
+            HIZ[-1] = SWDHelper._reverse(0b11111000)
+            if check_payload:
+                PEN.append(SWDHelper._reverse(0b01111111)) # don't check turn
+                PEN.extend([0xff]*4) 
+                PEN[-1] = SWDHelper._reverse(0b11111000) # don't check turn, trailing bits
+            else:
+                # still check ACK OK response!
+                PEN.append(SWDHelper._reverse(0b01110000))
+                PEN.extend([0]*4)
+            REN.extend([0]*(len(CMD)-len(REN)))
+
+        else: # write case
+            # shift WDATA into place:
+            CMD.extend(list(int.to_bytes((data << 5) + (p<<37), byteorder='little', length=5)))
+            # insert turn + ACK OK bits:
+            CMD[1] = CMD[1] + 0x03 # ACK bits
+            HIZ.extend([0x1f, 0, 0, 0, 0])
+            PEN.append(SWDHelper._reverse(0b01110111)) # don't check turns
+            PEN.extend([0xff]*4)
+            PEN[-1] = SWDHelper._reverse(0b11111100) # don't check trailing bits
+            REN = [0]*len(CMD)
+
+        # convert to lists of bits:
+        CMD = SWDHelper._bits_from_bytes(CMD)
+        HIZ = SWDHelper._bits_from_bytes(HIZ)
+        PEN = SWDHelper._bits_from_bytes(PEN)
+        REN = SWDHelper._bits_from_bytes(REN)
+        # don't check turn/trailing bits:
+        if pauses:
+            for a in [CMD, HIZ, PEN, REN]:
+                a.extend([0]*pauses)
+        return CMD, HIZ, PEN, REN
+
+    @staticmethod
+    def _parity(x):
+        res = 0
+        while x:
+            res ^= x&1
+            x >>= 1
+        return res
+
+    @staticmethod
+    def _reverse(x, width=8):
+        b = '{:0{width}b}'.format(x, width=width)
+        return int(b[::-1], 2)
+
+    @staticmethod
+    def _bits_from_bytes(x):
+        bits = []
+        for i in x:
+            for j in range(8):
+                bits.append((i>>j) & 1)
+        return bits
+
+
+
+    def set_dbgkey(self, key, trigger_bit='all', trigger_byte=0, check_match=True):
+        # start wiggling clock:
+        CMD = [0, 0]
+        HIZ = [0, 0]
+        PEN = [0xff]*len(CMD)
+        REN = [0, 0]
+
+        # convert to lists of bits:
+        CMD = SWDHelper._bits_from_bytes(CMD)
+        HIZ = SWDHelper._bits_from_bytes(HIZ)
+        PEN = SWDHelper._bits_from_bytes(PEN)
+        REN = SWDHelper._bits_from_bytes(REN)
+
+
+        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00080000)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 0b10, 0x04) # addresses DBGKEY (offset 0x04)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False, clear_matched=False)
+        if check_match: assert self.bb.matched, 'Problem setting DBGKEY.RESET'
+
+        # Husky SWD BB limits us to sending one nibble of the key at a time:
+        for b in range(32):
+            CMD = [0, 0]
+            HIZ = [0, 0]
+            PEN = [0xff]*len(CMD) 
+            REN = [0, 0]
+
+            # convert to lists of bits:
+            CMD = SWDHelper._bits_from_bytes(CMD)
+            HIZ = SWDHelper._bits_from_bytes(HIZ)
+            PEN = SWDHelper._bits_from_bytes(PEN)
+            REN = SWDHelper._bits_from_bytes(REN)
+
+            for i in range(4):
+                data = 2 + (key & 1) # send data lsb to msb; set PUSH bit as well
+                key = key >> 1
+                nextpacket = self.getpacket('AP', 'w', 0b10, data, check_payload=True) # addresses DBGKEY (offset 0x04)
+                CMD.extend(nextpacket[0])
+                HIZ.extend(nextpacket[1])
+                PEN.extend(nextpacket[2])
+                REN.extend(nextpacket[3])
+            if b == trigger_byte or trigger_byte == 'all':
+                trigger_en = True
+            else:
+                trigger_en = False
+
+            self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_bit=trigger_bit, trigger_en=trigger_en, clear_matched=False)
+            if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
+
+
+    def wake_swd(self):
+        # 1. 8 SWCLK cycles with SWDIO high:
+        CMD = [0xff]*2
+
+        # 2. 128b-bit alert sequence:
+        CMD.extend([0x92, 0xF3, 0x09, 0x62, 0x95, 0x2D, 0x85, 0x86, 0xE9, 0xAF, 0xDD, 0xE3, 0xA2, 0x0E, 0xBC, 0x19])
+
+        # 3. 4 SWCLK cycles with SWDIO low; 
+        # 4a. SWD activation sequence start: 0x1a
+        CMD.append(0xa0)
+
+        # 4b. SWD activation sequence start: 0x1a
+        # 5. at least 50 SWCLK cycles with SWDIO high
+        CMD.append(0xF1)
+        CMD.extend([0xff]*6)
+
+        # not in spec but looks like we need this!
+        CMD.extend([0x0]*2)
+
+        HIZ = [0]*len(CMD)
+        PEN = [0xff]*len(CMD)
+
+        # convert to lists of bits:
+        CMD = SWDHelper._bits_from_bytes(CMD)
+        HIZ = SWDHelper._bits_from_bytes(HIZ)
+        PEN = SWDHelper._bits_from_bytes(PEN)
+
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', 0x4c013477)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', 0x4c013477)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+
+        REN = [0]*len(CMD)
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+
+    def check_debug_enabled(self):
+        CMD = [0, 0]
+        HIZ = [0, 0]
+        PEN = [0xff]*len(CMD)
+        REN = [0, 0]
+
+        # convert to lists of bits:
+        CMD = SWDHelper._bits_from_bytes(CMD)
+        HIZ = SWDHelper._bits_from_bytes(HIZ)
+        PEN = SWDHelper._bits_from_bytes(PEN)
+        REN = SWDHelper._bits_from_bytes(REN)
+
+        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00002D05)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT1', 0x00000000)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00002D00)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, check_payload=False)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        # redundant read so we can see the previous one on Saleae:
+        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, check_payload=False)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        rdata = self.bb.recorded_data(nbytes=4)
+        if rdata == 0x43800042:
+            return True
+        elif rdata == 0x43000002:
+            return False
+        else:
+            raise ValueError('Unexpected CSW value: %s' % hex(rdata))
+
 
 
 
@@ -321,6 +585,7 @@ class BitBanger (util.DisableNewAttr):
         self._record_en = [0]*self.max_length
         self._trig_bits = [0]*self.max_length
         self.onewire = OneWireHelper(self)
+        self.swd = SWDHelper(self)
         self.disable_newattr()
 
     def _dict_repr(self):
@@ -477,6 +742,45 @@ class BitBanger (util.DisableNewAttr):
         raw[3] = self.num_bits & 0xFF
         raw[4] = self.num_bits >> 8
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
+
+
+    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, clear_matched=True, timeout=1):
+        """ Sends a generic "packet"; waits for it to be sent.
+
+        Args:
+            packet (list): list of lists defining the packet, as returned by e.g. :class:`OneWireHelper.get_rst_pd`, 
+                :class:`OneWireHelper.get_generic_write_read`, or :class:`SWDHelper.getpacket`.
+            trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
+            trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
+            clear_matched (bool): setting for :class:`BitBanger.clear_matched`
+            timeout (int): if the packet is not done being sent after this many seconds, times out.
+
+        """
+        CMD = packet[0]
+        HIZ = packet[1]
+        PEN = packet[2]
+        REN = packet[3]
+
+        assert len(CMD) <= self.max_length, 'Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks (max: %d; this: %d)' % (self.max_length, len(CMD))
+
+        self.pattern_data = CMD
+        self.pattern_hiz = HIZ
+        self.pattern_en = PEN
+        self.record_en = REN
+        self.num_bits = len(CMD)
+        
+        self.trigger_en = trigger_en
+        self.clear_matched = clear_matched
+        TRG = [0]*len(CMD)
+        if trigger_bit is None:
+            TRG[-1] = 1
+        else:
+            TRG[trigger_bit] = 1
+            
+        self.trig_bits = TRG
+        self.go()
+        self.wait_for_done(timeout)
+
 
     def wait_for_matched(self, timeout=1):
         """ Polls :class:`matched` until timeout.
