@@ -208,7 +208,8 @@ class OneWireHelper(util.DisableNewAttr):
 class SWDHelper(util.DisableNewAttr):
     ''' Helper functions for bit-banging a synchronous SWD interface.
     Meant to be overloaded for your particular target.
-    Requires bit-level SWD expertise!
+    **Requires bit-level SWD expertise!**
+
     Be sure to consult the ARM Debug Interface specification
     that applies to your specific target (e.g. IHI 0031, IHI 0074...).
     '''
@@ -218,6 +219,7 @@ class SWDHelper(util.DisableNewAttr):
         super().__init__()
         self.bb = bb
         self.disable_newattr()
+
 
     @staticmethod
     def getpacket(port, op, register, data, pauses=1, check_payload=True):
@@ -240,7 +242,6 @@ class SWDHelper(util.DisableNewAttr):
         Returns:
             Lists of bits that can be fed to :class:`BitBanger.sendpacket`.
         """
-
 
         CMD = []
         HIZ = []
@@ -338,8 +339,16 @@ class SWDHelper(util.DisableNewAttr):
         return bits
 
 
+    def set_dbgkey(self, key, trigger_bit=None, trigger_nibble=0, check_match=True):
+        """Sends RP2350 debug key.
+        Key is sent one nibble at a time.
 
-    def set_dbgkey(self, key, trigger_bit='all', trigger_byte=0, check_match=True):
+        Args:
+            key (int): 256-bit debug key
+            trigger_bit (int): which bit *of the SWD transaction* to trigger on.
+            trigger_nibble (int): which key nibble to trigger on (can be 'all').
+        """
+
         # start wiggling clock:
         CMD = [0, 0]
         HIZ = [0, 0]
@@ -395,7 +404,7 @@ class SWDHelper(util.DisableNewAttr):
                 HIZ.extend(nextpacket[1])
                 PEN.extend(nextpacket[2])
                 REN.extend(nextpacket[3])
-            if b == trigger_byte or trigger_byte == 'all':
+            if b == trigger_nibble or trigger_nibble == 'all':
                 trigger_en = True
             else:
                 trigger_en = False
@@ -404,7 +413,13 @@ class SWDHelper(util.DisableNewAttr):
             if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
 
 
-    def wake_swd(self):
+    def wake_swd(self, expected_id_code=0x4c013477):
+        """Sends RP2350 alert sequence, SWD activation, line reset, and checks ID code.
+
+        Args:
+            expected_id_code (int): expected ID code
+        """
+
         # 1. 8 SWCLK cycles with SWDIO high:
         CMD = [0xff]*2
 
@@ -431,12 +446,13 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
 
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', 0x4c013477)
+        # read IDCODE
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
 
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', 0x4c013477)
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
@@ -444,8 +460,15 @@ class SWDHelper(util.DisableNewAttr):
         REN = [0]*len(CMD)
 
         self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        assert self.bb.matched, 'ID code did not match'
 
     def check_debug_enabled(self):
+        """Checks whether debug is enabled on RP2350.
+
+        Returns:
+            True if debug is enabled, False if not.
+        """
+
         CMD = [0, 0]
         HIZ = [0, 0]
         PEN = [0xff]*len(CMD)
@@ -705,13 +728,15 @@ class BitBanger (util.DisableNewAttr):
         else:
             return False
 
-    def go(self, go=True):
+    def go(self, really_go=True):
         """ Make the bitbanger go.
+        Args:
+            really_go (bool): 'AP' or 'DP'
         """
         # Most properties of this module are only written out to the hardware when this
         # method is called; by setting the "go" argument to False, the properties get
         # pushed out without making it "go".
-        if go:
+        if really_go:
             writes = 6
         else:
             writes = 5
@@ -748,7 +773,7 @@ class BitBanger (util.DisableNewAttr):
         """ Sends a generic "packet"; waits for it to be sent.
 
         Args:
-            packet (list): list of lists defining the packet, as returned by e.g. :class:`OneWireHelper.get_rst_pd`, 
+            packet (list): list of lists defining the packet, as returned by e.g. 
                 :class:`OneWireHelper.get_generic_write_read`, or :class:`SWDHelper.getpacket`.
             trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
             trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.

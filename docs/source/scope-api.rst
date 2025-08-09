@@ -266,6 +266,9 @@ scope.bitbanger
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.OneWireHelper
     :members:
 
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.SWDHelper
+    :members:
+
 
 scope.XADC
 ^^^^^^^^^^
