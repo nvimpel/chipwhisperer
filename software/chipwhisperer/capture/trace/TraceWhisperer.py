@@ -28,7 +28,8 @@ import time
 import datetime
 import re
 import math
-import pkg_resources # type: ignore
+from importlib import resources
+import importlib.resources
 import chipwhisperer as cw
 from ...common.utils import util
 from ...hardware.naeusb.naeusb import NAEUSB
@@ -122,8 +123,12 @@ class TraceWhisperer(util.DisableNewAttr):
             self._fpga = FPGA(self._naeusb)
             if not self._fpga.isFPGAProgrammed() or force_bitfile:
                 if not bs:
-                    bs = pkg_resources.resource_filename('chipwhisperer', 'hardware/firmware/tracewhisperer_top.bit')
-                self._fpga.FPGAProgram(open(bs, 'rb'), exceptOnDoneFailure=False)
+                    # Get the resource file path using importlib.resources
+                    import chipwhisperer.hardware.firmware
+                    with resources.as_file(resources.files(chipwhisperer.hardware.firmware).joinpath('tracewhisperer_top.bit')) as bit_file:
+                        self._fpga.FPGAProgram(open(bit_file, 'rb'), exceptOnDoneFailure=False)
+                else:
+                    self._fpga.FPGAProgram(open(bs, 'rb'), exceptOnDoneFailure=False)
 
         else:
             self.platform = 'CW305'
@@ -221,8 +226,13 @@ class TraceWhisperer(util.DisableNewAttr):
         """
         self.verilog_define_matches = 0
         if not defines_files:
-            defines_files = [pkg_resources.resource_filename('chipwhisperer', 'capture/trace/defines/defines_trace.v'),
-                             pkg_resources.resource_filename('chipwhisperer', 'capture/trace/defines/defines_pw.v')]
+            import chipwhisperer.capture.trace.defines
+            defines_pkg = resources.files(chipwhisperer.capture.trace.defines)
+            defines_files = []
+            with resources.as_file(defines_pkg.joinpath('defines_trace.v')) as f1:
+                defines_files.append(str(f1))
+            with resources.as_file(defines_pkg.joinpath('defines_pw.v')) as f2:
+                defines_files.append(str(f2))
         for i,defines_file in enumerate(defines_files):
             defines = open(defines_file, 'r')
             define_regex_base  =   re.compile(r'`define')
