@@ -212,6 +212,9 @@ class SWDHelper(util.DisableNewAttr):
 
     Be sure to consult the ARM Debug Interface specification
     that applies to your specific target (e.g. IHI 0031, IHI 0074...).
+
+    Some of the methods here are specific to the RP2350. Adapt as needed for
+    other targets!
     '''
     _name = 'SWD helper functions'
 
@@ -380,7 +383,7 @@ class SWDHelper(util.DisableNewAttr):
         PEN.extend(nextpacket[2])
         REN.extend(nextpacket[3])
 
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False, clear_matched=False)
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
         if check_match: assert self.bb.matched, 'Problem setting DBGKEY.RESET'
 
         # Husky SWD BB limits us to sending one nibble of the key at a time:
@@ -409,7 +412,7 @@ class SWDHelper(util.DisableNewAttr):
             else:
                 trigger_en = False
 
-            self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_bit=trigger_bit, trigger_en=trigger_en, clear_matched=False)
+            self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_bit=trigger_bit, trigger_en=trigger_en)
             if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
 
 
@@ -591,7 +594,6 @@ class BitBanger (util.DisableNewAttr):
         super().__init__()
         self.oa = oaiface
         self._trigger_en = 0
-        self._clear_matched = 0
         self._continuous_clk = 0
         self._inactive_data = 0
         self._inactive_state = 'high_z'
@@ -754,8 +756,7 @@ class BitBanger (util.DisableNewAttr):
         else:
             inactive_state = 0
 
-        raw[0] = (self.trigger_en << 7) + \
-                 (self.clear_matched << 6)
+        raw[0] = (self.trigger_en << 7)
         raw[1] = (self.continuous_clk << 7) + \
                  (self.inactive_data << 6) + \
                  (inactive_state << 5) + \
@@ -769,7 +770,7 @@ class BitBanger (util.DisableNewAttr):
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
 
 
-    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, clear_matched=True, timeout=1):
+    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, timeout=1):
         """ Sends a generic "packet"; waits for it to be sent.
 
         Args:
@@ -777,7 +778,6 @@ class BitBanger (util.DisableNewAttr):
                 :class:`OneWireHelper.get_generic_write_read`, or :class:`SWDHelper.getpacket`.
             trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
             trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
-            clear_matched (bool): setting for :class:`BitBanger.clear_matched`
             timeout (int): if the packet is not done being sent after this many seconds, times out.
 
         """
@@ -795,7 +795,6 @@ class BitBanger (util.DisableNewAttr):
         self.num_bits = len(CMD)
         
         self.trigger_en = trigger_en
-        self.clear_matched = clear_matched
         TRG = [0]*len(CMD)
         if trigger_bit is None:
             TRG[-1] = 1
@@ -850,17 +849,6 @@ class BitBanger (util.DisableNewAttr):
         if val not in [0, 1]:
             raise ValueError()
         self._trigger_en = val
-
-    @property 
-    def clear_matched(self):
-        """ TODO: not sure this is needed?
-        """
-        return self._clear_matched
-    @clear_matched.setter
-    def clear_matched(self, val):
-        if val not in [0, 1]:
-            raise ValueError()
-        self._clear_matched = val
 
     @property 
     def continuous_clk(self):
