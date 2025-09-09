@@ -376,12 +376,13 @@ class SWDHelper(util.DisableNewAttr):
 
     def set_dbgkey(self, key, trigger_bit=None, trigger_nibble=0, check_match=True):
         """Sends RP2350 debug key.
-        Key is sent one nibble at a time.
+        Key is sent one nibble at a time (32 nibbles in total).
 
         Args:
             key (int): 256-bit debug key
             trigger_bit (int): which bit *of the SWD transaction* to trigger on.
-            trigger_nibble (int): which key nibble to trigger on (can be 'all').
+            trigger_nibble (int): which key nibble to trigger on (0-31). Set to 'all' to trigger
+                on each nibble, or None to not trigger at all.
         """
 
         # start wiggling clock:
