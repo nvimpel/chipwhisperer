@@ -472,6 +472,95 @@ make
 
 ---
 
+## Firmware Upgrade
+
+If you need to upgrade the firmware on the SAM3X (control microcontroller), simply run:
+
+```
+import chipwhisperer as cw
+target = cw.target(None, cw.targets.CW305)
+target.upgrade_firmware()
+```
+
+If this is successful you will see something like:
+
+```
+Entering bootloader mode...
+Detected com port /dev/ttyACM0
+Loading cw305 firmware...
+Opened!
+Connecting...
+Connected!
+Erasing...
+Erased!
+Programming file cw305/mcufw.bin...
+Programmed!
+Verifying...
+Verify OK!
+Resetting...
+Upgrade successful
+```
+
+If you don’t see the "Resetting..." line, you’ll need to power cycle the board.
+
+### Incorrect Firmware
+
+If your board has been programmed with incorrect firmware, the above method won't work. Instead you must do the following steps:
+
+1. Erase the SAM3X, causing it to enter bootloader mode.
+2. Program the SAM3X with the new firmware.
+
+#### Step 1: Erasing the SAM3X
+
+This can be done in two ways. Via Python:
+
+```
+import chipwhisperer as cw
+target = cw.target(None, cw.targets.CW305)
+programmer = cw.SAMFWLoader(scope=target)
+programmer.enter_bootloader(really_enter=True)
+```
+
+Alternative, short the jumper holes marked "ERASE" (J20) with a paperclip, tweezers, etc.
+
+If this part is successful, the leds D23 and D9 will be dimly lit. The CW305 will then **re-enumerate as a serial port**.
+
+#### Step 2: Reprogramming the SAM3X
+
+In the following step, you may need to add explicit permission for the bootloader serial port. This is a different USB interface than is normally used by the device.
+
+Simply run:
+
+```python
+import chipwhisperer as cw
+cw.program_sam_firmware(hardware_type='cw305')
+```
+
+If this is successful you will see something like:
+
+```
+Found /dev/ttyACM0
+Loading cw305 firmware...
+Opened!
+Connecting...
+Connected!
+Erasing...
+Erased!
+Programming file cw305/mcufw.bin...
+Programmed!
+Verifying...
+Verify OK!
+Resetting...
+Upgrade successful
+```
+
+If you don’t see the "Resetting..." line, you’ll need to power cycle the board.
+
+
+
+
+---
+
 ## Application Note
 
 Our [application note](https://media.newae.com/appnotes/NAE0010_Whitepaper_CW305_AES_SCA_Attack.pdf) has more details on using the CW305.

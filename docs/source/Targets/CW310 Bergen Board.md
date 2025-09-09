@@ -507,21 +507,43 @@ See [Page 27 of the Schematics](#reference-material-schematics) for more detail.
 
 ## Firmware Upgrade
 
-If you need to upgrade the firmware on the SAM3X (control microcontroller), this is currently done through two steps:
+If you need to upgrade the firmware on the SAM3X (control microcontroller), simply run:
+
+```
+import chipwhisperer as cw
+target = cw.target(None, cw.targets.CW310)
+target.upgrade_firmware()
+```
+
+If this is successful you will see something like:
+
+```
+Entering bootloader mode...
+Detected com port /dev/ttyACM0
+Loading cwbergen firmware...
+Opened!
+Connecting...
+Connected!
+Erasing...
+Erased!
+Programming file cwbergen/mcufw.bin...
+Programmed!
+Verifying...
+Verify OK!
+Resetting...
+Upgrade successful
+```
+
+If you don’t see the "Resetting..." line, you’ll need to power cycle the board.
+
+### Incorrect Firmware
+
+If your board has been programmed with incorrect firmware, the above method won't work. Instead you must do the following steps:
 
 1. Erase the SAM3X, causing it to enter bootloader mode.
 2. Program the SAM3X with the new firmware.
 
-See the following for details of these steps.
-
-```{admonition} Automatic Bootloader
-:class: tip
-Our other devices have a simplified "automatic" bootloader programmer -
-currently the CW310 firmware isn't distributed with ChipWhisperer, so for now
-use the following manual method.
-```
-
-### Step 1: Erasing the SAM3X
+#### Step 1: Erasing the SAM3X
 
 This can be done in two ways. Via Python:
 
@@ -536,49 +558,36 @@ Alternative, short the jumper holes marked "ERASE" (J20) with a paperclip, tweez
 
 If this part is successful, the leds D23 and D9 will be dimly lit. The CW310 will then **re-enumerate as a serial port**.
 
-### Step 2: Reprogramming the SAM3X
+#### Step 2: Reprogramming the SAM3X
 
 In the following step, you may need to add explicit permission for the bootloader serial port. This is a different USB interface than is normally used by the device.
 
-Get the latest firmware from GIT:
-
-```
-wget https://github.com/newaetech/cw310-bergen-board/raw/main/microfw/CW310/Debug/CW310.bin
-```
-
-And then:
+Simply run:
 
 ```python
 import chipwhisperer as cw
-programmer = cw.SAMFWLoader(scope=None)
-programmer.program('COM3', 'CW310.bin')
+cw.program_sam_firmware(hardware_type='cwbergen')
 ```
 
 If this is successful you will see something like:
 
 ```
-Opening firmware...
+Found /dev/ttyACM0
+Loading cwbergen firmware...
 Opened!
 Connecting...
-b'\n\r'
 Connected!
 Erasing...
 Erased!
-Programming file CW310.bin...
+Programming file cwbergen/mcufw.bin...
 Programmed!
 Verifying...
 Verify OK!
-Bootloader disabled. Please power cycle device.
+Resetting...
+Upgrade successful
 ```
 
-Press the "USB RST" button (SW5) on the board or power cycle it.
-
-```{admonition} No Touch Bootloader
-:class: tip
-The latest git will support an automatic bootloader which does not require you
-to power cycle or touch the physical board. If your board automatically
-re-enumerates, you do not need to do the "USB RST" command.
-```
+If you don’t see the "Resetting..." line, you’ll need to power cycle the board.
 
 ## Reference Material (Schematics)
 

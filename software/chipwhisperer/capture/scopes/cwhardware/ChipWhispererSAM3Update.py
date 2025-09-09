@@ -219,10 +219,9 @@ class SAMFWLoader:
             'cwlite',
             'cwnano',
             'cw305',
-            'cw310',
-            'cw340',
-            'cw1200',
             'cwbergen',
+            'cwluna',
+            'cw1200',
             'cwhusky',
             'cwhuskyplus'
         ]
