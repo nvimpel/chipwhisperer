@@ -60,6 +60,22 @@ class OneWireHelper(util.DisableNewAttr):
         self.bb = bb
         self.disable_newattr()
 
+
+    def set_defaults(self):
+        """ Sets normally useful defaults for 1-wire bit-banging:
+
+        * :class:`BitBanger.drive_edge` = 'rising'
+        * :class:`BitBanger.check_edge` = 'falling'
+        * :class:`BitBanger.inactive_data` = 1
+        * :class:`BitBanger.inactive_state` = 'high_z'
+
+        """
+        self.bb.drive_edge = 'rising'
+        self.bb.check_edge = 'falling'
+        self.bb.inactive_data = 1
+        self.bb.inactive_state = 'high_z'
+
+
     @staticmethod
     def get_rst_pd(rst=56, wait=6, check=2):
         total = rst + wait + check
@@ -224,11 +240,27 @@ class SWDHelper(util.DisableNewAttr):
         self.disable_newattr()
 
 
+    def set_defaults(self):
+        """ Sets normally useful defaults for SWD bit-banging:
+
+        * :class:`BitBanger.drive_edge` = 'falling'
+        * :class:`BitBanger.check_edge` = 'rising'
+        * :class:`BitBanger.inactive_data` = 0
+        * :class:`BitBanger.inactive_state` = 'driven'
+
+        """
+        self.bb.drive_edge = 'falling'
+        self.bb.check_edge = 'rising'
+        self.bb.inactive_data = 0
+        self.bb.inactive_state = 'driven'
+
     @staticmethod
     def getpacket(port, op, register, data, pauses=1, check_payload=True):
         """Get parameters for sending a desired SWD write and/or read transaction.
         An ACK response of "OK" is expected and can be verified via 
         :class:`BitBanger.matched`.
+
+        Quite specific to the RP2350, but easily adapted/extended to other targets.
 
         Args:
             port (str): 'AP' or 'DP'
