@@ -547,7 +547,10 @@ class USERIOPin(util.DisableNewAttr):
         rtn['status'] = self.status
         rtn['clock_enabled'] = self.clock_enabled
         if self.pin_number > 8 - self.parent.num_clocks:
-            rtn['clock'] = self.clock
+            info = '%s' % self.clock
+            if not self.parent.clocks_locked:
+                info += ' *** PLL UNLOCKED **'
+            rtn['clock'] = info
         else:
             rtn['clock'] = 'not supported'
         return rtn
@@ -910,6 +913,8 @@ class USERIOSettings(util.DisableNewAttr):
         rtn['direction'] = self.direction
         rtn['clock_enabled'] = self.clock_enabled
         rtn['clocks'] = self.clocks
+        rtn['clock_source'] = self.clock_source
+        rtn['clocks_locked'] = self.clocks_locked
         rtn['drive_data'] = self.drive_data
         rtn['status'] = self.status
         pins_rtn = {}
@@ -929,6 +934,8 @@ class USERIOSettings(util.DisableNewAttr):
                     info += ', clock not set'
                 else:
                     info += ', clock = %.1f' % self.clocks[8-i]
+                    if not self.clocks_locked:
+                        info += ' *** PLL UNLOCKED ***'
             else:
                 info += ', clock not supported'
 
