@@ -1669,6 +1669,21 @@ class XADCSettings(util.DisableNewAttr):
 
 class LASettings(util.DisableNewAttr):
     ''' Husky logic analyzer settings. For accessing recorded glitch generation, IO, and USERIO signals.
+    Example::
+
+        scope.LA.enabled = True
+        scope.LA.clk_source = 'usb'
+        scope.LA.oversampling_factor = 2
+        scope.LA.capture_group = 'USERIO 20-pin'
+        scope.LA.capture_depth = 128
+
+        scope.LA.armed()
+        scope.LA.trigger_now()
+        raw_data = scope.LA.read_capture_data()
+        userio_d0 = scope.LA.extract(raw_data, 0)
+        userio_d1 = scope.LA.extract(raw_data, 1)
+        userio_ck = scope.LA.extract(raw_data, 8)
+
     '''
     _name = 'Husky Logic Analyzer Setting'
 
@@ -1870,8 +1885,22 @@ class LASettings(util.DisableNewAttr):
     def clk_source(self, enable):
         self._setClkSource(enable)
         self.reset_MMCM()
+        # Wait a bit before exiting: without this, setting clk_source() and
+        # then oversampling_factor() immediately after can result in an
+        # unlocked PLL because the new clock frequency won't be reflected in
+        # source_clock_frequency yet, which will lead to incorrect PLL
+        # parameters. At worse, the PLL will be locked but not at the requested
+        # frequency!
+        time.sleep(0.25)
 
     def arm(self):
+        """Arm the logic analyzer.
+
+        Raises:
+           Exception: LA clock is not locked.
+        """
+        if not self.locked:
+            raise Exception("LA clock is not locked! Review your settings. If everything looks good, you may need to re-specify scope.LA.oversampling_factor.")
         self.oa.sendMessage(CODE_WRITE, "LA_ARM", [1], Validate=False)
 
     @property
