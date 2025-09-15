@@ -631,7 +631,9 @@ class BitBanger (util.DisableNewAttr):
         self._inactive_data = 0
         self._inactive_state = 'high_z'
         self._trigger_when_matched = 0
-        self._enable_glitch_output = 0
+        self._glitch_enabled = 0
+        self._glitch_mode_value = 0
+        self._glitch_mode_string = 'drive_low'
         self._drive_edge = 'rising'
         self._check_edge = 'falling'
         self._clk_div = 0
@@ -658,6 +660,7 @@ class BitBanger (util.DisableNewAttr):
         rtn['inactive_data'] = self.inactive_data
         rtn['continuous_clk'] = self.continuous_clk
         rtn['num_bits'] = self.num_bits
+        rtn['glitch_mode'] = self.glitch_mode
         return rtn
 
     def __repr__(self):
@@ -789,12 +792,13 @@ class BitBanger (util.DisableNewAttr):
         else:
             inactive_state = 0
 
-        raw[0] = (self.trigger_en << 7)
+        raw[0] = (self.trigger_en << 7) + \
+                 (self._glitch_mode_value)
         raw[1] = (self.continuous_clk << 7) + \
                  (self.inactive_data << 6) + \
                  (inactive_state << 5) + \
                  (self.trigger_when_matched << 3) + \
-                 (self.enable_glitch_output << 2) + \
+                 (self._glitch_enabled << 2) + \
                  (drive << 1) + \
                  check
         raw[2] = self.clk_div
@@ -941,15 +945,39 @@ class BitBanger (util.DisableNewAttr):
         self._trigger_when_matched = val
 
     @property 
-    def enable_glitch_output(self):
-        """ TODO - unsure if this will live here?
+    def glitch_mode(self):
+        """ Set the glitch mode of the BitBanger module. Possible settings:
+
+        * 'disabled': no glitching.
+        * 'drive_low': drive data pin low upon glitch.
+        * 'drive_high': drive data pin upon glitch.
+        * 'invert': invert data pin upon glitch.
+
+        When not set to 'disabled', the data pin will be "glitched" low/high/inverted as specified by
+        this setting whenever the output of the 
+        :class:`scope.glitch <chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings>`
+        module is active. The timing of the glitch(es) is entirely specified by 
+        :class:`scope.glitch <chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings>`.
+
         """
-        return self._enable_glitch_output
-    @enable_glitch_output.setter
-    def enable_glitch_output(self, val):
-        if val not in [0,1]:
+        return self._glitch_mode_string
+    @glitch_mode.setter
+    def glitch_mode(self, val):
+        if val == 'disabled':
+            self._glitch_enabled = 0
+        elif val == 'drive_low':
+            self._glitch_enabled = 1
+            self._glitch_mode_value = 0
+        elif val == 'drive_high':
+            self._glitch_enabled = 1
+            self._glitch_mode_value = 1
+        elif val == 'invert':
+            self._glitch_enabled = 1
+            self._glitch_mode_value = 2
+        else:
             raise ValueError
-        self._enable_glitch_output = val
+        self._glitch_mode_string = val
+
 
     @property 
     def drive_edge(self):
