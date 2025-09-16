@@ -537,24 +537,39 @@ class TraceWhisperer(util.DisableNewAttr):
 
         Args: none
         """
+        # set USERIO_CW_DRIVEN:
+        cw_driven = (1<<self.tms_bit) + (1<<self.tck_bit)
         if self.platform == 'Husky':
-            reg_pwdriven = "USERIO_CW_DRIVEN"
-            reg_data = "USERIO_DRIVE_DATA"
+            pre = self._scope.userio.direction
+            self._scope.userio.direction = cw_driven
         else:
-            reg_pwdriven = self.REG_USERIO_PWDRIVEN
-            reg_data = self.REG_USERIO_DATA
+            pre = self.fpga_read(self.REG_USERIO_PWDRIVEN, 1)
+            self.fpga_write(self.REG_USERIO_PWDRIVEN, [cw_driven])
 
-        self.fpga_write(reg_pwdriven, [(1<<self.tms_bit) + (1<<self.tck_bit)])
-        self.fpga_write(reg_data, [1<<self.tms_bit])
-        self._line_reset(reg_data)
-        self._send_tms_byte(reg_data, 0x9e)
-        self._send_tms_byte(reg_data, 0xe7)
-        self._line_reset(reg_data)
-        self.fpga_write(reg_data, [1<<self.tms_bit])
-        self.fpga_write(reg_pwdriven, [0])
+        # bit-bang:
+        if self.platform == 'Husky':
+            self._scope.userio.drive_data = 1<<self.tms_bit
+        else:
+            self.fpga_write(self.REG_USERIO_DATA, [1<<self.tms_bit])
+
+        self._line_reset()
+        self._send_tms_byte(0x9e)
+        self._send_tms_byte(0xe7)
+        self._line_reset()
+
+        if self.platform == 'Husky':
+            self._scope.userio.drive_data = 1<<self.tms_bit
+        else:
+            self.fpga_write(self.REG_USERIO_DATA, [1<<self.tms_bit])
+
+        # reset USERIO_CW_DRIVEN:
+        if self.platform == 'Husky':
+            self._scope.userio.direction = pre
+        else:
+            self.fpga_write(self.REG_USERIO_PWDRIVEN, pre)
 
 
-    def _send_tms_byte(self, addr, data):
+    def _send_tms_byte(self, data):
         """Bit-bang 8 bits of data on TMS/TCK (LSB first).
 
         Args:
@@ -562,16 +577,22 @@ class TraceWhisperer(util.DisableNewAttr):
         """
         for i in range(8):
             bit = (data & 2**i) >> i
-            self.fpga_write(addr, [bit<<self.tms_bit])
-            self.fpga_write(addr, [(1<<self.tck_bit) + (bit<<self.tms_bit)])
+            if self.platform == 'Husky':
+                self._scope.userio.drive_data = bit<<self.tms_bit
+                self._scope.userio.drive_data = (1<<self.tck_bit) + (bit<<self.tms_bit)
+                pass
+            else:
+                addr = self.REG_USERIO_DATA
+                self.fpga_write(addr, [bit<<self.tms_bit])
+                self.fpga_write(addr, [(1<<self.tck_bit) + (bit<<self.tms_bit)])
 
 
-    def _line_reset(self, addr, num_bytes=8):
+    def _line_reset(self, num_bytes=8):
         """Bit-bang a line reset on TMS/TCK.
 
         Args: none
         """
-        for i in range(num_bytes): self._send_tms_byte(addr, 0xff)
+        for i in range(num_bytes): self._send_tms_byte(0xff)
 
 
 
