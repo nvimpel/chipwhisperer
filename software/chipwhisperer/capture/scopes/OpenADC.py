@@ -26,7 +26,7 @@ try:
     from ..trace import TraceWhisperer
     from ..trace.TraceWhisperer import UARTTrigger
 except Exception as e:
-    tracewhisperer_logger.info("Could not import TraceWhisperer: {}".format(e))
+    tracewhisperer_logger.warning("Could not import TraceWhisperer: {}".format(e))
     TraceWhisperer = None # type: ignore
 
 from .cwhardware.ChipWhispererSAM3Update import SAMFWLoader
@@ -702,7 +702,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                     self.trace = TraceWhisperer(husky=True, target=None, scope=self, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
                     self.UARTTrigger = UARTTrigger(scope=self, trace_reg_select=3, main_reg_select=2)
                 except Exception as e:
-                    scope_logger.info("TraceWhisperer unavailable " + str(e))
+                    scope_logger.warning("TraceWhisperer unavailable " + str(e))
             self.userio = USERIOSettings(self.sc, self.trace)
             self.bitbanger = BitBanger(self.sc)
             self.SAD = ChipWhispererSAD.HuskySAD(self.sc)
