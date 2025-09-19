@@ -1870,6 +1870,7 @@ class ARM_debug_registers(util.DisableNewAttr):
     def __init__(self, main):
         super().__init__()
         self.main = main
+        self._use_register_cache = True
         self.cached_values = [None] * len(self.regs)
         self.disable_newattr()
 
@@ -1880,6 +1881,7 @@ class ARM_debug_registers(util.DisableNewAttr):
 
         else:
             rtn = OrderedDict()
+            rtn['use_register_cache'] = self.use_register_cache
             rtn['DWT_CTRL']     = self.DWT_CTRL
             rtn['DWT_COMP0']    = self.DWT_COMP0
             rtn['DWT_COMP1']    = self.DWT_COMP1
@@ -1901,6 +1903,34 @@ class ARM_debug_registers(util.DisableNewAttr):
 
     def __str__(self):
         return self.__repr__()
+
+    @property 
+    def use_register_cache(self):
+        """Writing and reading target debug registers this class's methods is
+        relatively slow because it is done via SimpleSerial exchanges. It can
+        therefore be useful to cache these values. Be cautious if these
+        registers can be changed via other means (e.g. a debugger, or the
+        target firmware itself).
+
+        Args:
+            val (bool): whether register values are cached.
+        """
+
+        return self._use_register_cache
+
+    @use_register_cache.setter
+    def use_register_cache(self, val): 
+        if val in [True, False]:
+            self._use_register_cache = val
+        else:
+            raise ValueError
+
+    def clear_cache(self): 
+        """Clear the cached register values, to force them to be re-read from
+        the target.
+        """
+        self.cached_values = [None] * len(self.regs)
+
 
     @property 
     def DWT_CTRL(self):
@@ -2047,7 +2077,7 @@ class ARM_debug_registers(util.DisableNewAttr):
             tracewhisperer_logger.error("Target must be connected for this to work (e.g. scope.trace.target = target)")
             return None
         elif reg in self.regs:
-            if self.cached_values[self.regs[reg]]:
+            if self.cached_values[self.regs[reg]] and self.use_register_cache:
                 val = self.cached_values[self.regs[reg]]
             else:
                 data = '%02x' % self.regs[reg] + '00000000'
