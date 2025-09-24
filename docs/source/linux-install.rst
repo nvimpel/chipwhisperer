@@ -33,7 +33,7 @@ should get you up and running:
 
     sudo cp 50-newae.rules /etc/udev/rules.d/50-newae.rules
     sudo udevadm control --reload-rules
-    sudo groupadd -f chipwhisperer
+    sudo groupadd -fr chipwhisperer # new systemd versions require system accounts for udev
     sudo usermod -aG chipwhisperer $USER
     sudo usermod -aG plugdev $USER
     git submodule update --init jupyter
@@ -146,7 +146,7 @@ you'll need to create that group and add your user to that group:
 
 .. code:: bash
 
-    sudo groupadd -f chipwhisperer
+    sudo groupadd -fr chipwhisperer # new systemd versions require system accounts for udev
     sudo usermod -aG chipwhisperer $USER
     sudo usermod -aG plugdev $USER
 
