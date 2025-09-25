@@ -86,7 +86,7 @@ target.baud = 38400 * 10 / 7.37
 if scope._is_husky_plus:
     MAXCLOCK = 250e6
     OVERCLOCK1 = 255e6
-    OVERCLOCK2 = 280e6
+    OVERCLOCK2 = 265e6
     MAXSAMPLES = 327828
     MAXSEGMENTSAMPLES = 295056
 else:
@@ -142,8 +142,11 @@ testData = [
     ('max',     0,          'internal', 50e6,       True,       4,      12, False,  1,      0,      1,      '4xfast'),
     ('max',     0,          'ADCramp',  20e6,       True,       1,      12, False,  1,      0,      1,      'ADCslow'),
     ('max',     0,          'ADCramp',  'max',      True,       1,      12, False,  1,      0,      3,      'ADCfast'),
-    ('max',     0,          'ADCramp',  'over1',    True,       1,      12, False,  1,      0,      1,      'ADCoverclocked'),
-    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast')
+    ('max',     0,          'ADCramp',  'over1',    True,       1,      12, False,  1,      0,      1,      'ADCover1'),
+    ('max',     0,          'ADCramp',  'over2',    True,       1,      12, False,  1,      0,      1,      'ADCover2'),
+    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast'),
+    ('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
+    ('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
 ]
 
 testTargetData = [
