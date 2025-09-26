@@ -439,7 +439,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         elif name == "cwhuskyplus":
             return "ChipWhisperer Husky Plus"
 
-    def adc_test(self, samples=131070, reps=3, verbose=False):
+    def adc_test(self, samples='max', reps=3, verbose=False):
         """Run a series of ADC sampling tests on CW-Husky.
 
         Useful when pushing the ADC sampling frequency, to get an idea (but
@@ -464,11 +464,14 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         cycle, whereas in the ADC ramp test, the ADC value changes every *4*
         clock cycles.
 
-        Note that this test does nothing to validate that the ADC's analog
-        front-end is working properly!
+        Warnings:
+            This test verifies that ADC sampling is working properly, but it
+            does nothing to validate that the ADC's analog front-end is working
+            properly. It also does not verify that Husky in general can work
+            properly at the specified clock frequency.
 
         Args:
-            samples (int): number of ADC samples per test.
+            samples (int): number of ADC samples per test, or 'max'.
             reps (int): number of times each test is run.
             verbose (bool)
 
@@ -481,6 +484,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
 
         """
 
+        fail = False
         if not self._is_husky:
             scope_logger.error("Only Husky supports scope.adc_test()")
             return
@@ -492,6 +496,11 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         saved_bits_per_sample = self.adc.bits_per_sample
         saved_clip_errors_disabled = self.adc.clip_errors_disabled
 
+        if samples == 'max':
+            if self._is_husky_plus:
+                samples = 327828
+            else:
+                samples = 131070
         self.adc.samples = samples
         self.adc.stream_mode = False
         self.adc.segments = 1
@@ -500,9 +509,13 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         mod=2**self.adc.bits_per_sample
         errors = 0
         first_error = None
+        last_error = None
 
+        print('Running ADC sampling tests with %d samples at %f MHz...' % (self.adc.samples, self.clock.adc_freq/1e6))
+
+        # 1. internal test (internally-generated ramp, ADC not involved)
         for i in range(reps):
-            # 1. internal test (internally-generated ramp, ADC not involved)
+            print('Internal test, rep %d... ' % i, end='')
             self.adc.test_mode = True
             self.ADS4128.mode = 'normal'
             self.sc.arm(False)
@@ -519,15 +532,20 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                     if not first_error:
                         first_error = i
                     current_count = byte
+                    last_error = i
                 else:
                     current_count += 1
                     if (i+2) % samples == 0:
                         current_count = (current_count - samples) % mod
             if errors:
-                scope_logger.error("%d errors in internal test. First error on sample #%d" % (errors, first_error))
-                return "fail"
+                print('❌ FAIL: %d errors. First error on sample %d, last error on %d' % (errors, first_error, last_error))
+                fail = True
+            else:
+                print('✅ pass')
 
-            # 2. ADC ramp test (ADC-generated ramp)
+        # 2. ADC ramp test (ADC-generated ramp)
+        for i in range(reps):
+            print('ADC ramp test, rep %d... ' % i, end='')
             self.ADS4128.mode = 'test ramp'
             self.adc.test_mode = False
             self.sc.arm(False)
@@ -548,12 +566,14 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                                 first_error = i
                             started = False
                             current_count = byte
+                            last_error = i
                         count4 += 1
                     else:
                         count4 = 0
                         if byte != (current_count+1)%mod:
                             if verbose: print("Byte %d: expected %d got %d" % (i, (current_count+1)%mod, byte))
                             errors += 1
+                            last_error = i
                             if not first_error:
                                 first_error = i
                         current_count = byte
@@ -564,10 +584,15 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                     count4 = 0
                     current_count = byte
             if errors:
-                scope_logger.error("%d errors in internal test. First error on sample #%d" % (errors, first_error))
-                return "fail"
+                print('❌ FAIL: %d errors in ADC ramp test. First error on sample %d, last error on %d' % (errors, first_error, last_error))
+                fail = True
+            else:
+                print('✅ pass')
 
-            # 3. alternating pattern test (ADC-generated)
+
+        # 3. alternating pattern test (ADC-generated)
+        for i in range(reps):
+            print('ADC alternating test, rep %d... ' % i, end='')
             self.ADS4128.mode = 'test alternating'
             self.adc.test_mode = False
             self.sc.arm(False)
@@ -584,17 +609,22 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                     current_count = 0xaaa
                 else:
                     errors += 1
+                    last_error = i
                     if not first_error:
                         first_error = i
                     if verbose: print("Byte %d: unexpected value %0x" % current_count)
                 if byte != current_count:
                     errors += 1
+                    last_error = i
                     if not first_error:
                         first_error = i
                     if verbose: print("Byte %d: unexpected value %0x" % current_count)
             if errors:
-                scope_logger.error("%d errors in internal test. First error on sample #%d" % (errors, first_error))
-                return "fail"
+                print('❌ FAIL: %d errors in ADC alternating test. First error on sample %d, last error on %d' % (errors, first_error, last_error))
+                fail = True
+            else:
+                print('✅ pass')
+
 
         # restore previous settings:
         self.adc.samples = saved_samples
@@ -604,7 +634,10 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         self.adc.clip_errors_disabled = saved_clip_errors_disabled
         self.adc.test_mode = False
         self.ADS4128.mode = 'normal'
-        return "pass"
+        if fail:
+            return 'fail'
+        else:
+            return 'pass'
 
 
     @property
