@@ -545,6 +545,29 @@ Newer ChipWhisperer Husky models (Revision D and later) include an 0402 capacito
 
 Users who wish to add, remove, or change this capacitor do so at their own risk and attempting any hardware modification will void the warranty of the device.
 
+### High-Speed ADC Sampling Fix
+
+Due to variances in production runs and parts, we have found that a small
+adjustment to the A/D converter clock alignment is required for proper sampling
+at very high clock frequencies (above 200 MHz) on the **Husky Plus**. If you are
+using an up-to-date "develop" branch of ChipWhisperer software, you are all
+set.
+
+However, if you are using the 6.0 release, you will need to apply a small manual update:
+1. Download [the patch file](v6.0.0b_ADC_sampling_fix.patch) and save it to the root of your ChipWhisperer software installation.
+2. Run `git apply v6.0.0b_ADC_sampling_fix.patch`.
+
+To verify that your Husky is sampling properly, run its internal ADC test as follows:
+1. Set the ADC sampling clock as desired (e.g. 200 MHz for Husky, 250 MHz for Husky Plus) via `scope.clock`; for example:
+    ```Python
+    scope.clock.clkgen_src = 'system'
+    scope.clock.adc_mul = 1
+    scope.clock.clkgen_freq = 200e6
+    ```
+2. Run `scope.adc_test()`. 
+3. In the case of failures, capture the output and [contact us for support](https://www.newae.com/support).
+
+
 ## Schematic
 
 Available at: [https://raw.githubusercontent.com/newaetech/chipwhisperer-husky/main/schematic/NAE-CWLITE-HUSKY-03.PDF](https://raw.githubusercontent.com/newaetech/chipwhisperer-husky/main/schematic/NAE-CWLITE-HUSKY-03.PDF)
