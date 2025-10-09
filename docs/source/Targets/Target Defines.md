@@ -108,7 +108,10 @@ firmware build system (e.g. `make PLATFORM=CWLITEXMEGA`).
 | CW308_NEORV32 | CW308/CW312-iCE40 with neorv32        |
 |               |   (RISC-V) soft-core processor.       |
 +---------------|---------------------------------------+
-| CW305_IBEX    | CW305 or CW312-A35 with Ibex          |
+| CW305_IBEX    | CW305 with Ibex                       |
+|               |   (RISC-V) soft-core processor.       |
++---------------|---------------------------------------+
+| CW312_IBEX    | CW312-A35 with Ibex                   |
 |               |   (RISC-V) soft-core processor.       |
 +---------------|---------------------------------------+
 
