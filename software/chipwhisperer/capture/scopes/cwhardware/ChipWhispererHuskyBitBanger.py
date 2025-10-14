@@ -224,19 +224,25 @@ class OneWireHelper(util.DisableNewAttr):
 class SWDHelper(util.DisableNewAttr):
     ''' Helper functions for bit-banging a synchronous SWD interface.
     Meant to be overloaded for your particular target.
-    **Requires bit-level SWD expertise!**
 
+    Some of the methods here are specific to the RP2350; others are for
+    our SAM4S and STM32F3 targets. Adapt as needed for other targets.
+
+    The purpose of this class is to demonstrate triggering on precisely-timed
+    SWD exchanges; **it is not to build a full-fledged debugger.**
+
+    **Going beyond what's shown here requires bit-level SWD expertise!**
     Be sure to consult the ARM Debug Interface specification
     that applies to your specific target (e.g. IHI 0031, IHI 0074...).
 
-    Some of the methods here are specific to the RP2350. Adapt as needed for
-    other targets!
+
     '''
     _name = 'SWD helper functions'
 
     def __init__(self, bb):
         super().__init__()
         self.bb = bb
+        self.idcode = None
         self.disable_newattr()
 
 
@@ -259,8 +265,6 @@ class SWDHelper(util.DisableNewAttr):
         """Get parameters for sending a desired SWD write and/or read transaction.
         An ACK response of "OK" is expected and can be verified via 
         :class:`BitBanger.matched`.
-
-        Quite specific to the RP2350, but easily adapted/extended to other targets.
 
         Args:
             port (str): 'AP' or 'DP'
@@ -374,7 +378,7 @@ class SWDHelper(util.DisableNewAttr):
         return bits
 
 
-    def set_dbgkey(self, key, trigger_bit=None, trigger_nibble=0, check_match=True):
+    def set_dbgkey_rp2350(self, key, trigger_bit=None, trigger_nibble=0, check_match=True):
         """Sends RP2350 debug key.
         Key is sent one nibble at a time (32 nibbles in total).
 
@@ -449,11 +453,15 @@ class SWDHelper(util.DisableNewAttr):
             if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
 
 
-    def wake_swd(self, expected_id_code=0x4c013477):
+    def wake_swd_rp2350(self, expected_id_code=0x4c013477):
         """Sends RP2350 alert sequence, SWD activation, line reset, and checks ID code.
 
         Args:
             expected_id_code (int): expected ID code
+
+        Raises:
+           Exception: target did not respond as expected (e.g. does not ACK OK when expected).
+
         """
 
         # 1. 8 SWCLK cycles with SWDIO high:
@@ -496,7 +504,240 @@ class SWDHelper(util.DisableNewAttr):
         REN = [0]*len(CMD)
 
         self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
-        assert self.bb.matched, 'ID code did not match'
+        code_read = scope.bitbanger.recorded_data(4)
+        if not self.bb.matched:
+            raise Exception('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
+        self.idcode = code_read
+
+
+
+    def wake_swd(self, expected_id_code=None, quiet=False):
+        """Sends line resets, sends JTAG-to-SWD command, checks ID code, and
+        writes CTRL/STAT. Works on NewAE SAM4S and STM32F3 targets. May work on
+        others too -- no promises. If ID code is successfully read, it is
+        stored in :class:`idcode`.
+
+        Args:
+            expected_id_code (int): expected IDCODE. Set to None to read the IDCODE without checking it.
+
+        Returns:
+            If expected_id_code is not provided, the read IDCODE.
+
+        Raises:
+           Exception: target did not respond as expected (e.g. does not ACK OK when expected).
+
+        """
+        # 1. line reset:
+        CMD = [0xff]*8
+
+        # 2. 0x9ee7:
+        CMD.extend([0x9e, 0xe7])
+
+        # 3. line reset:
+        CMD.extend([0xff]*8)
+
+        # 4. 16 cycles with SWDIO low:
+        CMD.extend([0x00]*2)
+
+        HIZ = [0]*len(CMD)
+        PEN = [0xff]*len(CMD)
+
+        # convert to lists of bits:
+        CMD = self._bits_from_bytes(CMD)
+        HIZ = self._bits_from_bytes(HIZ)
+        PEN = self._bits_from_bytes(PEN)
+        REN = [0]*len(CMD)
+
+        # read IDCODE
+        if expected_id_code:
+            check_code = True
+        else:
+            expected_id_code = 0
+            check_code = False
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        code_read = self.bb.recorded_data(4)
+        if check_code and code_read != expected_id_code:
+            scope_logger.warning('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
+        if not self.bb.matched:
+            raise Exception('Unexpected target behaviour during line reset / read IDCODE')
+        else:
+            self.idcode = code_read
+
+        CMD = [0, 0]
+        HIZ = [0, 0]
+        PEN = [0xff]*len(CMD)
+        REN = [0, 0]
+
+        # convert to lists of bits:
+        CMD = self._bits_from_bytes(CMD)
+        HIZ = self._bits_from_bytes(HIZ)
+        PEN = self._bits_from_bytes(PEN)
+
+        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+
+        nextpacket = self.getpacket('DP', 'w', 'CTRL/STAT', 0x50000000)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+
+        REN = [0]*len(CMD)
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        if not self.bb.matched:
+            self.idcode = None
+            raise Exception('Unexpected target behaviour during ABORT/CTRL/STAT write.')
+
+        if not check_code:
+            return code_read
+
+
+    def write(self, address, data, trigger_en=False, trigger_bit=0):
+        """Writes a word to target memory.
+        Works on NewAE SAM4S and STM32F3 targets. May work on others too -- no
+        promises! Consult your target's debug documentation.
+
+        Args:
+            address (int): 32-bit address.
+            data (int): 32-bit data to write.
+            trigger_en (bool): enable generating a trigger.
+            trigger_bit (int): bitbanger bit on which the trigger is issued.
+
+        Raises:
+           Exception: target did not respond as expected (e.g. does not ACK OK when expected).
+
+        """
+
+        CMD = [0, 0]
+        HIZ = [0, 0]
+        PEN = [0xff]*len(CMD)
+        REN = [0, 0]
+
+        # convert to lists of bits:
+        CMD = self._bits_from_bytes(CMD)
+        HIZ = self._bits_from_bytes(HIZ)
+        PEN = self._bits_from_bytes(PEN)
+        REN = self._bits_from_bytes(REN)
+
+        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00000000)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 'CSW', 0x23000012)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 'TAR', address)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 'DRW', data)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=trigger_en, trigger_bit=trigger_bit)
+        if not self.bb.matched:
+            raise Exception('Unexpected target response.')
+
+
+    def read(self, address, expected_data=None, trigger_en=False, trigger_bit=0):
+        """Reads a word from target memory.
+        Works on NewAE SAM4S and STM32F3 targets. May work on others too -- no
+        promises! Consult your target's debug documentation.
+
+        Args:
+            address (int): 32-bit address.
+            expected_data (int): 32-bit expected read data; leave as None if unknown.
+            trigger_en (bool): enable generating a trigger.
+            trigger_bit (int): bitbanger bit on which the trigger is issued.
+
+        Returns:
+            read data, if expected_data was not provided (int)
+
+        Raises:
+           Exception: target did not respond as expected (e.g. does not ACK OK when expected).
+        """
+        CMD = [0, 0]
+        HIZ = [0, 0]
+        PEN = [0xff]*len(CMD)
+        REN = [0, 0]
+
+        # convert to lists of bits:
+        CMD = self._bits_from_bytes(CMD)
+        HIZ = self._bits_from_bytes(HIZ)
+        PEN = self._bits_from_bytes(PEN)
+        REN = self._bits_from_bytes(REN)
+
+        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00000000)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 'CSW', 0x23000012)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'w', 'TAR', address)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        if expected_data is None:
+            expected_data = 0
+            check_payload = False
+        else:
+            check_payload = True
+        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, check_payload=False)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, check_payload=check_payload)
+        CMD.extend(nextpacket[0])
+        HIZ.extend(nextpacket[1])
+        PEN.extend(nextpacket[2])
+        REN.extend(nextpacket[3])
+
+        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=trigger_en, trigger_bit=trigger_bit)
+        if not self.bb.matched:
+            raise Exception('Unexpected target response.')
+
+        if not check_payload:
+            return self.bb.recorded_data(4)
+
+
 
     def check_debug_enabled(self):
         """Checks whether debug is enabled on RP2350.
@@ -638,7 +879,7 @@ class BitBanger (util.DisableNewAttr):
         self._check_edge = 'falling'
         self._clk_div = 0
         self._num_bits = 0
-        self.max_length = self._read_max_pattern()
+        self._read_max_pattern()
         self._pattern_data = [0]*self.max_length
         self._pattern_en = [1]*self.max_length
         self._pattern_hiz = [0]*self.max_length
@@ -653,6 +894,7 @@ class BitBanger (util.DisableNewAttr):
         rtn['data_pin'] = self.data_pin
         rtn['clock_pin'] = self.clock_pin
         rtn['max_length'] = self.max_length
+        rtn['max_record'] = self.max_record
         rtn['clk_div'] = self.clk_div
         rtn['drive_edge'] = self.drive_edge
         rtn['check_edge'] = self.check_edge
@@ -670,8 +912,9 @@ class BitBanger (util.DisableNewAttr):
         return self.__repr__()
 
     def _read_max_pattern(self):
-        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=3)
-        return raw[1] + (raw[2] << 8)
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=5)
+        self.max_length = raw[1] + (raw[2] << 8)
+        self.max_record = raw[3] + (raw[4] << 8)
 
 
     @property 
@@ -1131,6 +1374,7 @@ class BitBanger (util.DisableNewAttr):
 
     def recorded_data(self, nbytes=8, return_word=True):
         """ TODO-doc - including bit/nibble/byte order (may need to add options for those)
+        also TODO: use max_record!
         """
         assert nbytes <= 8
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_REG_SELECT", [self.oa.registers['BB_TRIG_SAVED_DATA']])
