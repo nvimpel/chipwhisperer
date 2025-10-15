@@ -250,18 +250,18 @@ class SWDHelper(util.DisableNewAttr):
         """ Sets normally useful defaults for SWD bit-banging:
 
         * :class:`BitBanger.drive_edge` = 'falling'
-        * :class:`BitBanger.check_edge` = 'rising'
+        * :class:`BitBanger.check_edge` = 'falling'
         * :class:`BitBanger.inactive_data` = 0
         * :class:`BitBanger.inactive_state` = 'driven'
 
         """
         self.bb.drive_edge = 'falling'
-        self.bb.check_edge = 'rising'
+        self.bb.check_edge = 'falling'
         self.bb.inactive_data = 0
         self.bb.inactive_state = 'driven'
 
     @staticmethod
-    def getpacket(port, op, register, data, pauses=1, check_payload=True):
+    def getpacket(port, op, register, data, pauses=1, record_en=True, check_payload=True):
         """Get parameters for sending a desired SWD write and/or read transaction.
         An ACK response of "OK" is expected and can be verified via 
         :class:`BitBanger.matched`.
@@ -274,6 +274,7 @@ class SWDHelper(util.DisableNewAttr):
                 not guaranteed to be universally correct; they are correct for the RP2350.
             data (int): 32-bit WDATA / RDATA field
             pauses (int): number of trailing bits to add at the end
+            record_en (bool): for read commands, whether the payload is recorded or not.
             check_payload (bool): if True, enable verifying that the WDATA/RDATA portion 
                 matches the "data" argument; use :class:`BitBanger.matched` to later
                 check whether there was a match.
@@ -317,7 +318,10 @@ class SWDHelper(util.DisableNewAttr):
         if RnW: # read case
             # shift RDATA into place:
             REN = [0]*len(CMD)
-            REN.extend([0xF0, 0xFF, 0xFF, 0xFF, 0x0F])
+            if record_en:
+                REN.extend([0xF0, 0xFF, 0xFF, 0xFF, 0x0F])
+            else:
+                REN.extend([0x00]*5)
             CMD.extend(list(int.to_bytes((data << 4) + (p<<36), byteorder='little', length=5)))
             # insert turn + ACK OK bits:
             CMD[1] = CMD[1] + 3 # ACK bits
@@ -491,7 +495,7 @@ class SWDHelper(util.DisableNewAttr):
         PEN = SWDHelper._bits_from_bytes(PEN)
 
         # read IDCODE
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code)
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, record_en=False)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
@@ -565,7 +569,7 @@ class SWDHelper(util.DisableNewAttr):
         if check_code and code_read != expected_id_code:
             scope_logger.warning('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
         if not self.bb.matched:
-            raise Exception('Unexpected target behaviour during line reset / read IDCODE')
+            raise Exception('Unexpected target behaviour during line reset / read IDCODE. Read: %x' % code_read)
         else:
             self.idcode = code_read
 
@@ -718,7 +722,7 @@ class SWDHelper(util.DisableNewAttr):
             check_payload = False
         else:
             check_payload = True
-        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, check_payload=False)
+        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, record_en=False, check_payload=False)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
@@ -781,7 +785,7 @@ class SWDHelper(util.DisableNewAttr):
         PEN.extend(nextpacket[2])
         REN.extend(nextpacket[3])
 
-        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, check_payload=False)
+        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, record_en=False, check_payload=False)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
@@ -1017,8 +1021,11 @@ class BitBanger (util.DisableNewAttr):
         # Most properties of this module are only written out to the hardware when this
         # method is called; by setting the "go" argument to False, the properties get
         # pushed out without making it "go".
+        # Additionally, due to the FIFO-based storage of pattern_data/_en/_hiz/etc...,
+        # it's easiest to write those out only when we "really go".
         if really_go:
             writes = 6
+            self._push_pattern_data()
         else:
             writes = 5
         raw = [0]*writes
@@ -1048,6 +1055,29 @@ class BitBanger (util.DisableNewAttr):
         raw[3] = self.num_bits & 0xFF
         raw[4] = self.num_bits >> 8
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
+
+
+    def _push_pattern_data(self):
+        bb_data = []
+        for a,b,c,d,e in zip(self.pattern_data, self.pattern_hiz, self.pattern_en, self.trig_bits, self.record_en):
+            bb_data.append(a + (b<<1) + (c<<2) + (d<<3) + (e<<4))
+        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data)
+        errors = self.fifo_errors()
+        if errors:
+            scope_logger.error('Internal BB FIFO error: %s' % errors)
+
+
+    def fifo_errors(self):
+        raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=1)[0]
+        if raw & 0xc0:
+            errors = 'over+underflow'
+        elif raw & 0x80:
+            errors = 'overflow'
+        elif raw & 0x40:
+            errors = 'underflow'
+        else:
+            errors = None
+        return errors
 
 
     def sendpacket(self, packet, trigger_en=True, trigger_bit=None, timeout=1):
@@ -1115,6 +1145,9 @@ class BitBanger (util.DisableNewAttr):
             if not self.active:
                 return
         raise ValueError('Timed out!')
+        errors = self.fifo_errors()
+        if errors:
+            scope_logger.error('Internal BB FIFO error: %s' % errors)
 
 
     @property 
@@ -1301,8 +1334,8 @@ class BitBanger (util.DisableNewAttr):
         return self._pattern_data
     @pattern_data.setter
     def pattern_data(self, val):
+        self._check_length(val)
         self._pattern_data = val
-        self._data_setter(val, 'BB_TRIG_PATTERN_DATA')
 
     @property
     def pattern_en(self):
@@ -1316,8 +1349,8 @@ class BitBanger (util.DisableNewAttr):
         return self._pattern_en
     @pattern_en.setter
     def pattern_en(self, val):
+        self._check_length(val)
         self._pattern_en = val
-        self._data_setter(val, 'BB_TRIG_PATTERN_EN')
 
     @property
     def pattern_hiz(self):
@@ -1331,8 +1364,8 @@ class BitBanger (util.DisableNewAttr):
         return self._pattern_hiz
     @pattern_hiz.setter
     def pattern_hiz(self, val):
+        self._check_length(val)
         self._pattern_hiz = val
-        self._data_setter(val, 'BB_TRIG_PATTERN_HIZ')
 
     @property
     def record_en(self):
@@ -1346,8 +1379,15 @@ class BitBanger (util.DisableNewAttr):
         return self._record_en
     @record_en.setter
     def record_en(self, val):
+        self._check_length(val)
+        # there is also a maximum number of bits that can be recorded, usually less than the pattern length:
+        ones = 0
+        for b in val:
+            if b: ones += 1
+        if ones > self.max_record:
+            scope_logger.error('Number of bits to record (%d) exceeds maximum supported (%d).' % (ones, self.max_record))
+
         self._record_en = val
-        self._data_setter(val, 'BB_TRIG_RECORD_EN')
 
     @property
     def trig_bits(self):
@@ -1361,23 +1401,22 @@ class BitBanger (util.DisableNewAttr):
         return self._trig_bits
     @trig_bits.setter
     def trig_bits(self, val):
+        self._check_length(val)
         self._trig_bits = val
-        self._data_setter(val, 'BB_TRIG_BITS')
 
-    def _data_setter(self, val, reg):
+
+    def _check_length(self, val):
         if len(val) > self.max_length:
-            raise ValueError('Too long!')
-        raw = self.bytes_from_bits(val)
-        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_REG_SELECT", [self.oa.registers[reg]])
-        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", raw)
+            scope_logger.error('Pattern exceeds maximum supported (%d).' % self.max_length)
+
 
 
     def recorded_data(self, nbytes=8, return_word=True):
         """ TODO-doc - including bit/nibble/byte order (may need to add options for those)
         also TODO: use max_record!
         """
-        assert nbytes <= 8
-        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_REG_SELECT", [self.oa.registers['BB_TRIG_SAVED_DATA']])
+        if nbytes > self.max_record*8:
+            scope_logger.error('Max number of recorded bytes is %d' % self.max_record*8)
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_DATA", maxResp=nbytes)
         final = []
         for b in raw:
@@ -1394,17 +1433,5 @@ class BitBanger (util.DisableNewAttr):
             return int.from_bytes(final, byteorder='big')
         else:
             return final[::-1]
-
-    @staticmethod
-    def bytes_from_bits(bits):
-        pad = len(bits)%8
-        if pad:
-            pad = 8 - pad
-            pad_value = bits[-1]
-            bits.extend([pad_value]*pad)
-        sum = 0
-        for i,j in enumerate(bits):
-            if j: sum += 2**i
-        return list(int.to_bytes(sum, len(bits)//8, byteorder='little'))
 
 
