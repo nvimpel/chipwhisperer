@@ -4,6 +4,7 @@ on: push
 
 jobs:
     build-n-publish:
+      if: github.repository == 'newaetech/chipwhisperer'
       name: Build/pub python to testpypi
       runs-on: ubuntu-latest
       steps:
