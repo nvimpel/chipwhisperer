@@ -30,6 +30,7 @@ from .. import _OpenADCInterface as OAI
 from ....logging import *
 import time
 import datetime
+import math
 
 CODE_READ = 0x80
 CODE_WRITE = 0xC0
@@ -555,23 +556,25 @@ class SWDHelper(util.DisableNewAttr):
         # read IDCODE
         if expected_id_code:
             check_code = True
+            record_en = False
         else:
             expected_id_code = 0
             check_code = False
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code)
+            record_en = True
+        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code, record_en=record_en)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
         REN.extend(nextpacket[3])
 
         self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
-        code_read = self.bb.recorded_data(4)
-        if check_code and code_read != expected_id_code:
-            scope_logger.warning('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
-        if not self.bb.matched:
-            raise Exception('Unexpected target behaviour during line reset / read IDCODE. Read: %x' % code_read)
-        else:
+        if record_en:
+            code_read = self.bb.recorded_data(4)
             self.idcode = code_read
+            if check_code and (code_read != expected_id_code):
+                scope_logger.warning('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
+        if not self.bb.matched:
+            raise Exception('Unexpected target behaviour during line reset / read IDCODE.')
 
         CMD = [0, 0]
         HIZ = [0, 0]
@@ -720,15 +723,17 @@ class SWDHelper(util.DisableNewAttr):
         if expected_data is None:
             expected_data = 0
             check_payload = False
+            record_en = True
         else:
             check_payload = True
+            record_en = False
         nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, record_en=False, check_payload=False)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
         REN.extend(nextpacket[3])
 
-        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, check_payload=check_payload)
+        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, record_en=record_en, check_payload=check_payload)
         CMD.extend(nextpacket[0])
         HIZ.extend(nextpacket[1])
         PEN.extend(nextpacket[2])
@@ -889,6 +894,7 @@ class BitBanger (util.DisableNewAttr):
         self._pattern_hiz = [0]*self.max_length
         self._record_en = [0]*self.max_length
         self._trig_bits = [0]*self.max_length
+        self.splitting_warning = True
         self.onewire = OneWireHelper(self)
         self.swd = SWDHelper(self)
         self.disable_newattr()
@@ -1080,7 +1086,7 @@ class BitBanger (util.DisableNewAttr):
         return errors
 
 
-    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, timeout=1):
+    def sendpacket(self, packet, trigger_en=True, trigger_bit=None, timeout=1, allow_splitting=True, chunk_size=None):
         """ Sends a generic "packet"; waits for it to be sent.
 
         Args:
@@ -1089,31 +1095,108 @@ class BitBanger (util.DisableNewAttr):
             trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
             trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
             timeout (int): if the packet is not done being sent after this many seconds, times out.
+            allow_splitting (bool): for packets exceeding max_length, split them into chunks of chunk_size bits.
+            chunk_size (int): used when allow_splitting is True; defaults to max_length.
 
         """
         CMD = packet[0]
         HIZ = packet[1]
         PEN = packet[2]
         REN = packet[3]
-
-        assert len(CMD) <= self.max_length, 'Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks (max: %d; this: %d)' % (self.max_length, len(CMD))
-
-        self.pattern_data = CMD
-        self.pattern_hiz = HIZ
-        self.pattern_en = PEN
-        self.record_en = REN
-        self.num_bits = len(CMD)
-        
-        self.trigger_en = trigger_en
         TRG = [0]*len(CMD)
         if trigger_bit is None:
             TRG[-1] = 1
         else:
             TRG[trigger_bit] = 1
+
+        if len(CMD) > self.max_length:
+            if not allow_splitting:
+                raise ValueError('Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks (max: %d; this: %d), or use the "allow_splitting" option.' % (self.max_length, len(CMD)))
+            if self.splitting_warning:
+                scope_logger.warning('Packet exceeds maximum length supported by hardware. Splitting into chunks, which may not work reliably; use at your own risk.')
+                scope_logger.warning('Set scope.bitbanger.splitting_warning to False to disable this warning.')
+
+            chunks = []
+            if chunk_size is None:
+                chunk_size = self.max_length
+            elif chunk_size > self.max_length:
+                raise ValueError('chunk_size too large (max: %d)' % self.max_length)
+
+            # if some recording is requested, try to place all the recorded bits in a single chunk:
+            if 1 in REN:
+                first = None
+                last = None
+                for i,r in enumerate(REN):
+                    if r:
+                        first = i
+                        break
+                for i,r in enumerate(REN[::-1]):
+                    if r:
+                        last = len(REN)-i-1
+                        break
+                if last-first+1 > chunk_size:
+                    raise ValueError('Cannot record all requested bits in a single chunk. Increase chunk size or reduce number of recorded bits.')
+
+                # 1. assemble chunks up to where recorded bits begin:
+                num_chunks  = math.ceil(first/chunk_size)
+                for chunk in range(num_chunks):
+                    start = chunk*chunk_size
+                    if chunk == num_chunks-1:
+                        stop = first
+                    else:
+                        stop = (chunk+1)*chunk_size
+                    chunks.append([start, stop])
+                # 2. recorded bits chunk:
+                start = stop
+                stop = stop + chunk_size
+                chunks.append([start, stop])
+                chunk += 1
+                # 3. assemble chunks that follow the recorded bits:
+                chunk += 1
+                num_chunks  = math.ceil((len(CMD)-stop)/chunk_size)
+                for chunk in range(chunk, chunk+num_chunks):
+                    start = stop
+                    if chunk == num_chunks-1:
+                        stop = len(CMD)
+                    else:
+                        stop = start+chunk_size
+                    chunks.append([start, stop])
+
+
+            else:
+                num_chunks  = math.ceil(len(CMD)/chunk_size)
+                for chunk in range(num_chunks):
+                    start = chunk*chunk_size
+                    if chunk == num_chunks-1:
+                        stop = len(CMD)
+                    else:
+                        stop = (chunk+1)*chunk_size
+                    chunks.append([start, stop])
+
+            # now send the chunks:
+            for chunk in chunks:
+                start, stop = chunk
+                self.pattern_data = CMD[start:stop]
+                self.pattern_hiz = HIZ[start:stop]
+                self.pattern_en = PEN[start:stop]
+                self.record_en = REN[start:stop]
+                self.trig_bits = TRG[start:stop]
+                self.num_bits = stop-start
+                self.trigger_en = trigger_en
+                self.go()
+                self.wait_for_done(timeout)
+
+        else:
+            self.pattern_data = CMD
+            self.pattern_hiz = HIZ
+            self.pattern_en = PEN
+            self.record_en = REN
+            self.num_bits = len(CMD)
             
-        self.trig_bits = TRG
-        self.go()
-        self.wait_for_done(timeout)
+            self.trigger_en = trigger_en
+            self.trig_bits = TRG
+            self.go()
+            self.wait_for_done(timeout)
 
 
     def wait_for_matched(self, timeout=1):
@@ -1314,7 +1397,7 @@ class BitBanger (util.DisableNewAttr):
         return self._num_bits
     @num_bits.setter
     def num_bits(self, val):
-        if val not in range(1, self.max_length):
+        if val not in range(1, self.max_length+1):
             raise ValueError
         self._num_bits = val
 
@@ -1413,7 +1496,6 @@ class BitBanger (util.DisableNewAttr):
 
     def recorded_data(self, nbytes=8, return_word=True):
         """ TODO-doc - including bit/nibble/byte order (may need to add options for those)
-        also TODO: use max_record!
         """
         if nbytes > self.max_record*8:
             scope_logger.error('Max number of recorded bytes is %d' % self.max_record*8)
