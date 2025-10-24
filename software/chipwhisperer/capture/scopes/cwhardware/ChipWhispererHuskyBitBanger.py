@@ -1115,6 +1115,8 @@ class BitBanger (util.DisableNewAttr):
             if self.splitting_warning:
                 scope_logger.warning('Packet exceeds maximum length supported by hardware. Splitting into chunks, which may not work reliably; use at your own risk.')
                 scope_logger.warning('Set scope.bitbanger.splitting_warning to False to disable this warning.')
+            if self.continuous_clk:
+                scope_logger.warning('Splitting with scope.bitbanging.continuous_clk set may not work; it is recommended to clear it and try again.')
 
             chunks = []
             if chunk_size is None:
