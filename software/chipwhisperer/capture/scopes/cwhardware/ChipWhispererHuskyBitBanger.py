@@ -764,6 +764,8 @@ class BitBanger (util.DisableNewAttr):
             'TIO2':           10,
             'TIO3':           11,
             'TIO4':           12,
+            'target_pwr':     13,
+            'nrst':           14,
             'disabled':       15
            }
 
@@ -829,7 +831,15 @@ class BitBanger (util.DisableNewAttr):
         * USERIO_D[0-7]
         * USERIO_CK
         * TIO[1-4]
+        * target_pwr
+        * nrst
         * disabled
+
+        Note that bit-banging behaviour is different when 'target_pwr' or 'nrst' is chosen
+        as the data pin:
+
+        * a data value of 1 *inverts* the signal's value while 0 leaves it unchanged
+        * there is no bidirectional support (pattern_hiz has no effect)
 
         """
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0] & 0x0f
@@ -1306,6 +1316,9 @@ class BitBanger (util.DisableNewAttr):
         generated or not (via :class:`trigger_when_matched`), or simply to know whether the
         expected data was seen (via :class:`matched`).
 
+        When :class:`data_pin` is set to 'target_pwr' or 'nrst', pattern_data is *not* output
+        onto the data line: instead, the data line is inverted when pattern_data is high.
+
         Args:
             val (list): list of binary values.
 
@@ -1335,6 +1348,7 @@ class BitBanger (util.DisableNewAttr):
     def pattern_hiz(self):
         """ Bit-bang pattern high-z.
         Intended for a bi-directional data line: control when the line is driven and when it is not.
+        Has no effect when :class:`data_pin` is set to 'target_pwr' or 'nrst'.
 
         Args:
             val (list): list of binary values.
