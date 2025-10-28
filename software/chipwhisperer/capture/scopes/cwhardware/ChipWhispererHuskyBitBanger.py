@@ -820,9 +820,26 @@ class BitBanger (util.DisableNewAttr):
 
     def _read_max_pattern(self):
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=5)
-        self.max_length = raw[1] + (raw[2] << 8)
-        self.max_record = raw[3] + (raw[4] << 8)
+        self._max_length = raw[1] + (raw[2] << 8)
+        self._max_record = raw[3] + (raw[4] << 8)
 
+    @property 
+    def max_length(self):
+        """ Maximum bit-bang pattern length. More formally, the maximum number of elements for:
+
+        * :class:`pattern_data`
+        * :class:`pattern_en`
+        * :class:`pattern_hiz`
+        * :class:`trig_bits`
+        * :class:`record_en`
+        """
+        return self._max_length
+
+    @property 
+    def max_record(self):
+        """ Maximum number of bits that can be recorded; in other words, the maximum number of ones in :class:`record_en`.
+        """
+        return self._max_record
 
     @property 
     def data_pin(self):
@@ -1330,6 +1347,8 @@ class BitBanger (util.DisableNewAttr):
         When :class:`data_pin` is set to 'target_pwr' or 'nrst', pattern_data is *not* output
         onto the data line: instead, the data line is inverted when pattern_data is high.
 
+        Maximum length: :class:`max_length`.
+
         Args:
             val (list): list of binary values.
 
@@ -1344,6 +1363,7 @@ class BitBanger (util.DisableNewAttr):
     def pattern_en(self):
         """ Bit-bang pattern enable.
         See :class:`pattern_data` for its application.
+        Maximum length: :class:`max_length`.
 
         Args:
             val (list): list of binary values.
@@ -1360,6 +1380,7 @@ class BitBanger (util.DisableNewAttr):
         """ Bit-bang pattern high-z.
         Intended for a bi-directional data line: control when the line is driven and when it is not.
         Has no effect when :class:`data_pin` is set to 'target_pwr' or 'nrst'.
+        Maximum length: :class:`max_length`.
 
         Args:
             val (list): list of binary values.
@@ -1374,7 +1395,8 @@ class BitBanger (util.DisableNewAttr):
     @property
     def record_en(self):
         """ Record enable.
-        Intended for a bi-directional data line: control when the line is driven and when it is not.
+        Controls which bits bi-directional data line are recorded. The maximum number of bits that can
+        be recorded is :class:`max_record`.
 
         Args:
             val (list): list of binary values.
@@ -1397,6 +1419,7 @@ class BitBanger (util.DisableNewAttr):
     def trig_bits(self):
         """ Pattern bits on which to (potentially) issue a trigger.
         Whether or not triggers are issued depends on :class:`trigger_when_matched`.
+        Maximum length: :class:`max_length`.
 
         Args:
             val (list): list of binary values.
