@@ -92,7 +92,7 @@ class OneWireHelper(util.DisableNewAttr):
         penbits.extend([1]*check)
         penbits.extend([0]*pad)
         renbits = [0]*(rst+wait+check+pad)
-        return cmdbits, hizbits, penbits, renbits
+        return BitBangerPacket(cmdbits, hizbits, penbits, renbits)
 
     def send_rst_pd(self, rst=56, wait=6, check=2, trigger_en=True, trigger_bit=None):
         """ Sends a reset and checks for the target's pulse detect response.
@@ -154,7 +154,7 @@ class OneWireHelper(util.DisableNewAttr):
             gap (int): number of idle timeslots between each byte
 
         Returns:
-            Lists of bits that can be fed to :class:`BitBanger.sendpacket`.
+            BitBangerPacket object that can be fed to :class:`BitBanger.sendpacket`.
         """
 
         cmdbits = []
@@ -194,7 +194,8 @@ class OneWireHelper(util.DisableNewAttr):
                 renbits.extend([0]*gap)
 
         penbits = [1]*len(cmdbits)
-        return cmdbits, hizbits, penbits, renbits
+        trigbits = [0]*len(cmdbits)
+        return BitBangerPacket(cmdbits, hizbits, penbits, renbits, trigbits)
 
 
     @staticmethod
@@ -281,7 +282,7 @@ class SWDHelper(util.DisableNewAttr):
                 check whether there was a match.
 
         Returns:
-            Lists of bits that can be fed to :class:`BitBanger.sendpacket`.
+            BitBangerPacket object that can be fed to :class:`BitBanger.sendpacket`.
         """
 
         CMD = []
@@ -355,11 +356,12 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
         REN = SWDHelper._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
         # don't check turn/trailing bits:
         if pauses:
-            for a in [CMD, HIZ, PEN, REN]:
+            for a in [CMD, HIZ, PEN, REN, TRG]:
                 a.extend([0]*pauses)
-        return CMD, HIZ, PEN, REN
+        return BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
     @staticmethod
     def _parity(x):
@@ -405,27 +407,13 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
         REN = SWDHelper._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-
-        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00080000)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 0b10, 0x04) # addresses DBGKEY (offset 0x04)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00080000))
+        packet.extend(self.getpacket('AP', 'w', 0b10, 0x04)) # addresses DBGKEY (offset 0x04)
+        self.bb.sendpacket(packet, trigger_en=False)
         if check_match: assert self.bb.matched, 'Problem setting DBGKEY.RESET'
 
         # Husky SWD BB limits us to sending one nibble of the key at a time:
@@ -440,21 +428,19 @@ class SWDHelper(util.DisableNewAttr):
             HIZ = SWDHelper._bits_from_bytes(HIZ)
             PEN = SWDHelper._bits_from_bytes(PEN)
             REN = SWDHelper._bits_from_bytes(REN)
+            TRG = [0]*len(CMD)
+            packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
             for i in range(4):
                 data = 2 + (key & 1) # send data lsb to msb; set PUSH bit as well
                 key = key >> 1
-                nextpacket = self.getpacket('AP', 'w', 0b10, data, check_payload=True) # addresses DBGKEY (offset 0x04)
-                CMD.extend(nextpacket[0])
-                HIZ.extend(nextpacket[1])
-                PEN.extend(nextpacket[2])
-                REN.extend(nextpacket[3])
+                packet.extend(self.getpacket('AP', 'w', 0b10, data, check_payload=True)) # addresses DBGKEY (offset 0x04)
             if b == trigger_nibble or trigger_nibble == 'all':
                 trigger_en = True
             else:
                 trigger_en = False
 
-            self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_bit=trigger_bit, trigger_en=trigger_en)
+            self.bb.sendpacket(packet, trigger_bit=trigger_bit, trigger_en=trigger_en)
             if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
 
 
@@ -489,31 +475,25 @@ class SWDHelper(util.DisableNewAttr):
 
         HIZ = [0]*len(CMD)
         PEN = [0xff]*len(CMD)
+        REN = [0]*len(CMD)
 
         # convert to lists of bits:
         CMD = SWDHelper._bits_from_bytes(CMD)
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
+        REN = SWDHelper._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
         # read IDCODE
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, record_en=False)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
+        packet.extend(self.getpacket('DP', 'r', 'IDCODE', expected_id_code, record_en=False))
+        packet.extend(self.getpacket('DP', 'r', 'IDCODE', expected_id_code))
+        self.bb.sendpacket(packet, trigger_en=False)
 
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-
-        REN = [0]*len(CMD)
-
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
         code_read = scope.bitbanger.recorded_data(4)
         if not self.bb.matched:
             raise Exception('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
         self.idcode = code_read
-
 
 
     def wake_swd(self, expected_id_code=None, quiet=False):
@@ -552,6 +532,8 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = self._bits_from_bytes(HIZ)
         PEN = self._bits_from_bytes(PEN)
         REN = [0]*len(CMD)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
         # read IDCODE
         if expected_id_code:
@@ -561,13 +543,8 @@ class SWDHelper(util.DisableNewAttr):
             expected_id_code = 0
             check_code = False
             record_en = True
-        nextpacket = self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code, record_en=record_en)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        packet.extend(self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code, record_en=record_en))
+        self.bb.sendpacket(packet, trigger_en=False)
         if record_en:
             code_read = self.bb.recorded_data(4)
             self.idcode = code_read
@@ -585,19 +562,13 @@ class SWDHelper(util.DisableNewAttr):
         CMD = self._bits_from_bytes(CMD)
         HIZ = self._bits_from_bytes(HIZ)
         PEN = self._bits_from_bytes(PEN)
+        REN = self._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-
-        nextpacket = self.getpacket('DP', 'w', 'CTRL/STAT', 0x50000000)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-
-        REN = [0]*len(CMD)
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
+        packet.extend(self.getpacket('DP', 'w', 'CTRL/STAT', 0x50000000))
+        self.bb.sendpacket(packet, trigger_en=False)
         if not self.bb.matched:
             self.idcode = None
             raise Exception('Unexpected target behaviour during ABORT/CTRL/STAT write.')
@@ -632,38 +603,15 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = self._bits_from_bytes(HIZ)
         PEN = self._bits_from_bytes(PEN)
         REN = self._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00000000)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 'CSW', 0x23000012)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 'TAR', address)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 'DRW', data)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=trigger_en, trigger_bit=trigger_bit)
+        packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00000000))
+        packet.extend(self.getpacket('AP', 'w', 'CSW', 0x23000012))
+        packet.extend(self.getpacket('AP', 'w', 'TAR', address))
+        packet.extend(self.getpacket('AP', 'w', 'DRW', data))
+        self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
         if not self.bb.matched:
             raise Exception('Unexpected target response.')
 
@@ -695,30 +643,13 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = self._bits_from_bytes(HIZ)
         PEN = self._bits_from_bytes(PEN)
         REN = self._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00000000)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 'CSW', 0x23000012)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'w', 'TAR', address)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
+        packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00000000))
+        packet.extend(self.getpacket('AP', 'w', 'CSW', 0x23000012))
+        packet.extend(self.getpacket('AP', 'w', 'TAR', address))
 
         if expected_data is None:
             expected_data = 0
@@ -727,19 +658,10 @@ class SWDHelper(util.DisableNewAttr):
         else:
             check_payload = True
             record_en = False
-        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, record_en=False, check_payload=False)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
+        packet.extend(self.getpacket('AP', 'r', 'DRW', expected_data, record_en=False, check_payload=False))
+        packet.extend(self.getpacket('AP', 'r', 'DRW', expected_data, record_en=record_en, check_payload=check_payload))
 
-        nextpacket = self.getpacket('AP', 'r', 'DRW', expected_data, record_en=record_en, check_payload=check_payload)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=trigger_en, trigger_bit=trigger_bit)
+        self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
         if not self.bb.matched:
             raise Exception('Unexpected target response.')
 
@@ -765,45 +687,19 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
         REN = SWDHelper._bits_from_bytes(REN)
+        TRG = [0]*len(CMD)
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-        nextpacket = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00002D05)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT1', 0x00000000)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('DP', 'w', 'SELECT', 0x00002D00)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
-
-        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, record_en=False, check_payload=False)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
+        packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00002D05))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT1', 0x00000000))
+        packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00002D00))
+        packet.extend(self.getpacket('AP', 'r', 0b00, 0x43000002, record_en=False, check_payload=False))
 
         # redundant read so we can see the previous one on Saleae:
-        nextpacket = self.getpacket('AP', 'r', 0b00, 0x43000002, check_payload=False)
-        CMD.extend(nextpacket[0])
-        HIZ.extend(nextpacket[1])
-        PEN.extend(nextpacket[2])
-        REN.extend(nextpacket[3])
+        packet.extend(self.getpacket('AP', 'r', 0b00, 0x43000002, check_payload=False))
 
-        self.bb.sendpacket([CMD, HIZ, PEN, REN], trigger_en=False)
+        self.bb.sendpacket(packet, trigger_en=False)
         rdata = self.bb.recorded_data(nbytes=4)
         if rdata == 0x43800042:
             return True
@@ -811,7 +707,6 @@ class SWDHelper(util.DisableNewAttr):
             return False
         else:
             raise ValueError('Unexpected CSW value: %s' % hex(rdata))
-
 
 
 
@@ -1090,8 +985,7 @@ class BitBanger (util.DisableNewAttr):
         """ Sends a generic "packet"; waits for it to be sent.
 
         Args:
-            packet (list): list of lists defining the packet, as returned by e.g. 
-                :class:`OneWireHelper.get_generic_write_read`, or :class:`SWDHelper.getpacket`.
+            packet (BitBangerPacket): packet to send.
             trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
             trigger_bit (int): timeslot on which to issue the trigger; if None, the packet's last timeslot is used.
             timeout (int): if the packet is not done being sent after this many seconds, times out.
@@ -1099,11 +993,11 @@ class BitBanger (util.DisableNewAttr):
             chunk_size (int): used when allow_splitting is True; defaults to max_length.
 
         """
-        CMD = packet[0]
-        HIZ = packet[1]
-        PEN = packet[2]
-        REN = packet[3]
-        TRG = [0]*len(CMD)
+        CMD = packet.pattern_data
+        HIZ = packet.pattern_hiz
+        PEN = packet.pattern_en
+        REN = packet.record_en
+        TRG = [0]*len(CMD) # TODO: or obtain from packet.trig_bits
         if trigger_bit is None:
             TRG[-1] = 1
         else:
@@ -1517,5 +1411,53 @@ class BitBanger (util.DisableNewAttr):
             return int.from_bytes(final, byteorder='big')
         else:
             return final[::-1]
+
+
+
+class BitBangerPacket (util.DisableNewAttr):
+    ''' Very simple class to make building bit-bang patterns easier.
+    '''
+    _name = 'Husky Bit-Banger Packet'
+
+    def __init__(self, pattern_data=[], pattern_hiz=[], pattern_en=[], record_en=[], trig_bits=[]):
+        self.pattern_data = pattern_data
+        self.pattern_hiz = pattern_hiz
+        self.pattern_en = pattern_en
+        self.record_en = record_en
+        self.trig_bits = trig_bits
+        if not (len(pattern_data) == len(pattern_hiz) == len(pattern_en) == len(record_en) == len(trig_bits)):
+            scope_logger.warning('Unequal lengths.')
+        self.disable_newattr()
+
+    def _dict_repr(self):
+        rtn = {}
+        rtn['num_bits'] = self.num_bits
+        rtn['pattern_data'] = self.pattern_data
+        rtn['pattern_hiz'] = self.pattern_hiz
+        rtn['pattern_en'] = self.pattern_en
+        rtn['record_en'] = self.record_en
+        rtn['trig_bits'] = self.trig_bits
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    @property 
+    def num_bits(self):
+        """ Length of packet, in bits (or, more accurately: bit-banger time slots).
+        """
+        return len(self(pattern_data))
+
+    def extend(self, packet):
+        """ Extend a packet with another packet.
+        """
+        self.pattern_data.extend(packet.pattern_data)
+        self.pattern_hiz.extend(packet.pattern_hiz)
+        self.pattern_en.extend(packet.pattern_en)
+        self.record_en.extend(packet.record_en)
+        self.trig_bits.extend(packet.trig_bits)
 
 
