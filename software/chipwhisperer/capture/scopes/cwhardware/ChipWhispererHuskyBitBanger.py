@@ -970,9 +970,20 @@ class BitBanger (util.DisableNewAttr):
 
     def _push_pattern_data(self):
         bb_data = []
+        if not (len(self.pattern_data) == len(self.pattern_hiz) == len(self.pattern_en) == len(self.record_en) == len(self.trig_bits)):
+            scope_logger.warning('Unequal lengths.')
+
         for a,b,c,d,e in zip(self.pattern_data, self.pattern_hiz, self.pattern_en, self.trig_bits, self.record_en):
             bb_data.append(a + (b<<1) + (c<<2) + (d<<3) + (e<<4))
-        self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data)
+        #self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data)
+        # Note: writing a 512-element bb_data fails! So break it up into 256-element chunks:
+        chunk_size = 256
+        for start in range(0, len(bb_data), chunk_size):
+            if start+chunk_size > len(bb_data):
+                stop = len(bb_data)
+            else:
+                stop = start+chunk_size
+            self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data[start:stop])
         errors = self.fifo_errors()
         if errors:
             scope_logger.error('Internal BB FIFO error: %s' % errors)
