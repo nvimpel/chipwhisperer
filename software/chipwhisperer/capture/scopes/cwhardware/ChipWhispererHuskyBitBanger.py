@@ -783,7 +783,7 @@ class BitBanger (util.DisableNewAttr):
         self._glitch_mode_string = 'drive_low'
         self._drive_edge = 'rising'
         self._check_edge = 'falling'
-        self._clk_div = 0
+        self._clk_div = 2
         self._num_bits = 0
         self._read_max_pattern()
         self._pattern_data = [0]*self.max_length
@@ -952,10 +952,10 @@ class BitBanger (util.DisableNewAttr):
         # Additionally, due to the FIFO-based storage of pattern_data/_en/_hiz/etc...,
         # it's easiest to write those out only when we "really go".
         if really_go:
-            writes = 6
+            writes = 7
             self._push_pattern_data()
         else:
-            writes = 5
+            writes = 6
         raw = [0]*writes
         if self.drive_edge == 'rising':
             drive = 1
@@ -979,9 +979,10 @@ class BitBanger (util.DisableNewAttr):
                  (self._glitch_enabled << 2) + \
                  (drive << 1) + \
                  check
-        raw[2] = self.clk_div
-        raw[3] = self.num_bits & 0xFF
-        raw[4] = self.num_bits >> 8
+        raw[2] = self.clk_div & 0xFF
+        raw[3] = self.clk_div >> 8
+        raw[4] = self.num_bits & 0xFF
+        raw[5] = self.num_bits >> 8
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
 
 
@@ -1313,13 +1314,13 @@ class BitBanger (util.DisableNewAttr):
         the time slots for :class:`pattern_data` and its associated properties. Must be even.
 
         Args:
-            val (int): clock divider. Must be even and < 256.
+            val (int): clock divider. Must be even and < 2**16.
 
         """
         return self._clk_div
     @clk_div.setter
     def clk_div(self, val):
-        if val not in range(2, 256, 2):
+        if val not in range(2, 2**16, 2):
             raise ValueError
         self._clk_div = val
         self.go(False)
