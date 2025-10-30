@@ -941,10 +941,18 @@ class BitBanger (util.DisableNewAttr):
         else:
             return False
 
-    def go(self, really_go=True):
+    def go(self):
         """ Make the bitbanger go.
+        """
+        self._maybe_go(True)
+
+
+    def _maybe_go(self, really_go=True):
+        """ Make the bitbanger go.
+
         Args:
-            really_go (bool): 'AP' or 'DP'
+            really_go (bool): when False, updates bit-banger settings but does not send the bit-bang pattern.
+
         """
         # Most properties of this module are only written out to the hardware when this
         # method is called; by setting the "go" argument to False, the properties get
@@ -984,6 +992,7 @@ class BitBanger (util.DisableNewAttr):
         raw[4] = self.num_bits & 0xFF
         raw[5] = self.num_bits >> 8
         self.oa.sendMessage(CODE_WRITE, "BB_TRIG_CTRL_STAT", raw)
+
 
 
     def _push_pattern_data(self):
