@@ -1011,22 +1011,22 @@ class BitBanger (util.DisableNewAttr):
             else:
                 stop = start+chunk_size
             self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data[start:stop])
-        errors = self.fifo_errors()
+        self.check_fifo_errors()
         if errors:
             scope_logger.error('Internal BB FIFO error: %s' % errors)
 
 
-    def fifo_errors(self):
+    def check_fifo_errors(self):
         raw = self.oa.sendMessage(CODE_READ, "BB_TRIG_CTRL_STAT", maxResp=1)[0]
-        if raw & 0xc0:
-            errors = 'over+underflow'
-        elif raw & 0x80:
-            errors = 'overflow'
-        elif raw & 0x40:
-            errors = 'underflow'
-        else:
-            errors = None
-        return errors
+        if raw & 2**5:
+            scope_logger.error('Internal BB FIFO error (likely underflow)')
+            self.harness.inc_error()
+        if raw & 2**6:
+            scope_logger.error('Internal BB FIFO underflow error')
+            self.harness.inc_error()
+        if raw & 2**7:
+            scope_logger.error('Internal BB FIFO overflow error')
+            self.harness.inc_error()
 
 
     def sendpacket(self, packet, trigger_en=True, trigger_bit=None, timeout=1, allow_splitting=True, chunk_size=None):
@@ -1172,9 +1172,7 @@ class BitBanger (util.DisableNewAttr):
             if not self.active:
                 return
         raise ValueError('Timed out!')
-        errors = self.fifo_errors()
-        if errors:
-            scope_logger.error('Internal BB FIFO error: %s' % errors)
+        self.check_fifo_errors()
 
 
     @property 
