@@ -1012,8 +1012,6 @@ class BitBanger (util.DisableNewAttr):
                 stop = start+chunk_size
             self.oa.sendMessage(CODE_WRITE, "BB_TRIG_DATA", bb_data[start:stop])
         self.check_fifo_errors()
-        if errors:
-            scope_logger.error('Internal BB FIFO error: %s' % errors)
 
 
     def check_fifo_errors(self):
@@ -1199,7 +1197,7 @@ class BitBanger (util.DisableNewAttr):
         if val not in [0,1]:
             raise ValueError
         self._continuous_clk = val
-        self.go(False)
+        self._maybe_go(False)
 
     @property 
     def inactive_data(self):
@@ -1215,7 +1213,7 @@ class BitBanger (util.DisableNewAttr):
         if val not in [0,1]:
             raise ValueError
         self._inactive_data = val
-        self.go(False)
+        self._maybe_go(False)
 
     @property 
     def inactive_state(self):
@@ -1231,7 +1229,7 @@ class BitBanger (util.DisableNewAttr):
         if val not in ['driven', 'high_z']:
             raise ValueError
         self._inactive_state = val
-        self.go(False)
+        self._maybe_go(False)
 
     @property 
     def trigger_when_matched(self):
@@ -1331,7 +1329,7 @@ class BitBanger (util.DisableNewAttr):
         if val not in range(2, 2**16, 2):
             raise ValueError
         self._clk_div = val
-        self.go(False)
+        self._maybe_go(False)
 
     @property 
     def num_bits(self):
