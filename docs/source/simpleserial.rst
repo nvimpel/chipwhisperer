@@ -241,7 +241,7 @@ Capture->Target communication:
 ``'e'`` is reserved for Target->Capture communication.
 
 In both SimpleSerial versions, the output of the ``'v'`` command
-is a single number between `0x00` and `0x03` mapped to
+is a single number between ``0x00`` and ``0x03`` mapped to
 the SimpleSerial versions in ascending order:
 
 .. code::
