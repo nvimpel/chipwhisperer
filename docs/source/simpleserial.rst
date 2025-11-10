@@ -240,6 +240,15 @@ Capture->Target communication:
 
 ``'e'`` is reserved for Target->Capture communication.
 
+The output of the ``'v'`` command is a single number between `0x00` and `0x03` mapped to the SimpleSerial versions in ascending order:
+
+.. code::
+
+    0x00 - Version 1.0
+    0x01 - Version 1.1
+    0x02 - Version 2.0
+    0x03 - Version 2.1
+
 Reserved Errors
 -----------------
 
