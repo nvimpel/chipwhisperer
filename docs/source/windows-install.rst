@@ -143,6 +143,12 @@ as all files will be owned by root until this is done. The easiest way to fix th
 is to simply reboot your computer, but you can also run the following command in
 the chipwhisperer and jupyter folders via the CW Compiler Environment:
 
+.. code:: bash
+
+  git config --global --add safe.directory $(pwd)
+  cd jupyter
+  git config --global --add safe.directory $(pwd)
+
 =======================================================
 Javascript Error: IPython is not defined
 =======================================================
@@ -188,12 +194,6 @@ with:
     %%bash
     cmd
 
-
-.. code:: bash
-
-  git config --global --add safe.directory $(pwd)
-  cd jupyter
-  git config --global --add safe.directory $(pwd)
 
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 
