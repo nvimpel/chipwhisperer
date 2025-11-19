@@ -107,10 +107,11 @@ plaintext and send it back. Our project files typically support both simpleseria
         trigger_setup();
         simpleserial_init();
 
-        // tell simpleserial_get to look for 'p' and 'k' packets
+        // tell simpleserial_get to look for 'a' and 'b' packets
         // and to do these two functions when they're received
-        simpleserial_addcmd('p', 16, xor_inc);
-        simpleserial_addcmd('k', 16, get_key);
+        // NOTE: 'p' and 'k' in SSV2 are changed to 0x01 with a varying scmd in Python, so they're not recommended for custom firmware.
+        simpleserial_addcmd('a', 16, xor_inc);
+        simpleserial_addcmd('b', 16, get_key);
 
         // look for simpleserial packets
         while(1)
