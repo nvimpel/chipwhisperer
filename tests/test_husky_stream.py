@@ -57,7 +57,7 @@ verbose = False
 cw.scope_logger.setLevel(cw.logging.ERROR) # don't want to see warnings when setting clock past its specifications
 
 # TODO: program FW?
-scope.sc.reset_fpga()
+scope.reset_fpga()
 scope.adc.clip_errors_disabled = True
 scope.adc.lo_gain_errors_disabled = True
 scope.clock.clkgen_freq = 10e6

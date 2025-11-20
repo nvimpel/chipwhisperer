@@ -418,15 +418,6 @@ class OpenADCInterface(util.DisableNewAttr):
         address = self._address_str2int(address)
         return self.msg_read(address, maxResp=num_bytes)
 
-    def reset_fpga(self):
-        """ Reset all FPGA resgiters to their defaults.
-        """
-        if not self._is_husky:
-            raise ValueError("For CW-Husky only.")
-        self.sendMessage(CODE_WRITE, "RESET", [1])
-        self.sendMessage(CODE_WRITE, "RESET", [0])
-
-
     def setSettings(self, state, validate=False):
         cmd = bytearray(1)
         cmd[0] = state
@@ -606,8 +597,9 @@ class OpenADCInterface(util.DisableNewAttr):
 
         self.flushInput()
 
-        #Reset... will automatically clear by the time we are done
+        #Reset... self-clearing on CW-lite/pro, but NOT on Husky family
         self._setReset(True)
+        self._setReset(False)
         self.flushInput()
 
         #Send ping

@@ -101,7 +101,7 @@ cw.scope_logger.setLevel(cw.logging.ERROR) # don't want to see warnings when set
 
 # TODO: program FW?
 scope.XADC.user_reset() # reset max/min stats
-scope.sc.reset_fpga()
+scope.reset_fpga()
 scope.adc.clip_errors_disabled = True
 scope.adc.lo_gain_errors_disabled = True
 scope.clock.clkgen_freq = 10e6
@@ -191,6 +191,14 @@ testData = [
     (500,       0,          'internal', 20e6,       False,      1,      12, False,  1,      0,      1,      'slowreads'),
     ('max',     0,          'internal', 20e6,       False,      1,      12, False,  1,      0,      1,      'maxslowreads_SLOW'),
 ]
+
+
+testADCresetData = [
+    # freq_start    freq_stop   freq_step   adc_mul_start   adc_mul_stop    adc_mul_step    desc
+    (7.37e6,        8e6,        1e6,        1,              'max',          1,              'ADCreset'),
+    (7.37e6,        20e6,       1e6,        1,              'max',          1,              'ADCreset_SLOW'),
+]
+
 
 testADCsweep = [
     # samples   presamples  freq_start  freq_stop   freq_step   testmode    fastreads   adcmul  bit stream  segs    segcycs reps    desc
@@ -571,6 +579,78 @@ def test_internal_ramp(fulltest, samples, presamples, testmode, clock, fastreads
         assert errors == 0, "%d errors; First error: %d; scope.adc.errors: %s" % (errors, first_error, scope.adc.errors)
         assert scope.adc.errors == False
     scope.sc._fast_fifo_read_enable = True # return to default
+
+
+
+@pytest.mark.parametrize("freq_start, freq_stop, freq_step, adc_mul_start, adc_mul_stop, adc_mul_step, desc", testADCresetData)
+def test_adc_reset(fulltest, reps, freq_start, freq_stop, freq_step, adc_mul_start, adc_mul_stop, adc_mul_step, desc):
+    # The goal of this test is to ensure that when the FPGA is reset, which scope.con() does, everything works properly.
+    # We test this with a wide range of ADC clock frequencies.
+    # This is in response to this bug: https://github.com/newaetech/chipwhisperer/issues/559
+    if not fulltest and 'SLOW' in desc:
+        pytest.skip("use --fulltest to run")
+        return None
+    if not fulltest:
+        reps = 1 # reduce number of reps to speed up
+    fhits = []
+    if freq_stop == 'max':
+        freq_stop = MAXCLOCK
+    if adc_mul_stop == 'max':
+        use_max_adc_mul_stop = True
+    else:
+        use_max_adc_mul_stop = False
+    for clock in range(int(freq_start), int(freq_stop), int(freq_step)):
+        if use_max_adc_mul_stop:
+            adc_mul_stop = int(MAXCLOCK//clock)
+        if adc_mul_stop == 0:
+            adc_mul_stop = 1
+        for adcmul in range(adc_mul_start, adc_mul_stop+1, adc_mul_step):
+            if adcmul * clock > MAXCLOCK:
+                if verbose: print('skipping mul=%d, clock=%d' % (adcmul, clock))
+                next
+            if adcmul*clock in fhits:
+                if verbose: print('skipping (already done)')
+                next
+            fhits.append(adcmul*clock)
+            samples = MAXSAMPLES
+            adc_reset_test_setup(samples)
+            scope.clock.clkgen_freq = clock
+            scope.clock.adc_mul = adcmul
+            time.sleep(0.1)
+            assert scope.clock.pll.pll_locked == True
+            #assert abs(scope.clock.adc_freq - clock * adcmul) <= 10e6
+            if verbose: print('Running clock=%d, mul=%d, adc=%d' % (clock/1e6, adcmul, scope.clock.adc_freq/1e6))
+            for i in range(reps):
+                scope.sc.arm(False)
+                scope.arm()
+                scope.sc.triggerNow()
+                scope.sc.arm(False)
+                assert scope.capture() == False
+                raw = np.int64(scope.get_last_trace(True))
+                errors, first_error = check_ramp(raw, 'internal', 12, samples, 0)
+                assert errors == 0, "at ADC clock=%d MHz: %d errors; First error: %d; scope.adc.errors: %s" % (scope.clock.adc_freq/1e6, errors, first_error, scope.adc.errors)
+                assert scope.adc.errors == False, 'ADC errors at clock=%d MHz: %s' % (scope.clock.adc_freq/1e6, scope.adc.errors)
+
+    scope.adc.test_mode = False
+
+def adc_reset_test_setup(samples):
+    # reconnecting to the scope WITHOUT reprogramming the FPGA bitfile is an important part of this test:
+    # NOTE: manually reset -- not ideal since it's not what we want to test
+    #scope.sc._setReset(True)
+    #scope.sc._setReset(False)
+    # NOTE: for some reason, calling scope.dis()/con() here leads to strange errors elsewhere
+    #scope.dis()
+    #scope.con(hw_location=hw_loc)
+    scope = cw.scope(hw_location=hw_loc)
+    reset_setup(scope,target)
+    scope.adc.test_mode = True
+    scope.ADS4128.mode = 'normal'
+    scope.adc.samples = samples
+    scope.adc.presamples = 0
+    scope.adc.segments = 1
+    scope.adc.clip_errors_disabled = True
+    scope.adc.lo_gain_errors_disabled = True
+    scope.adc.bits_per_sample = 12
 
 
 
