@@ -1504,7 +1504,7 @@ class BitBangerPacket (util.DisableNewAttr):
     def num_bits(self):
         """ Length of packet, in bits (or, more accurately: bit-banger time slots).
         """
-        return len(self(pattern_data))
+        return len(self.pattern_data)
 
     def extend(self, packet):
         """ Extend a packet with another packet.
