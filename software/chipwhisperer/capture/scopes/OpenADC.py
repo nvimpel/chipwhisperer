@@ -697,6 +697,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             # TODO-temporary: when Husky bitfiles are fixed, RESET writes below won't be necessary, can use _setReset() instead
             self.fpga_reg_write('RESET', [1])
             self.fpga_reg_write('RESET', [0])
+            self.sc._setMaxSamples() # TODO: won't be needed when _setReset can be called
         else:
             self.sc._setReset(True)
             self.sc._setReset(False)

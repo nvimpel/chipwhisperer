@@ -438,15 +438,21 @@ class OpenADCInterface(util.DisableNewAttr):
         """
         if value:
             self.setSettings(self.settings() | SETTINGS_RESET, validate=False)
-            if self._is_husky:
-                self.hwMaxSamples = self.numMaxSamples()
-                self.hwMaxSegmentSamples = self.numMaxSegmentSamples()
-            else:
-                #Hack to adjust the hwMaxSamples since the number should be smaller than what is being returned
-                self.hwMaxSamples = self.numSamples() - 45
-            self.setNumSamples(self.hwMaxSamples)
+            self._setMaxSamples()
         else:
             self.setSettings(self.settings() & ~SETTINGS_RESET)
+
+    def _setMaxSamples(self):
+        """Note: this is only intended to be called when connecting. If used outside of this, cached register values may be not reflect reality.
+        """
+        if self._is_husky:
+            self.hwMaxSamples = self.numMaxSamples()
+            self.hwMaxSegmentSamples = self.numMaxSegmentSamples()
+        else:
+            #Hack to adjust the hwMaxSamples since the number should be smaller than what is being returned
+            self.hwMaxSamples = self.numSamples() - 45
+        self.setNumSamples(self.hwMaxSamples)
+
 
     def triggerNow(self):
         initial = self.settings(True)
