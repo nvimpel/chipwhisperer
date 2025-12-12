@@ -231,7 +231,7 @@ ERROR:
 void simpleserial_put(char c, uint8_t size, uint8_t* output)
 {
     if (!output) return;
-	uint8_t data_buf[MAX_SS_LEN];
+	uint8_t data_buf[MAX_SS_LEN+5];
 	data_buf[0] = 0x00;
 	data_buf[1] = c;
 	data_buf[2] = size;
