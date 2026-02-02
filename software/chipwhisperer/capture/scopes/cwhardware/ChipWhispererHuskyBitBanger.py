@@ -38,9 +38,10 @@ CODE_WRITE = 0xC0
 
 class OneWireHelper(util.DisableNewAttr):
     ''' Helper functions for bit-banging a 1-wire interface.
-    Basic functions for sending a reset/pulse detect, as well as arbitrary reads and writes.
-    Meant to be overloaded for your particular target. For example, if the command for reading your target's 
-    ROM code is 0x33, and its family code is 0x45, you could do::
+    Basic functions for sending a reset/pulse detect, as well as arbitrary
+    reads and writes. Meant to be overloaded for your particular target. For
+    example, if the command for reading your target's ROM code is 0x33, and
+    its family code is 0x45, you could do::
 
         class My1wireTarget(cw.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.OneWireHelper):
             def __init__(self, bitbanger):
@@ -53,6 +54,9 @@ class OneWireHelper(util.DisableNewAttr):
         target.send_rst_pd()
         target.read_rom_code()
                     
+    **The methods in this class should be considered examples; they may or may
+    not work on all targets. You may need/want to customize them for your
+    particular use case.**
     '''
     _name = '1-wire helper functions'
 
@@ -228,8 +232,10 @@ class SWDHelper(util.DisableNewAttr):
     ''' Helper functions for bit-banging a synchronous SWD interface.
     Meant to be overloaded for your particular target.
 
-    Some of the methods here are specific to the RP2350; others are for
-    our SAM4S and STM32F3 targets. Adapt as needed for other targets.
+    The methods in this class should be considered examples that have been
+    verified to work on some of our targets (STM32F3, SAM4S, RP2350); they
+    may or may not work on other targets. You may also need/want to
+    customize them for your particular use case.
 
     The purpose of this class is to demonstrate triggering on precisely-timed
     SWD exchanges; **it is not to build a full-fledged debugger.**
@@ -237,7 +243,6 @@ class SWDHelper(util.DisableNewAttr):
     **Going beyond what's shown here requires bit-level SWD expertise!**
     Be sure to consult the ARM Debug Interface specification
     that applies to your specific target (e.g. IHI 0031, IHI 0074...).
-
 
     '''
     _name = 'SWD helper functions'
@@ -357,7 +362,7 @@ class SWDHelper(util.DisableNewAttr):
         HIZ = SWDHelper._bits_from_bytes(HIZ)
         PEN = SWDHelper._bits_from_bytes(PEN)
         REN = SWDHelper._bits_from_bytes(REN)
-        TRG = [0]*len(CMD) # TODO? maybe handle this in the post?
+        TRG = [0]*len(CMD) # NOTE: intended to be set at a higher level (because a single BB packet is often composed of several of these packets)
         # don't check turn/trailing bits:
         if pauses:
             for a in [CMD, HIZ, PEN, REN, TRG]:
@@ -497,20 +502,17 @@ class SWDHelper(util.DisableNewAttr):
         self.idcode = code_read
 
 
-    def wake_swd(self, expected_id_code=None, trigger_en=False, trigger_bit=0, single_burst=True, lr_bits=56):
+    def wake_swd(self, expected_id_code=None, trigger_bits=[[],[]], lr_bits=56):
         """Sends line resets, sends JTAG-to-SWD command, checks ID code, and
-        writes CTRL/STAT. Works on NewAE SAM4S and STM32F3 targets. May work on
-        others too -- no promises. If ID code is successfully read, it is
-        stored in :class:`idcode`.
-        TODO re-add trigger?
-        TODO-NOW: single/multi burst option
-        TODO-add note to this and all such convenience commands that they are merely examples and cannot possibly suit all situations; 
-        if it doesn't suit yours, write your own!
+        writes CTRL/STAT. Verified to work on NewAE SAM4S and STM32F3 targets.
+        May work on others too -- no promises. 
+
+        If the ID code is successfully read, it is stored in :class:`idcode`.
 
         Args:
             expected_id_code (int): expected IDCODE. Set to None to read the IDCODE without checking it.
-            single_burst (bool): TODO
-            lr_bits (int): TODO - must be 56(?) for Husky
+            trigger_bits (list[list[ints]]): bitbanger bits on which triggers are issued (one list for each of the two packets sent)
+            lr_bits (int): number of bits for the line reset.
 
         Returns:
             If expected_id_code is not provided, the read IDCODE.
@@ -522,27 +524,13 @@ class SWDHelper(util.DisableNewAttr):
         # 1. Line resets:
         CMD = [1]*lr_bits                                   # line reset
         CMD.extend(self._bits_from_bytes([0x9e, 0xe7]))     # 0x9ee7
-        HIZ = [0]*len(CMD)
-        PEN = [1]*len(CMD)
-        REN = [0]*len(CMD)
-        TRG = [0]*len(CMD)
-        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
-
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-
-        CMD = ([1]*lr_bits)                                 # line reset
+        CMD.extend([1]*lr_bits)                             # line reset
         CMD.extend([0]*16)                                  # 16 cycles with SWDIO low
         HIZ = [0]*len(CMD)
         PEN = [1]*len(CMD)
         REN = [0]*len(CMD)
         TRG = [0]*len(CMD)
-        packet.extend(BitBangerPacket(CMD, HIZ, PEN, REN, TRG))
-
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
+        packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
         # 2. Read IDCODE:
         if expected_id_code:
@@ -554,8 +542,12 @@ class SWDHelper(util.DisableNewAttr):
             record_en = True
         packet.extend(self.getpacket('DP', 'r', 'IDCODE', expected_id_code, check_payload=check_code, record_en=record_en))
 
+        # add in the trigger(s):
+        for t in trigger_bits[0]:
+            packet.trig_bits[t] = 1
+
         # and now we send so that we can detect errors in different parts of the target response:
-        self.bb.sendpacket(packet, trigger_en=False)
+        self.bb.sendpacket(packet)
 
         if record_en:
             code_read = self.bb.recorded_data(4)
@@ -563,21 +555,16 @@ class SWDHelper(util.DisableNewAttr):
             if check_code and (code_read != expected_id_code):
                 scope_logger.warning('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
         if not self.bb.matched:
-            raise Exception('Unexpected target behaviour during line reset / read IDCODE.')
+            #raise Exception('Unexpected target behaviour during line reset / read IDCODE.')
+            scope_logger.warning('Unexpected target behaviour during line reset / read IDCODE.')
 
         # 3. ABORT + CTRL/STAT:
         packet = self.getpacket('DP', 'w', 'ABORT', 0x0000001e)
-
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-            if not self.bb.matched:
-                self.idcode = None
-                raise Exception('Unexpected target behaviour during ABORT write.')
-
-
         packet.extend(self.getpacket('DP', 'w', 'CTRL/STAT', 0x50000000))
-        self.bb.sendpacket(packet, trigger_en=False)
+        # add in the trigger(s):
+        for t in trigger_bits[1]:
+            packet.trig_bits[t] = 1
+        self.bb.sendpacket(packet)
         if not self.bb.matched:
             self.idcode = None
             raise Exception('Unexpected target behaviour during ABORT/CTRL/STAT write.')
@@ -586,19 +573,16 @@ class SWDHelper(util.DisableNewAttr):
             return code_read
 
 
-    def write(self, address, data, trigger_en=False, trigger_bits=[0], single_burst=True, preamble_bits=8):
+    def write(self, address, data, trigger_bits=[], preamble_bits=8):
         """Writes a word to target memory.
         Works on NewAE SAM4S and STM32F3 targets. May work on others too -- no
         promises! Consult your target's debug documentation.
-        TODO-NOW: figure out trigger_bit
 
         Args:
             address (int): 32-bit address.
             data (int): 32-bit data to write.
-            trigger_en (bool): enable generating a trigger.
             trigger_bits (list[int]): bitbanger bits on which triggers are issued.
-            single_burst (bool): TODO - also how does this impact trigger_bit, trigger_en...
-            preamble_bits (int): TODO
+            preamble_bits (int): number of preamble bits before the commands.
 
         Raises:
            Exception: target did not respond as expected (e.g. does not ACK OK when expected).
@@ -613,45 +597,33 @@ class SWDHelper(util.DisableNewAttr):
         packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
         packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00000000))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'w', 'CSW', 0x23000012))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'w', 'TAR', address))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'w', 'DRW', data))
-        self.bb.sendpacket(packet, trigger_en=trigger_en)
+
+        # add in the trigger(s):
+        for t in trigger_bits:
+            packet.trig_bits[t] = 1
+
+        # send it:
+        self.bb.sendpacket(packet)
+
+        # check it:
         if not self.bb.matched:
             raise Exception('Unexpected target response.')
 
 
-    def read(self, address, expected_data=None, trigger_en=False, trigger_bit=0, single_burst=False, preamble_bits=8, split_read=True):
+    def read(self, address, expected_data=None, trigger_bits=[], preamble_bits=8):
         """Reads a word from target memory.
         Works on NewAE SAM4S and STM32F3 targets. May work on others too -- no
         promises! Consult your target's debug documentation.
 
-        TODO-NOW: figure out trigger_bit
-
         Args:
             address (int): 32-bit address.
             expected_data (int): 32-bit expected read data; leave as None if unknown.
-            trigger_en (bool): enable generating a trigger.
-            trigger_bit (int): bitbanger bit on which the trigger is issued.
-            preamble_bits (int): TODO
-            split_read (bool): TODO
+            trigger_bits (list[int]): bitbanger bits on which triggers are issued.
+            preamble_bits (int): number of preamble bits before the commands.
 
         Returns:
             read data, if expected_data was not provided (int)
@@ -667,26 +639,10 @@ class SWDHelper(util.DisableNewAttr):
         TRG = [0]*preamble_bits
         packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-
         packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00000000))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'w', 'CSW', 0x23000012))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'w', 'TAR', address))
-        if not single_burst:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
 
         if expected_data is None:
             expected_data = 0
@@ -696,20 +652,20 @@ class SWDHelper(util.DisableNewAttr):
             check_payload = True
             record_en = False
         packet.extend(self.getpacket('AP', 'r', 'DRW', expected_data, record_en=False, check_payload=False))
-
-        if split_read:
-            self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
-            packet = BitBangerPacket([], [], [], [], [])
-
         packet.extend(self.getpacket('AP', 'r', 'DRW', expected_data, record_en=record_en, check_payload=check_payload))
 
-        self.bb.sendpacket(packet, trigger_en=trigger_en, trigger_bit=trigger_bit)
+        # add in the trigger(s):
+        for t in trigger_bits:
+            packet.trig_bits[t] = 1
+
+        # send it:
+        self.bb.sendpacket(packet)
+
+        # check it:
         if not self.bb.matched:
             raise Exception('Unexpected target response.')
-
         if not check_payload:
             return self.bb.recorded_data(4)
-
 
 
     def check_debug_enabled(self):
@@ -1071,117 +1027,32 @@ class BitBanger (util.DisableNewAttr):
             self.harness.inc_error()
 
 
-    def sendpacket(self, packet, trigger_en=True, timeout=1, allow_splitting=True, chunk_size=None):
+    def sendpacket(self, packet, trigger_en=True, timeout=1):
         """ Sends a generic "packet"; waits for it to be sent.
 
         Args:
             packet (BitBangerPacket): packet to send.
             trigger_en (bool): whether a trigger *can be* issued by the bit-banging module. Affected by :class:`BitBanger.trigger_when_matched`
             timeout (int): if the packet is not done being sent after this many seconds, times out.
-            allow_splitting (bool): for packets exceeding max_length, split them into chunks of chunk_size bits.
-            chunk_size (int): used when allow_splitting is True; defaults to max_length.
 
         """
-        if self.verbose: # TODO: make this print out what actually gets send
-            print('sending %d bits...' % packet.num_bits)
-        self.last_packet_sent = packet
-        CMD = packet.pattern_data
-        HIZ = packet.pattern_hiz
-        PEN = packet.pattern_en
-        REN = packet.record_en
-        TRG = packet.trig_bits
-
-        # TODO: consider removing all this auto-chunking?
-        if len(CMD) > self.max_length:
-            if not allow_splitting:
-                raise ValueError('Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks (max: %d; this: %d), or use the "allow_splitting" option.' % (self.max_length, len(CMD)))
-            if self.splitting_warning:
-                scope_logger.warning('Packet exceeds maximum length supported by hardware. Splitting into chunks, which may not work reliably; use at your own risk.')
-                scope_logger.warning('Set scope.bitbanger.splitting_warning to False to disable this warning.')
-            if self.continuous_clk:
-                scope_logger.warning('Splitting with scope.bitbanging.continuous_clk set may not work; it is recommended to clear it and try again.')
-
-            chunks = []
-            if chunk_size is None:
-                chunk_size = self.max_length
-            elif chunk_size > self.max_length:
-                raise ValueError('chunk_size too large (max: %d)' % self.max_length)
-
-            # if some recording is requested, try to place all the recorded bits in a single chunk:
-            if 1 in REN:
-                first = None
-                last = None
-                for i,r in enumerate(REN):
-                    if r:
-                        first = i
-                        break
-                for i,r in enumerate(REN[::-1]):
-                    if r:
-                        last = len(REN)-i-1
-                        break
-                if last-first+1 > chunk_size:
-                    raise ValueError('Cannot record all requested bits in a single chunk. Increase chunk size or reduce number of recorded bits.')
-
-                # 1. assemble chunks up to where recorded bits begin:
-                num_chunks  = math.ceil(first/chunk_size)
-                for chunk in range(num_chunks):
-                    start = chunk*chunk_size
-                    if chunk == num_chunks-1:
-                        stop = first
-                    else:
-                        stop = (chunk+1)*chunk_size
-                    chunks.append([start, stop])
-                # 2. recorded bits chunk:
-                start = stop
-                stop = stop + chunk_size
-                chunks.append([start, stop])
-                chunk += 1
-                # 3. assemble chunks that follow the recorded bits:
-                chunk += 1
-                num_chunks  = math.ceil((len(CMD)-stop)/chunk_size)
-                for chunk in range(chunk, chunk+num_chunks):
-                    start = stop
-                    if chunk == num_chunks-1:
-                        stop = len(CMD)
-                    else:
-                        stop = start+chunk_size
-                    chunks.append([start, stop])
-
-
-            else:
-                num_chunks  = math.ceil(len(CMD)/chunk_size)
-                for chunk in range(num_chunks):
-                    start = chunk*chunk_size
-                    if chunk == num_chunks-1:
-                        stop = len(CMD)
-                    else:
-                        stop = (chunk+1)*chunk_size
-                    chunks.append([start, stop])
-
-            # now send the chunks:
-            for chunk in chunks:
-                start, stop = chunk
-                self.pattern_data = CMD[start:stop]
-                self.pattern_hiz = HIZ[start:stop]
-                self.pattern_en = PEN[start:stop]
-                self.record_en = REN[start:stop]
-                self.trig_bits = TRG[start:stop]
-                self.num_bits = stop-start
-                self.trigger_en = trigger_en
-                self.go()
-                self.wait_for_done(timeout)
-
+        if len(packet.pattern_data) > self.max_length:
+            raise ValueError('Packet too long! Break up the data you are transmitting via sendpacket() into smaller chunks (max: %d; this: %d).' % (self.max_length, len(CMD)))
         else:
-            self.pattern_data = CMD
-            self.pattern_hiz = HIZ
-            self.pattern_en = PEN
-            self.record_en = REN
-            self.num_bits = len(CMD)
-            
+            self.pattern_data = packet.pattern_data
+            self.pattern_hiz = packet.pattern_hiz
+            self.pattern_en = packet.pattern_en
+            self.record_en = packet.record_en
+            self.trig_bits = packet.trig_bits
+            self.num_bits = len(self.pattern_data)
             self.trigger_en = trigger_en
-            self.trig_bits = TRG
+
+            if self.verbose:
+                print('sending %d-bit packet:' % packet.num_bits)
+                print(packet)
             self.go()
             self.wait_for_done(timeout)
+            self.last_packet_sent = packet
 
 
     def wait_for_matched(self, timeout=1):
@@ -1523,7 +1394,6 @@ class BitBangerPacket (util.DisableNewAttr):
         self.pattern_en = pattern_en
         self.record_en = record_en
         self.trig_bits = trig_bits
-        print(len(pattern_data), len(pattern_hiz), len(pattern_en), len(record_en), len(trig_bits))
         if not (len(pattern_data) == len(pattern_hiz) == len(pattern_en) == len(record_en) == len(trig_bits)):
             scope_logger.warning('Unequal lengths.')
         self.disable_newattr()
