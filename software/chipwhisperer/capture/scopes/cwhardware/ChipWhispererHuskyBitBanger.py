@@ -391,29 +391,24 @@ class SWDHelper(util.DisableNewAttr):
         return bits
 
 
-    def set_dbgkey_rp2350(self, key, trigger_bit=None, trigger_nibble=0, check_match=True):
+    def set_dbgkey_rp2350(self, key, trigger_bit=None, trigger_key_byte=None, preamble_bits=16, check_match=True):
         """Sends RP2350 debug key.
-        Key is sent one nibble at a time (32 nibbles in total).
+        Key is sent one byte at a time (16 bytes total).
 
         Args:
             key (int): 256-bit debug key
             trigger_bit (int): which bit *of the SWD transaction* to trigger on.
-            trigger_nibble (int): which key nibble to trigger on (0-31). Set to 'all' to trigger
-                on each nibble, or None to not trigger at all.
+            trigger_key_byte (int): which key byte to trigger on (0-15). Set to 'all' to trigger
+                on each byte, or None to not trigger at all.
+            preamble_bits (int): number of preamble bits before the commands.
         """
 
         # start wiggling clock:
-        CMD = [0, 0]
-        HIZ = [0, 0]
-        PEN = [0xff]*len(CMD)
-        REN = [0, 0]
-
-        # convert to lists of bits:
-        CMD = SWDHelper._bits_from_bytes(CMD)
-        HIZ = SWDHelper._bits_from_bytes(HIZ)
-        PEN = SWDHelper._bits_from_bytes(PEN)
-        REN = SWDHelper._bits_from_bytes(REN)
-        TRG = [0]*len(CMD)
+        CMD = [0]*preamble_bits
+        HIZ = [0]*preamble_bits
+        PEN = [1]*preamble_bits
+        REN = [0]*preamble_bits
+        TRG = [0]*preamble_bits
         packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
         packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
@@ -422,31 +417,27 @@ class SWDHelper(util.DisableNewAttr):
         self.bb.sendpacket(packet, trigger_en=False)
         if check_match: assert self.bb.matched, 'Problem setting DBGKEY.RESET'
 
-        # Husky SWD BB limits us to sending one nibble of the key at a time:
-        for b in range(32):
-            CMD = [0, 0]
-            HIZ = [0, 0]
-            PEN = [0xff]*len(CMD) 
-            REN = [0, 0]
-
-            # convert to lists of bits:
-            CMD = SWDHelper._bits_from_bytes(CMD)
-            HIZ = SWDHelper._bits_from_bytes(HIZ)
-            PEN = SWDHelper._bits_from_bytes(PEN)
-            REN = SWDHelper._bits_from_bytes(REN)
-            TRG = [0]*len(CMD)
+        # Husky SWD BB limits us to sending one byte of the key at a time:
+        for b in range(16):
+            CMD = [0]*preamble_bits
+            HIZ = [0]*preamble_bits
+            PEN = [1]*preamble_bits
+            REN = [0]*preamble_bits
+            TRG = [0]*preamble_bits
             packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
 
-            for i in range(4):
+            for i in range(8):
                 data = 2 + (key & 1) # send data lsb to msb; set PUSH bit as well
                 key = key >> 1
                 packet.extend(self.getpacket('AP', 'w', 0b10, data, check_payload=True)) # addresses DBGKEY (offset 0x04)
-            if b == trigger_nibble or trigger_nibble == 'all':
+            if b == trigger_key_byte or trigger_key_byte == 'all':
                 trigger_en = True
             else:
                 trigger_en = False
+            if trigger_bit != None:
+                packet.trig_bits[trigger_bit] = 1
 
-            self.bb.sendpacket(packet, trigger_bit=trigger_bit, trigger_en=trigger_en)
+            self.bb.sendpacket(packet, trigger_en=trigger_en)
             if check_match: assert self.bb.matched, 'Problem setting DBGKEY byte %d' % b
 
 
@@ -496,7 +487,7 @@ class SWDHelper(util.DisableNewAttr):
         packet.extend(self.getpacket('DP', 'r', 'IDCODE', expected_id_code))
         self.bb.sendpacket(packet, trigger_en=False)
 
-        code_read = scope.bitbanger.recorded_data(4)
+        code_read = self.bb.recorded_data(4)
         if not self.bb.matched:
             raise Exception('ID code did not match!\nExpected %x\nGot      %x' % (expected_id_code, code_read))
         self.idcode = code_read
@@ -668,26 +659,22 @@ class SWDHelper(util.DisableNewAttr):
             return self.bb.recorded_data(4)
 
 
-    def check_debug_enabled(self):
+    def check_debug_enabled_rp2350(self, preamble_bits=16):
         """Checks whether debug is enabled on RP2350.
+
+        Args:
+            preamble_bits (int): number of preamble bits before the commands.
 
         Returns:
             True if debug is enabled, False if not.
         """
 
-        CMD = [0, 0]
-        HIZ = [0, 0]
-        PEN = [0xff]*len(CMD)
-        REN = [0, 0]
-
-        # convert to lists of bits:
-        CMD = SWDHelper._bits_from_bytes(CMD)
-        HIZ = SWDHelper._bits_from_bytes(HIZ)
-        PEN = SWDHelper._bits_from_bytes(PEN)
-        REN = SWDHelper._bits_from_bytes(REN)
-        TRG = [0]*len(CMD)
+        CMD = [0]*preamble_bits
+        HIZ = [0]*preamble_bits
+        PEN = [1]*preamble_bits
+        REN = [0]*preamble_bits
+        TRG = [0]*preamble_bits
         packet = BitBangerPacket(CMD, HIZ, PEN, REN, TRG)
-
         packet.extend(self.getpacket('DP', 'w', 'ABORT', 0x0000001e))
         packet.extend(self.getpacket('DP', 'w', 'SELECT', 0x00002D05))
         packet.extend(self.getpacket('DP', 'w', 'SELECT1', 0x00000000))
