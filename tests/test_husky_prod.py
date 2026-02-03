@@ -71,8 +71,8 @@ scope.errors.clear()
 verbose = False
 cw.scope_logger.setLevel(cw.logging.ERROR) # don't want to see warnings when setting clock past its specifications
 
-scope.XADC._user_reset() # reset max/min stats
-scope.sc.reset_fpga()
+scope.XADC.user_reset() # reset max/min stats
+scope.reset_fpga()
 scope.adc.clip_errors_disabled = True
 scope.adc.lo_gain_errors_disabled = True
 scope.clock.clkgen_freq = 10e6
@@ -86,7 +86,7 @@ target.baud = 38400 * 10 / 7.37
 if scope._is_husky_plus:
     MAXCLOCK = 250e6
     OVERCLOCK1 = 255e6
-    OVERCLOCK2 = 280e6
+    OVERCLOCK2 = 265e6
     MAXSAMPLES = 327828
     MAXSEGMENTSAMPLES = 295056
 else:
@@ -138,12 +138,15 @@ testData = [
     # samples   presamples  testmode    clock       fastreads   adcmul  bit stream  segs    segcycs reps    desc
     ('max',     0,          'internal', 20e6,       True,       1,      12, False,  1,      0,      1,      'maxsamples12'),
     ('max',     0,          'internal', 'max',      True,       1,      12, False,  1,      0,      1,      'fastest'),
-    ('max',     0,          'internal', 'over2',    True,       1,      12, False,  1,      0,      1,      'overclocked'),
+    ('max',     0,          'internal', 'over1',    True,       1,      12, False,  1,      0,      1,      'overclocked'),
     ('max',     0,          'internal', 50e6,       True,       4,      12, False,  1,      0,      1,      '4xfast'),
     ('max',     0,          'ADCramp',  20e6,       True,       1,      12, False,  1,      0,      1,      'ADCslow'),
     ('max',     0,          'ADCramp',  'max',      True,       1,      12, False,  1,      0,      3,      'ADCfast'),
-    ('max',     0,          'ADCramp',  'over2',    True,       1,      12, False,  1,      0,      1,      'ADCoverclocked'),
-    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast')
+    ('max',     0,          'ADCramp',  'over1',    True,       1,      12, False,  1,      0,      1,      'ADCover1'),
+    ('max',     0,          'ADCramp',  'over2',    True,       1,      12, False,  1,      0,      1,      'ADCover2'),
+    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast'),
+    ('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
+    ('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
 ]
 
 testTargetData = [
@@ -249,6 +252,8 @@ def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, 
     reset_setup(scope,target)
     if clock == 'max':
         clock = MAXCLOCK
+    elif clock == 'over1':
+        clock = OVERCLOCK1
     elif clock == 'over2':
         clock = OVERCLOCK2
     scope.clock.clkgen_freq = clock
@@ -472,7 +477,7 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
     if adc_mul == 'max':
         adc_mul = int(MAXCLOCK/clock)
     elif adc_mul == 'over':
-        adc_mul = int(OVERCLOCK2/clock)
+        adc_mul = int(OVERCLOCK1/clock)
     scope.clock.adc_mul = adc_mul
     time.sleep(0.1)
     assert scope.clock.pll.pll_locked == True, 'Unexpected clock-setting problem.'

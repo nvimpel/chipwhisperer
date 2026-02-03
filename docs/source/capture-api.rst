@@ -90,6 +90,19 @@ that resulted in that trace such as textin, textout, and key.
 
 .. _api-capture-ktp:
 
+
+Plotting
+========
+
+.. autofunction:: chipwhisperer.plot
+
+.. TIP::
+    If you wish to plot multiple datasets on the same graph, do this::
+        
+        cw.plot(trace[0].wave) * cw.plot(trace[1].wave)
+
+
+
 Key Text Patterns
 =================
 

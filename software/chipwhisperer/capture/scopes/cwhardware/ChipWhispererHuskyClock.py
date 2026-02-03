@@ -6,6 +6,7 @@ from ....logging import *
 import numpy as np
 from .._OpenADCInterface import OpenADCInterface, ClockSettings
 from ..cwhardware.ChipWhispererHuskyMisc import ADS4128Settings
+from typing import Callable
 
 import time
 
@@ -733,7 +734,8 @@ class CDCI6214(util.DisableNewAttr):
     @property
     def f_vco(self):
         """ VCO freqency, using the input frequency against which PLL
-        parameters were calculated.
+        parameters were calculated (unrelated to :class:`update_fpga_vco()`).
+
         """
         vco =  self.f_pfd * self.get_fb_prescale() * self.get_pll_mul()
         if not (self._min_vco <= vco <= self._max_vco):
@@ -990,7 +992,6 @@ class CDCI6214(util.DisableNewAttr):
 
         return self._cached_adc_freq
 
-
     @property
     def input_freq(self):
         if self.pll_src == "xtal":
@@ -1053,7 +1054,15 @@ class CDCI6214(util.DisableNewAttr):
         """Set the FPGA clock glitch PLL's VCO frequency.
         This isn't a property of the CDCI6214 PLL, but it is closely tied, because
         the FPGA VCO frequency depends on this PLL's frequency.
-        Allowed range: 600 - 1200 MHz.
+
+        Args:
+            vco (float): desired VCO frequency. Allowed range: 600 - 1200 MHz; however
+                the achievable range may be narrower as it depends on the
+                target's clock frequency.
+
+        Returns:
+            Actual VCO frequency if successful. Raises an error otherwise.
+
         """
         # For clock glitching, FPGA clock glitch MMCMs also need to have their M/D parameters
         # adjusted, in order to keep their VCO frequency in range.
@@ -1064,7 +1073,7 @@ class CDCI6214(util.DisableNewAttr):
         if self.target_freq == 0:
             return
         if vco > self._mmcm_vco_max or vco < self._mmcm_vco_min:
-            raise ValueError("Requested VCO out of range")
+            scope_logger.error("Requested VCO out of range")
 
         # the following changes resets the glitch offset and width setting, but just resetting the internal (Python)
         # phase settings doesn't work as one would expect; resetting the actual FPGA MMCM phases is needed to get consistent
@@ -1078,14 +1087,18 @@ class CDCI6214(util.DisableNewAttr):
         if self.target_freq * muldiv > self._mmcm_vco_max:
             muldiv -= 1
 
-        scope_logger.info("Setting vco {}, muldiv: {}".format(vco, muldiv))
-        self._mmcm1.set_mul(muldiv)
-        self._mmcm2.set_mul(muldiv)
-        self._mmcm1.set_sec_div(muldiv)
-        self._mmcm2.set_sec_div(muldiv)
-        self._mmcm1.set_main_div(1)
-        self._mmcm2.set_main_div(1)
-        self._mmcm_muldiv = muldiv
+        try:
+            scope_logger.info("Setting vco {}, muldiv: {}".format(vco, muldiv))
+            self._mmcm1.set_mul(muldiv)
+            self._mmcm2.set_mul(muldiv)
+            self._mmcm1.set_sec_div(muldiv)
+            self._mmcm2.set_sec_div(muldiv)
+            self._mmcm1.set_main_div(1)
+            self._mmcm2.set_main_div(1)
+            self._mmcm_muldiv = muldiv
+            return self.target_freq * muldiv
+        except Exception as e:
+            scope_logger.error("Update failed: %s. Try a different VCO value." % e)
 
 
     @property
@@ -1121,7 +1134,7 @@ class CDCI6214(util.DisableNewAttr):
 
 class ChipWhispererHuskyClock(util.DisableNewAttr):
 
-    def clear_adc_unlock(fn):
+    def clear_adc_unlock(fn: Callable): # type: ignore
         """Use this to decorate methods that can cause the PLL to momentarily unlock. Clears
         the unlock status and then re-enables it. If PLL lock is regained, then the user will
         see the ADC LED turn on for a short time. If the PLL remains unlocked, then the ADC
@@ -1358,6 +1371,17 @@ class ChipWhispererHuskyClock(util.DisableNewAttr):
         return self._cached_adc_freq
 
     @property
+    def adc_rate(self):
+        """The current sampling rate of the ADC clock in samples/s. Read-only.
+
+        Note that the sampling rate may be less than the clock frequency if
+        the downsampling factor is greater than 1.
+
+        :Getter: Return the current sampling rate in samples/s (float)
+        """
+        return self.adc_freq / self.oa.decimate()
+
+    @property
     def freq_ctr(self):
         """Reads the frequency of the external input clock.
 
@@ -1586,6 +1610,7 @@ class ChipWhispererHuskyClock(util.DisableNewAttr):
         my_dict['clkgen_freq'] = self.clkgen_freq
         my_dict['adc_mul'] = self.adc_mul
         my_dict['adc_freq'] = self.adc_freq
+        my_dict['adc_rate'] = self.adc_rate
         my_dict['freq_ctr'] = self.freq_ctr
         my_dict['freq_ctr_src'] = self.freq_ctr_src
         my_dict['clkgen_locked'] = self.clkgen_locked

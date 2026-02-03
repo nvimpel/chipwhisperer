@@ -157,7 +157,7 @@ void platform_init(void);
 #elif HAL_TYPE == HAL_mpc5676r
     #include "chipwhisperer-fw-extra/mpc5676r/MPC5676R_hal.h"
 #elif HAL_TYPE == HAL_neorv32
-    #include "chipwhisperer-fw-extra/neorv32/neorv32_hal.h"
+    #include "neorv32/neorv32_hal.h"
 #elif HAL_TYPE == HAL_sam4s
     #include "sam4s/sam4s_hal.h"
 #elif HAL_TYPE == HAL_ibex

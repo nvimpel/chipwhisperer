@@ -361,7 +361,7 @@ class SimpleSerial(TargetTemplate, util.DisableNewAttr):
             return None
         return ret
 
-    def simpleserial_write(self, cmd, num, end='\n'):
+    def simpleserial_write(self, cmd, num, end='\n', var_len=False):
         """ Writes a simpleserial command to the target over serial.
 
         Writes 'cmd' + ascii(num) + 'end' over serial. Flushes the read and
@@ -375,6 +375,8 @@ class SimpleSerial(TargetTemplate, util.DisableNewAttr):
                 before being sent. If set to 'none' is omitted.
             end (str, optional): String to end the simpleserial command with.
                 Defaults to '\\n'.
+            var_len (bool, optional): Indicates that this command is variable length.
+                Must be supported by firmware. Defaults to False.
 
         Example:
             Sending a 'p' command::
@@ -390,7 +392,12 @@ class SimpleSerial(TargetTemplate, util.DisableNewAttr):
         """
         if type(num) is list:
             num = bytearray(num)
+
+        if len(num) > 64:
+            raise ValueError("Message length too long! Max len=64bytes")
         self.ser.flush()
+        if var_len is True:
+            cmd += "{:02X}".format(len(num))
         if cmd:
             cmd += binascii.hexlify(num).decode()
         cmd += end

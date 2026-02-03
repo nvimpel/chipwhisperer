@@ -25,3 +25,17 @@ __attribute__((weak)) void led_ok(unsigned int status)
 __attribute__((weak)) void led_error(unsigned int status)
 {
 }
+
+#ifdef __GNUC__
+#if ((__GNUC__ > 11) || \
+     ((__GNUC__ == 11) && (__GNUC_MINOR__ >= 3)))
+__attribute__((weak)) void _close() {}
+__attribute__((weak)) void _fstat() {}
+__attribute__((weak)) void _getpid() {}
+__attribute__((weak)) void _isatty() {}
+__attribute__((weak)) void _kill() {}
+__attribute__((weak)) void _lseek() {}
+__attribute__((weak)) void _read() {}
+__attribute__((weak)) void _write() {}
+#endif
+#endif

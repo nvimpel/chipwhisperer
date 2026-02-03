@@ -154,7 +154,7 @@ CFLAGS += -Wstrict-prototypes
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -Wno-discarded-qualifiers -Wno-unused-function -Wno-unused-variable -Wno-strict-prototypes -Wno-missing-prototypes
-CFLAGS += -Wno-pointer-sign -Wno-unused-value -Wno-implicit-function-declaration
+CFLAGS += -Wno-pointer-sign -Wno-unused-value
 
 
 #---------------- Compiler Options C++ ----------------
@@ -281,6 +281,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(MATH_LIB)
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB)
+LDFLAGS += -Wl,--print-memory-usage
 #LDFLAGS += -T linker_script.x
 
 
@@ -551,7 +552,7 @@ clean_objs :
 	@$(REMOVE) $(SRC:.c=.i)
 
 # Target: clean project.
-clean: begin clean_print clean_all_objs clean_list end
+clean: begin clean_print clean_all_objs clean_list
 
 clean_print :
 	@$(ECHO_BLANK)

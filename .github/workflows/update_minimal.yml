@@ -9,6 +9,7 @@ on:
 
 jobs:
   update_minimal:
+    if: github.repository == 'newaetech/chipwhisperer'
     name: Update minimal
     runs-on: ubuntu-latest
     steps:

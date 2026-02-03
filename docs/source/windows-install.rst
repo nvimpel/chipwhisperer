@@ -149,6 +149,52 @@ the chipwhisperer and jupyter folders via the CW Compiler Environment:
   cd jupyter
   git config --global --add safe.directory $(pwd)
 
+=======================================================
+Javascript Error: IPython is not defined
+=======================================================
+
+For the past few releases, most of our notebooks have used the ``cw.plot()``
+function to graph information. In an effort to clean up the install, we removed
+other plotting libraries, namely matplotlib, but a few instances of matplotlib
+were missed.
+
+To fix, replace:
+
+.. code:: python
+
+    import matplotlib.pylab as plt
+    plt.plot(data)
+    plt.show()
+
+with:
+
+.. code:: python
+
+    import chipwhisperer as cw
+    display(cw.plot(data))
+
+==============================================================
+Make/Compilers not recognized as internal or external command
+==============================================================
+
+Similar to the matplotlib error above, some changes to the 6.0.0 release
+removed support for a method of invoking bash commands used in a few places
+in the notebooks. 
+
+To fix, change:
+
+.. code:: bash
+
+    !cmd
+
+with:
+
+.. code:: bash
+
+    %%bash
+    cmd
+
+
 .. _releases: https://github.com/newaetech/chipwhisperer/releases
 
 .. _forums: https://forum.newae.com/

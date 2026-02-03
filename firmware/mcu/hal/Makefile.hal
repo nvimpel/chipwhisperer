@@ -8,9 +8,9 @@ endif
 #Manually have to update these lists...
 PLATFORM_LIST = CW308_CC2538 CW301_AVR CW303 CW304 CW308_MEGARF CW308_SAM4L \
 	CW308_STM32F0 CW308_STM32F1 CW308_STM32F2 CW308_STM32F3 CW308_STM32F4 CW308_K24F \
-    CW308_NRF52 CW308_AURIX CW308_SAML11 CW308_EFM32TG11B CWLITEARM CWLITEXMEGA CWNANO CW308_K82F \
+    CW308_NRF52 CW308_AURIX CW308_SAML11 CW308_EFM32TG11B CWLITEARM CWLITEXMEGA CWNANO CWHUSKY CW308_K82F \
     CW308_PSOC62 CW308_IMXRT1062 CW308_FE310 CW308_EFR32MG21A CW308_EFM32GG11 CW308_STM32L5 CW308_NEORV32\
-    CW308_SAM4S CW305_IBEX
+    CW312_SAM4S CW305_IBEX CW312_IBEX
 
 define KNOWN_PLATFORMS
 
@@ -24,7 +24,7 @@ define KNOWN_PLATFORMS
 +-------------------------------------------------------+
 | CWNANO        | CW-Lite Nano (STM32F0_NANO)           |
 +-------------------------------------------------------+
-| CWHUSKY       | CW-Husky (Alias for CW308_SAM4L)      |
+| CWHUSKY       | CW-Husky (Alias for CW312_SAM4S)      |
 +-------------------------------------------------------+
 +=======================================================+
 | AVR/XMEGA Targets (8-Bit RISC)                        |
@@ -50,7 +50,7 @@ define KNOWN_PLATFORMS
 +-------------------------------------------------------+
 | CWNANO        | CW-Lite Nano (STM32F0_NANO)           |
 +-------------------------------------------------------+
-| CWHUSKY       | CW-Husky (Alias for CW308_SAM4L)      |
+| CWHUSKY       | CW-Husky (Alias for CW312_SAM4S)      |
 +-------------------------------------------------------+
 | CW308_STM32F0 | CW308T-STM32F0 (ST Micro STM32F0)     |
 +-------------------------------------------------------+
@@ -102,7 +102,7 @@ define KNOWN_PLATFORMS
 +-------------------------------------------------------+
 | CW308_STM32L5 | CW308T-STM32L5HWC (ST Micro STM32L562)|
 +-------------------------------------------------------+
-| CW308_SAM4S   | CW308T-SAM4S (Microchip SAM4S)        |
+| CW312_SAM4S   | CW308T-SAM4S (Microchip SAM4S)        |
 +-------------------------------------------------------+
 +=======================================================+
 + Other 32-bit Architecture                             |
@@ -118,7 +118,10 @@ define KNOWN_PLATFORMS
 | CW308_NEORV32 | CW308/CW312-iCE40 with neorv32        |
 |               |   (RISC-V) soft-core processor.       |
 +---------------|---------------------------------------+
-| CW305_IBEX    | CW305 or CW312-A35 with Ibex          |
+| CW305_IBEX    | CW305 with Ibex                       |
+|               |   (RISC-V) soft-core processor.       |
++---------------|---------------------------------------+
+| CW312_IBEX    | CW312-A35 with Ibex                   |
 |               |   (RISC-V) soft-core processor.       |
 +---------------|---------------------------------------+
 
@@ -283,7 +286,11 @@ endif
   else ifeq ($(PLATFORM),CW308_NEORV32)
   HAL = neorv32
   PLTNAME = iCE40 Target with neorv softcore
-  else ifeq ($(PLATFORM), CW308_SAM4S)
+  else ifeq ($(PLATFORM), CW308_SAM4S)  # CW308_SAM4S is deprecated, use CW312_SAM4S instead.
+  HAL = sam4s
+  PLTNAME = Microchip SAM4S
+  EXTRAPATH=
+  else ifeq ($(PLATFORM), CW312_SAM4S)
   HAL = sam4s
   PLTNAME = Microchip SAM4S
   EXTRAPATH=
@@ -292,6 +299,10 @@ endif
     PLTNAME = CW-Husky Microchip SAM4S
   EXTRAPATH=
   else ifeq ($(PLATFORM), CW305_IBEX)
+    HAL = ibex
+    PLTNAME = CW305 or CW312-A35 with Ibex softcore
+  EXTRAPATH=
+  else ifeq ($(PLATFORM), CW312_IBEX)
     HAL = ibex
     PLTNAME = CW305 or CW312-A35 with Ibex softcore
   EXTRAPATH=
