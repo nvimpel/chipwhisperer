@@ -283,7 +283,7 @@ won't be present.
 
 After shorting the pins or pressing the erase button, unplug and replug the USB connector.
 
-See {doc}`../firmware` for more information on erasing and re-programming ChipWhisperer-Husky firmware.
+Then, see {ref}`programming-new-firmware` for the next step to re-program ChipWhisperer-Husky firmware.
 
 
 ### Advanced Features

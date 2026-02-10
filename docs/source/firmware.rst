@@ -132,21 +132,25 @@ upgrading a ChipWhisperer-Lite::
 
 If you don't see the "Resetting..." line, you'll need to power cycle your ChipWhisperer.
 
+.. _programming-new-firmware:
 ************************
 Programming New Firmware
 ************************
 
-If you've accidentally erased the firmware on your ChipWhisperer,
+If you've erased the firmware on your ChipWhisperer (either
+accidentally or on purpose, via the "erase" button or jumper),
 the best way to flash new firmware is to use ChipWhisperer's
 :code:`program_sam_firmware()` function. You will need
 to specify the device you are upgrading from the following list:
 
-  * 'cwlite'
-  * 'cw1200'
-  * 'cwnano'
-  * 'cwhusky'
-  * 'cwbergen'
-  * 'cw305'
+* 'cwlite'
+* 'cw1200'
+* 'cwnano'
+* 'cwhusky'
+* 'cwhuskyplus'
+* 'cwbergen'
+* 'cwluna'
+* 'cw305'
 
 For example, to flash new firmware to a CW305::
 
