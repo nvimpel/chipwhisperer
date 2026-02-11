@@ -144,9 +144,18 @@ testData = [
     ('max',     0,          'ADCramp',  'max',      True,       1,      12, False,  1,      0,      3,      'ADCfast'),
     ('max',     0,          'ADCramp',  'over1',    True,       1,      12, False,  1,      0,      1,      'ADCover1'),
     ('max',     0,          'ADCramp',  'over2',    True,       1,      12, False,  1,      0,      1,      'ADCover2'),
-    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast'),
-    ('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
-    ('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
+    ('max',     0,          'ADCramp',  265e6,      True,       1,      12, False,  1,      0,      1,      'ADC_265'),
+    ('max',     0,          'ADCramp',  270e6,      True,       1,      12, False,  1,      0,      1,      'ADC_270'),
+    ('max',     0,          'ADCramp',  275e6,      True,       1,      12, False,  1,      0,      1,      'ADC_275'),
+    ('max',     0,          'ADCalt',   7.37e6,     True,       1,      12, False,  1,      0,      3,      'ADCaltslow'),
+    ('max',     0,          'ADCalt',   150e6,      True,       1,      12, False,  1,      0,      3,      'ADCalt150')
+    # NB: for ADCalt testing, we stop short of the maximum frequency, because on HuskyPlus, the extreme toggling rate
+    # of the ADC data lines often leads to voltage rails exceeding their recommended limits (by a tiny amount, but still).
+    # Unsure whether it's the ADS4128 or the FPGA that's responsible, but the violations occur *even if the scope is kept
+    # idle* (i.e. no capturing of the ADC data).
+    #('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltmax'),
+    #('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
+    #('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
 ]
 
 testTargetData = [
@@ -188,22 +197,39 @@ def test_fw_version():
     common_fw_version_check(scope)
 
 @pytest.fixture(autouse=True)
-def xadc_check(xadc, log):
+def xadc_check(log):
     # runs before test:
     #...
     yield
+
     # runs after test:
-    if xadc:
-        #print(' temp=%4.1f, XADC=%s' % (scope.XADC.temp, scope.XADC.status), end='')
-        print(' temp=%4.1f ' % scope.XADC.temp, end='')
-        if scope.XADC.status != 'good':
-            print(scope.XADC.status, end='')
-            if 'VCCint' in scope.XADC.status: 
-                print(' vccint=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccint, scope.XADC.get_vcc('vccint', 'min'),  scope.XADC.get_vcc('vccint', 'max')), end='')
-            if 'VCCbram' in scope.XADC.status: 
-                print(' vccbram=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccbram, scope.XADC.get_vcc('vccbram', 'min'),  scope.XADC.get_vcc('vccbram', 'max')), end='')
-            if 'VCCaux' in scope.XADC.status: 
-                print(' vccaux=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccaux, scope.XADC.get_vcc('vccaux', 'min'),  scope.XADC.get_vcc('vccaux', 'max')), end='')
+
+    # useful to diagnose disappearing voltage margins:
+    #rail = 'vccint'
+    #lower = scope.XADC.get_vcc_limit(rail, 'lower')
+    #upper = scope.XADC.get_vcc_limit(rail, 'upper')
+    #vmin = scope.XADC.get_vcc(rail, 'min')
+    #vmax = scope.XADC.get_vcc(rail, 'max')
+    #margin = min(upper-vmax, vmin-lower)
+    #print(' MARGIN: %.3f' % margin, end='')
+
+
+    #print()
+    #print(scope.XADC.status)
+    #print(scope.XADC.vcc_limits())
+    #print()
+
+    #print(' temp=%4.1f, XADC=%s' % (scope.XADC.temp, scope.XADC.status), end='')
+    #print(' temp=%4.1f ' % scope.XADC.temp, end='')
+    if scope.XADC.status != 'good':
+        print(' ** WARNING: XADC errors: %s' % scope.XADC.status, end='')
+        if 'VCCint' in scope.XADC.status: 
+            print(' vccint=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccint, scope.XADC.get_vcc('vccint', 'min'),  scope.XADC.get_vcc('vccint', 'max')), end='')
+        if 'VCCbram' in scope.XADC.status: 
+            print(' vccbram=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccbram, scope.XADC.get_vcc('vccbram', 'min'),  scope.XADC.get_vcc('vccbram', 'max')), end='')
+        if 'VCCaux' in scope.XADC.status: 
+            print(' vccaux=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccaux, scope.XADC.get_vcc('vccaux', 'min'),  scope.XADC.get_vcc('vccaux', 'max')), end='')
+
     if log:
         logfile = open(logfilename, 'a')
         logfile.write('%4.1f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f\n' % 
@@ -235,6 +261,7 @@ def test_reg_rw(address, nbytes, reps, desc):
         read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
         assert read_data == data, "rep %d: expected %0x, got %0x; this is a highly unusual error which indicates inability to communicate with the FPGA" % (i, int.from_bytes(data, byteorder='little'), int.from_bytes(read_data, byteorder='little'))
 
+
 @pytest.mark.skipif(not target_attached, reason='No target detected')
 def test_target_power():
     #scope.io.cwe.setTargetPowerSlew(fastmode=True) # will fail if this is commented out
@@ -244,6 +271,7 @@ def test_target_power():
         scope.io.target_pwr = 1
         time.sleep(0.2)
     common_xadc_check(scope, False, "failure indicates that the target soft-power-up logic needs adjustment, this needs follow-up")
+
 
 @pytest.mark.parametrize("samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, segments, segment_cycles, reps, desc", testData)
 def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, segments, segment_cycles, reps, desc):
@@ -297,8 +325,6 @@ def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, 
         assert errors == 0, "%d errors (rep %d); First error: %d; scope.adc.errors: %s" % (errors, i, first_error, scope.adc.errors)
         assert scope.adc.errors == False
     scope.sc._fast_fifo_read_enable = True # return to default
-
-
 
 
 @pytest.mark.parametrize("samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, threshold, seg_size, check, segments, segment_cycles, desc", testTargetData)
@@ -579,7 +605,7 @@ def test_sad_timeouts(stress):
     scope.SAD.always_armed = False
 
 def test_xadc():
-    common_xadc_check(scope, True, 'Final XADC check, it would be odd for this to trip now.')
+    common_xadc_check(scope, True, 'Final XADC check, it would be odd for this to trip now (unless XADC errors were noted during earlier tests which passed).')
 
 def test_finish():
     # just restore some defaults:
