@@ -27,6 +27,7 @@
 import chipwhisperer as cw
 import pytest
 import time
+from datetime import datetime
 import numpy as np
 import random
 import os
@@ -138,6 +139,7 @@ if test_platform != 'cw305':
     resp = target.read()
     if resp == '':
         target_attached = False
+        print('no target?!?')
     else:
         target_attached = True
 else:
@@ -147,7 +149,8 @@ else:
 if target_attached:
     target.simpleserial_write('i', b'')
     time.sleep(0.1)
-    if target.read().split('\n')[0] == 'ChipWhisperer simpleserial-trace, compiled Mar 14 2022, 21:06:34':
+    resp = target.read().split('\n')[0]
+    if resp in ['ChipWhisperer simpleserial-trace, compiled Mar 14 2022, 21:06:34', 'ChipWhisperer simpleserial-trace, compiled Sep  2 2022, 13:55:43']:
         trace_fw = True
         scope.trace.target = target
         trace = scope.trace
@@ -469,7 +472,7 @@ def test_fw_version():
     common_fw_version_check(scope)
 
 @pytest.fixture(autouse=True)
-def xadc_check(xadc, log):
+def xadc_check(xadc, log, timeout=120):
     # runs before test:
     #...
     yield
@@ -494,6 +497,29 @@ def xadc_check(xadc, log):
                  scope.XADC.vccaux, scope.XADC.get_vcc('vccaux', 'min'),  scope.XADC.get_vcc('vccaux', 'max')
                 ))
         logfile.close()
+
+    # if an error occured, cool down until it can actually be cleared
+    if scope.XADC.status != 'good':
+        if verbose: print('XADC errors, pausing to cool down...', end='')
+        oldclock = scope.clock.clkgen_freq
+        oldmul = scope.clock.adc_mul
+        scope.clock.clkgen_freq = 5e6
+        scope.clock.adc_mul = 1
+
+        scope.glitch.enabled = False
+        start = datetime.now()
+        while scope.XADC.status != 'good':
+            scope.errors.clear()
+            time.sleep(5)
+            if verbose: print('.', end='')
+            if (datetime.now() - start).total_seconds() > timeout:
+                print(' XADC cool-down timed out! aborting... subsequent tests may fail as a result')
+                break
+        if verbose: print(' ok!')
+        scope.clock.clkgen_freq = oldclock
+        scope.clock.adc_mul = oldmul
+        scope.glitch.enabled = True
+
     scope.XADC.status = 0 # clear any errors after each test
 
 @pytest.fixture(autouse=True)
@@ -895,7 +921,7 @@ def test_missing_glitch_sweep_offset(fulltest, clock, vco, span, width, num_glit
     target.baud = 38400 * clock / 1e6 / 7.37
     reset_target(scope)
 
-    scope.clock.pll.update_fpga_vco(vco)
+    scope.clock.fpga_vco_freq = vco
     setup_glitch(scope, 0, width, oversamp)
     scope.glitch.num_glitches = num_glitches
     scope.glitch.trigger_src = 'ext_single'
@@ -1000,7 +1026,7 @@ def test_glitch_output_doubles(fulltest, reps, clock, vco, glitches, oversamp, s
     assert scope.clock.adc_freq == clock
 
     setup_glitch(scope, 0, 0, oversamp)
-    scope.clock.pll.update_fpga_vco(vco)
+    scope.clock.fpga_vco_freq = vco
     scope.glitch.repeat = glitches
     failing_offsets = []
     maxwidth = 0
@@ -1023,7 +1049,7 @@ def test_glitch_output_doubles(fulltest, reps, clock, vco, glitches, oversamp, s
                     maxwidth = golen
 
     assert failing_offsets == [], "Max width seen: %d; failing offsets: %s" % (maxwidth, failing_offsets)
-    scope.clock.pll.update_fpga_vco(600e6)
+    scope.clock.fpga_vco_freq = 600e6
     scope.glitch.enabled = False
     scope.LA.enabled = False
 
@@ -1894,6 +1920,7 @@ def test_pll(fulltest, freq, adc_mul, xtal, oversample, tolerance, reps, desc):
                 scope.clock.recal_pll()
             else:
                 scope.clock.reset_adc()
+            time.sleep(0.5)
             assert scope.clock.pll.pll_locked, 'failed on rep %d' % i
             assert scope.LA.locked, 'failed on rep %d' % i
             delta = get_adc_clock_phase(refclk)
