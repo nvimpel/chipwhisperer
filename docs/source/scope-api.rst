@@ -150,6 +150,19 @@ Module to control glitching. A block diagram of the module is shown below:
 
 .. note:: This diagram is slightly inaccurate because the "offset" parameter also affects the glitch output in "enable_only" mode.
 
+:code:`scope.glitch` controls the shape of the glitch for **both voltage and
+clock glitching**. Whether this glitch goes out into the outside world as a
+voltage glitch or a clock glitch depends on :class:`scope.io
+<chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra.GPIOSettings>`
+settings (as illustrated by the figure above).
+
+This also means that some :code:`scope.glitch` settings are sensible for voltage
+glitching but not clock glitching, or vice-versa.
+
+Take the time to go through our 
+`glitch notebooks <https://github.com/newaetech/chipwhisperer-jupyter/tree/master/courses/fault101>`_
+to learn how to glitch with your ChipWhisperer device.
+
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
     :members:
     :exclude-members: enabled, mmcm_locked, phase_shift_steps, actual_num_glitches, num_glitches
