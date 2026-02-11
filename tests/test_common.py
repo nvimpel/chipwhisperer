@@ -63,7 +63,7 @@ def setup_glitch(scope, offset, width, oversamp):
     # set up glitch:
     scope.glitch.enabled = True
     scope.glitch.clk_src = 'pll'
-    scope.clock.pll.update_fpga_vco(600e6)
+    scope.clock.fpga_vco_freq = 600e6
     scope.glitch.repeat = 1
     scope.glitch.output = 'glitch_only'
     scope.glitch.trigger_src = 'manual'

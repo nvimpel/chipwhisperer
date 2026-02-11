@@ -895,7 +895,7 @@ def test_missing_glitch_sweep_offset(fulltest, clock, vco, span, width, num_glit
     target.baud = 38400 * clock / 1e6 / 7.37
     reset_target(scope)
 
-    scope.clock.pll.update_fpga_vco(vco)
+    scope.clock.fpga_vco_freq = vco
     setup_glitch(scope, 0, width, oversamp)
     scope.glitch.num_glitches = num_glitches
     scope.glitch.trigger_src = 'ext_single'
@@ -1000,7 +1000,7 @@ def test_glitch_output_doubles(fulltest, reps, clock, vco, glitches, oversamp, s
     assert scope.clock.adc_freq == clock
 
     setup_glitch(scope, 0, 0, oversamp)
-    scope.clock.pll.update_fpga_vco(vco)
+    scope.clock.fpga_vco_freq = vco
     scope.glitch.repeat = glitches
     failing_offsets = []
     maxwidth = 0
@@ -1023,7 +1023,7 @@ def test_glitch_output_doubles(fulltest, reps, clock, vco, glitches, oversamp, s
                     maxwidth = golen
 
     assert failing_offsets == [], "Max width seen: %d; failing offsets: %s" % (maxwidth, failing_offsets)
-    scope.clock.pll.update_fpga_vco(600e6)
+    scope.clock.fpga_vco_freq = 600e6
     scope.glitch.enabled = False
     scope.LA.enabled = False
 
