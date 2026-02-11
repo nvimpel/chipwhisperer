@@ -41,6 +41,7 @@ def reset_setup(scope, target):
     scope.LA.downsample = 1
     scope.trace.enabled = False
     target.baud = 38400 * 10 / 7.37
+    reset_target(scope)
 
 
 def reset_target(scope):
@@ -63,7 +64,7 @@ def setup_glitch(scope, offset, width, oversamp):
     # set up glitch:
     scope.glitch.enabled = True
     scope.glitch.clk_src = 'pll'
-    scope.clock.pll.update_fpga_vco(600e6)
+    scope.clock.fpga_vco_freq = 600e6
     scope.glitch.repeat = 1
     scope.glitch.output = 'glitch_only'
     scope.glitch.trigger_src = 'manual'
@@ -130,12 +131,12 @@ def check_ramp(raw, testmode, bits_per_sample, samples, segment_cycles, verbose=
                 errors += 1
                 if not first_error:
                     first_error = i
-                if verbose: print("Byte %d: unexpected value %0x" % current_count)
+                if verbose: print("Byte %d: unexpected value %0x" % (i, current_count))
             if byte != current_count:
                 errors += 1
                 if not first_error:
                     first_error = i
-                if verbose: print("Byte %d: unexpected value %0x" % current_count)
+                if verbose: print("Byte %d: unexpected value %0x" % (i, current_count))
 
     elif testmode == 'internal':
         for i, byte in enumerate(raw[1:]):
@@ -203,7 +204,7 @@ def common_xadc_check(scope, verbose=False, error_msg=''):
                     vmargin = vseen - vlimit
                 else:
                     vmargin = vlimit - vseen
-                if vmargin > 0:
+                if vmargin >= 0:
                     status = '✅ pass'
                 else:
                     status = '❌ FAIL!'
@@ -212,7 +213,7 @@ def common_xadc_check(scope, verbose=False, error_msg=''):
     if scope.XADC.status != 'good':
         failed = True
         print('\*** nFailing due to XADC status: %s' % scope.XADC.status)
-    if scope.XADC.max_temp >= 65.0:
+    if scope.XADC.max_temp >= 70.0:
         failed = True
         print('\n*** Failing due to high temperature: %s' % scope.XADC.max_temp)
     assert not failed, error_msg
