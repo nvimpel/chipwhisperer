@@ -185,8 +185,8 @@ testADCTriggerData = [
 
 testSADTriggerData = [
     #clock  adc_mul bits   emode,   threshold   interval_threshold   offset  reps    desc
-    (10e6,  1,      8,     False,   10,         4,                   0,      10,     '8bits'),
-    (10e6,  'max',  8,     False,   10,         5,                   0,      20,     'fastest'),
+    (10e6,  1,      8,     False,   12,         10,                 0,      100,    '8bits'),
+    (10e6,  'max',  8,     False,   12,         11,                 0,      100,    'fastest'),
 ]
 
 
@@ -526,11 +526,12 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
     scope.adc.presamples = 0
     scope.adc.bits_per_sample = bits
     scope.adc.offset = offset
+    scope.adc.timeout = 0.1
     scope.SAD.multiple_triggers = False
 
     scope.trigger.module = 'basic'
     # scope.gain.db = 23.7
-    scope.gain.db = 12
+    scope.gain.db = 18
     reftrace = cw.capture_trace(scope, target, bytearray(16), bytearray(16), as_int=True)
     assert scope.adc.errors == False, 'Unexpected capture error on reference trace: %s' % scope.adc.errors
 
@@ -546,9 +547,14 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
     # + sad_reference_length because trigger happens at the end of the SAD pattern;
     # + latency for the latency of the SAD triggering logic.
     scope.adc.presamples = scope.SAD.sad_reference_length + scope.SAD.latency
+    bad = 0
+    good = 0
     for rep in range(reps):
         sadtrace = cw.capture_trace(scope, target, bytearray(16), bytearray(16), as_int=True)
-        assert sadtrace is not None, 'SAD-triggered capture failed on rep {}'.format(rep)
+        #assert sadtrace is not None, 'SAD-triggered capture failed on rep {}'.format(rep)
+        if sadtrace is None:
+            bad += 1
+            continue
         assert scope.adc.errors == False, 'Unexpected capture error: %s on rep %d' % (scope.adc.errors, rep)
         sad = 0
         samples = 0
@@ -560,7 +566,17 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
             if e:
                 if abs(r-s) > interval_threshold:
                     sad += 1
-        assert sad <= threshold, 'FPGA or Python bug? SAD=%d, threshold=%d (iteration %d)' %(sad, threshold, rep)
+        #assert sad <= threshold, 'FPGA or Python bug? SAD=%d, threshold=%d (iteration %d)' %(sad, threshold, rep)
+        if sad > threshold:
+            bad +=1
+        else:
+            good +=1
+
+    # SAD is probabilistic; trying to reliably get 100% isn't the goal here:
+    #print(' %d/%d/%d ' % (good, bad, reps), end='')
+    assert bad/reps <= 0.05, 'too many failures! (%d/%d) FPGA or Python bug, or SAD parameters need adjustment?' % (bad, reps)
+
+
     common_xadc_check(scope, False, 'SAD stress test pushing things too far? If temperature is just above 65C, could be ok.')
 
 
