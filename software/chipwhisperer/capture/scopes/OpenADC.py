@@ -655,11 +655,8 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         """
         if not self._is_husky:
             raise ValueError("For CW-Husky only.")
-        self.fpga_reg_write('RESET', [1])
-        self.fpga_reg_write('RESET', [0])
-        # TODO-temporary: when Husky bitfiles are fixed, replace RESET writes above with:
-        #self.sc._setReset(True)
-        #self.sc._setReset(False)
+        self.sc._setReset(True)
+        self.sc._setReset(False)
         self.adc._clear_caches()
         self.sc._clear_caches()
         self.gain._clear_caches()
@@ -696,9 +693,8 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         cwtype = self._getCWType()
         if cwtype in ["cwhusky", "cwhuskyplus"]:
             self.sc._is_husky = True
-            # TODO-temporary: when Husky bitfiles are fixed, RESET writes below won't be necessary, can use _setReset() instead
-            self.fpga_reg_write('RESET', [1])
-            self.fpga_reg_write('RESET', [0])
+            self.sc._setReset(True)
+            self.sc._setReset(False)
             self.sc._setMaxSamples() # TODO: won't be needed when _setReset can be called
         else:
             self.sc._setReset(True)
