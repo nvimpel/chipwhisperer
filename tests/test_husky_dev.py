@@ -455,6 +455,33 @@ testPLLData = [
 ]
 
 
+testManualGlitchCountData = [
+    #clock  glitches    desc
+    (10e6,  10,         '10_glitches_slow'),
+    (50e6,  10,         '10_glitches_mid_SLOW'),
+    #('max', 10,         '10_glitches_max'), # seems that manual_trigger() is not reliable with a fast clock rate?
+]
+
+testTriggeredGlitchCountData = [
+    #clock  glitches    desc
+    (10e6,  10,         '10_glitches_slow'),
+    (100e6, 10,         '10_glitches_mid_SLOW'),
+    ('max', 10,         '10_glitches_max'),
+    ('max', 200,        '200_glitches_max_SLOW'),
+]
+
+testGlitchCountPhasesData = [
+    #clock  reps    step_size   desc
+    (10e6,  3,      50,         'sweep_phase_slow_quick'),
+    ('max', 3,      5,          'sweep_phase_max_quick'),
+
+    (10e6,  10,     1,          'sweep_phase_slow_SLOW'),
+    (100e6, 10,     1,          'sweep_phase_slow_SLOW'),
+    ('max', 10,     1,          'sweep_phase_max_SLOW'),
+]
+
+
+
 def test_fpga_version():
     common_fpga_version_check(scope)
 
@@ -1980,6 +2007,131 @@ def get_adc_clock_phase(refclk='target'):
             time.sleep(0.5)
             count += 1
     return adc_ref_delta
+
+
+@pytest.mark.parametrize("clock, glitches, desc", testManualGlitchCountData)
+def test_manual_glitch_counter(fulltest, clock, glitches, desc):
+    if not fulltest and 'SLOW' in desc:
+        pytest.skip("use --fulltest to run")
+        return None
+    if clock == 'max':
+        clock = MAXCLOCK
+    reset_setup(scope,target)
+    scope.default_setup(verbose=False)
+    glitch_count_setup(clock)
+
+    scope.glitch.num_glitches = 1
+    scope.glitch.trigger_src = 'manual'
+    assert scope.glitch.mmcm_locked
+
+    for _ in range(glitches):
+        check_xadc() # practice has shown that this is the good place to do this check
+        scope.glitch.manual_trigger()
+    assert scope.glitch.actual_num_glitches == glitches
+
+    scope.glitch.reset_glitch_counter()
+    assert scope.glitch.actual_num_glitches == 0
+
+
+@pytest.mark.parametrize("clock, glitches, desc", testTriggeredGlitchCountData)
+def test_triggered_glitch_counter(fulltest, clock, glitches, desc):
+    if not fulltest and 'SLOW' in desc:
+        pytest.skip("use --fulltest to run")
+        return None
+    if clock == 'max':
+        clock = MAXCLOCK
+    reset_setup(scope,target)
+    scope.default_setup(verbose=False)
+    glitch_count_setup(clock)
+
+    scope.glitch.num_glitches = 1
+    assert scope.glitch.mmcm_locked
+
+    glitch_counter_setup_useriod7()
+    for _ in range(glitches):
+        check_xadc() # practice has shown that this is the good place to do this check
+        t = capture_trace(lambda: toggle_userio_d7())
+    assert scope.glitch.actual_num_glitches == glitches
+    scope.glitch.reset_glitch_counter()
+
+
+@pytest.mark.parametrize("clock, reps, step_size, desc", testGlitchCountPhasesData)
+def test_glitch_counter_phases(fulltest, clock, reps, step_size, desc):
+    if not fulltest and 'SLOW' in desc:
+        pytest.skip("use --fulltest to run")
+        return None
+    if clock == 'max':
+        clock = MAXCLOCK
+    glitch_count_setup(clock)
+    scope.glitch.reset_glitch_counter()
+    glitch_counter_setup_useriod7()
+    for i,offset in enumerate(range(0, scope.glitch.phase_shift_steps, step_size)):
+        scope.glitch.reset_glitch_counter()
+        for r in range(reps):
+            check_xadc() # practice has shown that this is the good place to do this check
+            scope.glitch.offset = offset
+            t = capture_trace(lambda: toggle_userio_d7())
+        assert scope.glitch.actual_num_glitches == reps, 'ERROR on rep=%d, offset=%d: got %d glitches (expected %d)' % (r, offset, scope.glitch.actual_num_glitches, reps)
+
+def glitch_counter_setup_useriod7():
+    # using USERIO D7 because nothing should be connected to it (no contention from target), but let's test that:
+    scope.userio.pins[7].direction = 'output'
+    drive = 0
+    for _ in range(10):
+        scope.userio.pins[7].drive_data = drive
+        assert scope.userio.pins[7].status == drive, 'Not reading back what we drive on USERIO D7, is there contention? This test needs USERIO D7 to not be externally driven.'
+        drive = not drive
+    scope.userio.pins[7].drive_data = 0
+    scope.trigger.triggers = 'userio_d7'
+
+
+def toggle_userio_d7():
+    scope.userio.pins[7].drive_data = 1
+    scope.userio.pins[7].drive_data = 0
+
+def capture_trace(sendcommand, as_int=False):
+    scope.arm()
+    sendcommand()
+    ret = scope.capture()
+    if ret:
+        print("WARNING: Timeout happened during capture")
+        return None
+    wave = scope.get_last_trace(as_int=as_int)
+    return wave
+
+def glitch_count_setup(clock):
+    scope.clock.adc_mul = 1
+    scope.clock.clkgen_src = 'system'
+    scope.clock.clkgen_freq = clock
+    scope.glitch.enabled = True
+    scope.glitch.num_glitches = 1
+    scope.glitch.clk_src = 'pll'
+    scope.glitch.trigger_src = 'ext_single'
+    scope.glitch.ext_offset = 0
+    scope.glitch.repeat = 1
+    scope.glitch.output = 'enable_only'
+    scope.io.glitch_hp = False
+    scope.io.glitch_lp = False
+    scope.io.glitch_trig_mcx = 'glitch'
+    scope.trigger.module = 'basic'
+    scope.adc.clip_errors_disabled = True
+    scope.adc.lo_gain_errors_disabled = True
+    scope.adc.samples = 100
+    scope.adc.timeout = 0.1
+
+def check_xadc():
+    if scope.XADC.status != 'good':
+        print(' XADC errors, pausing to cool down...', end='')
+        oldclock = scope.clock.clkgen_freq
+        setclock(5e6)
+        scope.glitch.enabled = False
+        while scope.XADC.status != 'good':
+            scope.errors.clear()
+            time.sleep(5)
+            print('.', end='')
+        print(' ok!')
+        scope.clock.clkgen_freq = oldclock
+        scope.glitch.enabled = True
 
 
 def test_xadc():
