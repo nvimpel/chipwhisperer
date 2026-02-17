@@ -696,6 +696,8 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.sc._setReset(True)
             self.sc._setReset(False)
             self.sc._setMaxSamples() # TODO: won't be needed when _setReset can be called
+            if cwtype == "cwhuskyplus":
+                self.sc._is_husky_plus = True
         else:
             self.sc._setReset(True)
             self.sc._setReset(False)

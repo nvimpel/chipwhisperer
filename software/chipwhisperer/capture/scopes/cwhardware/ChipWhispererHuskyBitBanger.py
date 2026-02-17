@@ -834,10 +834,12 @@ class BitBanger (util.DisableNewAttr):
 
         * USERIO_D[0-7]
         * USERIO_CK
+        * disabled
+
+        On Husky Plus, the following pins on the 20-pin target header can also be used:
         * TIO[1-4]
         * target_pwr
         * nrst
-        * disabled
 
         Note that bit-banging behaviour is different when 'target_pwr' or 'nrst' is chosen
         as the data pin:
@@ -857,6 +859,8 @@ class BitBanger (util.DisableNewAttr):
 
     @data_pin.setter
     def data_pin(self, pin):
+        if not self.oa._is_husky_plus and not (('USERIO' in pin) or (pin == 'disabled')):
+            raise ValueError('The use of this pin for bitbanger data is only supported on Husky Plus.')
         if pin in self.PINS.keys():
             value = self.PINS[pin]
         else:
@@ -876,8 +880,10 @@ class BitBanger (util.DisableNewAttr):
 
         * USERIO_D[0-7]
         * USERIO_CK
-        * TIO[1-4]
         * disabled
+
+        On Husky Plus, the following pins on the 20-pin target header can also be used:
+        * TIO[1-4]
 
         """
 
@@ -892,6 +898,8 @@ class BitBanger (util.DisableNewAttr):
 
     @clock_pin.setter
     def clock_pin(self, pin):
+        if not self.oa._is_husky_plus and not (('USERIO' in pin) or (pin == 'disabled')):
+            raise ValueError('The use of this pin for bitbanger clock is only supported on Husky Plus.')
         if pin in self.PINS.keys():
             value = self.PINS[pin]
         else:
