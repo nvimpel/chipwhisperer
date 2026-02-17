@@ -729,15 +729,16 @@ class USERIOSettings(util.DisableNewAttr):
 
     # fpga_mode = 5:
     fpga_mode_definitions[5] = ['clockglitch debug2', 
-                                 ['glitch_done_count[1]',
-                                  'glitch_done_count[0]',
-                                  'glitch_enable',
-                                  'glitchclk',
-                                  'glitch_trigger',
-                                  'unused',
-                                  'sourceclk',
+                                 ['unused',
                                   'exttrigger',
-                                  'unused']]
+                                  'sourceclk',
+                                  'unused',
+                                  'glitch_trigger',
+                                  'glitchclk',
+                                  'glitch_enable',
+                                  'glitch_done_count[0]',
+                                  'glitch_done_count[1]']]
+
 
     # fpga_mode = 6:
     fpga_mode_definitions[6] = ['usb debug1', 
