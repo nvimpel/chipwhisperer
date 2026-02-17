@@ -709,7 +709,7 @@ class USERIOSettings(util.DisableNewAttr):
                                   'trigger_capture',
                                   'glitch_enable',
                                   'glitchclk',
-                                  'glitch_mmcm2_clk_out',
+                                  'unused',
                                   'glitch_mmcm1_clk_out',
                                   'xadc_error_flag',
                                   'unused',
@@ -734,7 +734,7 @@ class USERIOSettings(util.DisableNewAttr):
                                   'glitch_enable',
                                   'glitchclk',
                                   'glitch_trigger',
-                                  'glitch_mmcm1_clk_out',
+                                  'unused',
                                   'sourceclk',
                                   'exttrigger',
                                   'unused']]
