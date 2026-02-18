@@ -82,7 +82,7 @@ class TraceWhisperer(util.DisableNewAttr):
     longsync = [255, 255, 255, 127]
     shortsync = [255, 127]
 
-    def __init__(self, target, scope, husky=False, defines_files=None, bs='', force_bitfile=False, trace_reg_select=None, main_reg_select=None):
+    def __init__(self, target, scope, husky=False, huskyplus=False, defines_files=None, bs='', force_bitfile=False, trace_reg_select=None, main_reg_select=None):
         """
         Args:
             target: SimpleSerial target object
@@ -102,8 +102,14 @@ class TraceWhisperer(util.DisableNewAttr):
         self.expected_verilog_defines = 131
         self.swo_mode = False
         self._scope = scope
+        self._is_husky = False
+        self._is_husky_plus = False
+
+        if huskyplus:
+            self._is_husky_plus = True
 
         if husky:
+            self._is_husky = True
             self.platform = 'Husky'
             self._ss = target
 
@@ -134,6 +140,11 @@ class TraceWhisperer(util.DisableNewAttr):
             self.platform = 'CW305'
             self._ss = cw.target(scope)
             self._naeusb = target._naeusb
+
+        if husky and not huskyplus:
+            self._num_rules = 2
+        else:
+            self._num_rules = 8
 
         self.slurp_defines(defines_files, trace_reg_select, main_reg_select)
         self.target_registers = ARM_debug_registers(self)
@@ -640,7 +651,7 @@ class TraceWhisperer(util.DisableNewAttr):
         """Sets pattern match and mask parameters.
 
         Args:
-            index: match index [0-7]
+            index: match rule index [0-7]
             pattern: list of 8-bit integers, pattern match value. Maximum size given by self.pattern_size.
                 If fewer than self.pattern_size bytes are given, the list is expanded to self.pattern_size
                 by *prepending* the required number of zeros (see usage notes below for implications of
@@ -662,6 +673,8 @@ class TraceWhisperer(util.DisableNewAttr):
         """
         # Since this also gets used by generic UART, we can't assume that word size is 8 bits.
         # Translate pattern (and mask, if provided) to bytes:
+        if index >= self._num_rules:
+            raise ValueError('This hardware supports a maximum of %d rules.' % self._num_rules)
         if len(pattern) > self.pattern_size:
             raise ValueError('pattern and mask cannot be more than %d bytes.' % self.pattern_size)
         pattern_converted = self._words2bytes(pattern)
@@ -1739,13 +1752,16 @@ class capture(util.DisableNewAttr):
             self.main.fpga_write(self.main.REG_PATTERN_TRIG_ENABLE, [0])
         else:
             if type(source) == int:
-                self.main.fpga_write(self.main.REG_SOFT_TRIG_ENABLE, [0])
-                self.main.fpga_write(self.main.REG_SOFT_TRIG_PASSTHRU, [0])
-                self.main.fpga_write(self.main.REG_PATTERN_TRIG_ENABLE, [2**source])
-                self.main.fpga_write(self.main.REG_TRIGGER_ENABLE, [1])
-                # these can be customized but let's start you off with simple default values:
-                self.main.fpga_write(self.main.REG_NUM_TRIGGERS, [1])
-                self.main.fpga_write(self.main.REG_TRIGGER_WIDTH, [16])
+                if 0 <= source < self.main._num_rules:
+                    self.main.fpga_write(self.main.REG_SOFT_TRIG_ENABLE, [0])
+                    self.main.fpga_write(self.main.REG_SOFT_TRIG_PASSTHRU, [0])
+                    self.main.fpga_write(self.main.REG_PATTERN_TRIG_ENABLE, [2**source])
+                    self.main.fpga_write(self.main.REG_TRIGGER_ENABLE, [1])
+                    # these can be customized but let's start you off with simple default values:
+                    self.main.fpga_write(self.main.REG_NUM_TRIGGERS, [1])
+                    self.main.fpga_write(self.main.REG_TRIGGER_WIDTH, [16])
+                else:
+                    raise ValueError('This hardware supports a maximum of %d rules.' % self.main._num_rules)
             else:
                 raise TypeError
 
@@ -1822,6 +1838,8 @@ class capture(util.DisableNewAttr):
     def rules_enabled(self, rules):
         raw = 0
         for rule in rules:
+            if rule >= self.main._num_rules:
+                raise ValueError('This hardware supports a maximum of %d rules.' % self.main._num_rules)
             raw += 2**rule
         self.main.fpga_write(self.main.REG_PATTERN_ENABLE, [raw])
 
@@ -2122,10 +2140,10 @@ class UARTTrigger(TraceWhisperer):
     '''
     _name = 'UART Trigger Module'
 
-    def __init__(self, scope, trace_reg_select, main_reg_select):
+    def __init__(self, scope, huskyplus, trace_reg_select, main_reg_select):
         self._baud = 0
         self._baud_margin = 0.005
-        super().__init__(husky=True, target=None, scope=scope, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
+        super().__init__(husky=True, huskyplus=huskyplus, target=None, scope=scope, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
         self.disable_newattr()
         self.trigger_source = 0
 
@@ -2307,13 +2325,13 @@ class UARTTrigger(TraceWhisperer):
 
     @trigger_source.setter
     def trigger_source(self, rule):
-        if 0 <= rule < 8:
+        if 0 <= rule < self._num_rules:
             self.fpga_write(self.REG_SOFT_TRIG_ENABLE, [0])
             self.fpga_write(self.REG_SOFT_TRIG_PASSTHRU, [0])
             self.fpga_write(self.REG_PATTERN_TRIG_ENABLE, [2**rule])
             self.fpga_write(self.REG_TRIGGER_ENABLE, [1])
         else:
-            raise ValueError
+            raise ValueError('This hardware supports a maximum of %d rules.' % self.main._num_rules)
 
     def set_pattern_match(self, index, pattern, mask=None, enable_rule=True):
         """Sets pattern match and mask parameters.  The pattern may be

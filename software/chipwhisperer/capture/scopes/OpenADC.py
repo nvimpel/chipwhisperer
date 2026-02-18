@@ -735,12 +735,16 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.XADC = XADCSettings(self.sc)
             self.LEDs = LEDSettings(self.sc)
             self.LA = LASettings(oaiface=self.sc, mmcm=self.la_mmcm, scope=self)
+            if cwtype == "cwhuskyplus":
+                self._is_husky_plus = True
+                self.LA._is_husky_plus = True
+                self.clock.pll._is_husky_plus = True
             if TraceWhisperer:
                 try:
                     trace_reg_select = self.sc._address_str2int('TW_TRACE_REG_SELECT')
                     main_reg_select = self.sc._address_str2int('TW_MAIN_REG_SELECT')
-                    self.trace = TraceWhisperer(husky=True, target=None, scope=self, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
-                    self.UARTTrigger = UARTTrigger(scope=self, trace_reg_select=3, main_reg_select=2)
+                    self.trace = TraceWhisperer(husky=True, huskyplus=self._is_husky_plus, target=None, scope=self, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
+                    self.UARTTrigger = UARTTrigger(scope=self, huskyplus=self._is_husky_plus, trace_reg_select=3, main_reg_select=2)
                 except Exception as e:
                     scope_logger.warning("TraceWhisperer unavailable " + str(e))
             self.userio = USERIOSettings(self.sc, self.trace)
@@ -752,10 +756,6 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.gain._is_husky = True
             self.sc._is_husky = True
             self.adc.bits_per_sample = 12
-            if cwtype == "cwhuskyplus":
-                self._is_husky_plus = True
-                self.LA._is_husky_plus = True
-                self.clock.pll._is_husky_plus = True
         else:
             self.clock = ClockSettings(self.sc, hwinfo=self.hwinfo)
             self.errors = ChipWhispererSAMErrors(self._getNAEUSB())
