@@ -1375,7 +1375,12 @@ class BitBanger (util.DisableNewAttr):
 
 
     def recorded_data(self, nbytes=8, return_word=True):
-        """ TODO-doc - including bit/nibble/byte order (may need to add options for those)
+        """ Returns the data recorded by the last :class:`go()` event. The most significant bit is the last bit recorded.
+
+        Args:
+            nbytes (int): number of bytes to return
+            return_word (bool): whether to return the result as a list of 8-bit values or a single larger integer.
+
         """
         if nbytes > self.max_record*8:
             scope_logger.error('Max number of recorded bytes is %d' % self.max_record*8)
