@@ -310,7 +310,7 @@ it.
 After shorting the pins, unplug and replug the USB connector and you should
 see D2 and D9 lit dimly, indicating that the firmware has been erased.
 
-See {doc}`../firmware` for more information on erasing and re-programming ChipWhisperer-Lite firmware.
+Then, see {ref}`programming-new-firmware` for the next step to re-program ChipWhisperer-Lite firmware.
 
 ![eraseexample](Images/lite-erase-jumper.jpg)
 

@@ -304,7 +304,7 @@ it.
 After shorting the pins, you should
 see no LEDs lit (the ERROR LED may be very dimly lit).
 
-See {doc}`../firmware` for more information on erasing and re-programming ChipWhisperer-Nano firmware.
+Then, see {ref}`programming-new-firmware` for the next step to re-program ChipWhisperer-Nano firmware.
 
 ---
 ## Schematic

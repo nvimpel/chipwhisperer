@@ -23,6 +23,10 @@ capture hardware to your own targets.
 
 ![cw506\_annotate1.png](Images/Cw506_annotate1.png "cw506_annotate1.png")
 
+**NOTE:** If you are translating to a voltage the same or higher than your ChipWhisperer (3.3V),
+you may need to add a pullup resistor between 3.3V and the ChipWhisperer's low speed (nRST, TIO1-4, etc)
+IO pins.
+
 ---
 
 ## Connection Routing
