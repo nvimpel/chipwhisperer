@@ -498,7 +498,7 @@ class SWDHelper(util.DisableNewAttr):
         writes CTRL/STAT. Verified to work on NewAE SAM4S and STM32F3 targets.
         May work on others too -- no promises. 
 
-        If the ID code is successfully read, it is stored in :class:`idcode`.
+        If the ID code is successfully read, it is stored in the `idcode` class property.
 
         Args:
             expected_id_code (int): expected IDCODE. Set to None to read the IDCODE without checking it.
@@ -1405,6 +1405,8 @@ class BitBanger (util.DisableNewAttr):
 
 class BitBangerPacket (util.DisableNewAttr):
     ''' Very simple class to make building bit-bang patterns easier.
+    See :class:`SWDHelper`, :class:`OneWireHelper` for usage examples.
+
     '''
     _name = 'Husky Bit-Banger Packet'
 
@@ -1436,7 +1438,7 @@ class BitBangerPacket (util.DisableNewAttr):
 
     @property 
     def num_bits(self):
-        """ Length of packet, in bits (or, more accurately: bit-banger time slots).
+        """ Length of packet, in bits (or, more accurately, bit-banger time slots).
         """
         return len(self.pattern_data)
 

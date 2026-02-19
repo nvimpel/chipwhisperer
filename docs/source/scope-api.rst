@@ -288,6 +288,9 @@ scope.bitbanger
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.SWDHelper
     :members:
 
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBangerPacket
+    :members:
+
 
 scope.XADC
 ^^^^^^^^^^
