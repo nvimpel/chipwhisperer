@@ -76,6 +76,7 @@ class OpenADCInterface(util.DisableNewAttr):
         self._stream_segment_size = 65536
         self._support_get_duration = True
         self._is_husky = False
+        self._is_husky_plus = False
         self._fast_fifo_read_enable = True
         self._fast_fifo_read_active = False
         self.hwMaxSamples = 0

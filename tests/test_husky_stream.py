@@ -46,8 +46,17 @@ else:
 if "HUSKY_TARGET_PLATFORM" in os.environ:
     test_platform = os.environ["HUSKY_TARGET_PLATFORM"]
 
+if "HUSKY_TYPE" in os.environ:
+    NAME = os.environ["HUSKY_TYPE"]
+else:
+    NAME = None
+
 print("Husky target platform {}".format(test_platform))
-scope = cw.scope(name='Husky', hw_location=hw_loc)
+if NAME:
+    scope = cw.scope(name=NAME, hw_location=hw_loc)
+else:
+    scope = cw.scope(hw_location=hw_loc)
+
 if test_platform == 'cw305':
     target = cw.target(scope, cw.targets.CW305, force=False)
 else:

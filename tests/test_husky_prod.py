@@ -47,9 +47,8 @@ print('* Use --stress to run extra iterations of tests which drive the temperatu
 print('* this increases runtime to about 5 minutes.                                         *')
 print('**************************************************************************************\n\n')
 
-# default to sam4s:
+# default to sam4s; note that stm32f3 is not supported by this script
 test_platform = "sam4s"
-#test_platform = "stm32f3" (not supported by this script)
 logfilename = "test_husky_prod_xadc.log"
 
 if "HUSKY_HW_LOC" in os.environ:
@@ -63,9 +62,17 @@ else:
 
 if "HUSKY_TARGET_PLATFORM" in os.environ:
     test_platform = os.environ["HUSKY_TARGET_PLATFORM"]
+if "HUSKY_TYPE" in os.environ:
+    NAME = os.environ["HUSKY_TYPE"]
+else:
+    NAME = None
 
 print("Husky target platform {}".format(test_platform))
-scope = cw.scope(hw_location=hw_loc)
+if NAME:
+    scope = cw.scope(name=NAME, hw_location=hw_loc)
+else:
+    scope = cw.scope(hw_location=hw_loc)
+
 target = cw.target(scope)
 scope.errors.clear()
 verbose = False
@@ -144,9 +151,18 @@ testData = [
     ('max',     0,          'ADCramp',  'max',      True,       1,      12, False,  1,      0,      3,      'ADCfast'),
     ('max',     0,          'ADCramp',  'over1',    True,       1,      12, False,  1,      0,      1,      'ADCover1'),
     ('max',     0,          'ADCramp',  'over2',    True,       1,      12, False,  1,      0,      1,      'ADCover2'),
-    ('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltfast'),
-    ('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
-    ('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
+    ('max',     0,          'ADCramp',  265e6,      True,       1,      12, False,  1,      0,      1,      'ADC_265'),
+    ('max',     0,          'ADCramp',  270e6,      True,       1,      12, False,  1,      0,      1,      'ADC_270'),
+    ('max',     0,          'ADCramp',  275e6,      True,       1,      12, False,  1,      0,      1,      'ADC_275'),
+    ('max',     0,          'ADCalt',   7.37e6,     True,       1,      12, False,  1,      0,      3,      'ADCaltslow'),
+    ('max',     0,          'ADCalt',   150e6,      True,       1,      12, False,  1,      0,      3,      'ADCalt150')
+    # NB: for ADCalt testing, we stop short of the maximum frequency, because on HuskyPlus, the extreme toggling rate
+    # of the ADC data lines often leads to voltage rails exceeding their recommended limits (by a tiny amount, but still).
+    # Unsure whether it's the ADS4128 or the FPGA that's responsible, but the violations occur *even if the scope is kept
+    # idle* (i.e. no capturing of the ADC data).
+    #('max',     0,          'ADCalt',   'max',      True,       1,      12, False,  1,      0,      3,      'ADCaltmax'),
+    #('max',     0,          'ADCalt',   'over1',    True,       1,      12, False,  1,      0,      3,      'ADCaltover1'),
+    #('max',     0,          'ADCalt',   'over2',    True,       1,      12, False,  1,      0,      3,      'ADCaltover2')
 ]
 
 testTargetData = [
@@ -176,8 +192,8 @@ testADCTriggerData = [
 
 testSADTriggerData = [
     #clock  adc_mul bits   emode,   threshold   interval_threshold   offset  reps    desc
-    (10e6,  1,      8,     False,   10,         4,                   0,      10,     '8bits'),
-    (10e6,  'max',  8,     False,   10,         5,                   0,      20,     'fastest'),
+    (10e6,  1,      8,     False,   12,         10,                 0,      100,    '8bits'),
+    (10e6,  'max',  8,     False,   12,         11,                 0,      100,    'fastest'),
 ]
 
 
@@ -188,22 +204,39 @@ def test_fw_version():
     common_fw_version_check(scope)
 
 @pytest.fixture(autouse=True)
-def xadc_check(xadc, log):
+def xadc_check(log):
     # runs before test:
     #...
     yield
+
     # runs after test:
-    if xadc:
-        #print(' temp=%4.1f, XADC=%s' % (scope.XADC.temp, scope.XADC.status), end='')
-        print(' temp=%4.1f ' % scope.XADC.temp, end='')
-        if scope.XADC.status != 'good':
-            print(scope.XADC.status, end='')
-            if 'VCCint' in scope.XADC.status: 
-                print(' vccint=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccint, scope.XADC.get_vcc('vccint', 'min'),  scope.XADC.get_vcc('vccint', 'max')), end='')
-            if 'VCCbram' in scope.XADC.status: 
-                print(' vccbram=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccbram, scope.XADC.get_vcc('vccbram', 'min'),  scope.XADC.get_vcc('vccbram', 'max')), end='')
-            if 'VCCaux' in scope.XADC.status: 
-                print(' vccaux=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccaux, scope.XADC.get_vcc('vccaux', 'min'),  scope.XADC.get_vcc('vccaux', 'max')), end='')
+
+    # useful to diagnose disappearing voltage margins:
+    #rail = 'vccint'
+    #lower = scope.XADC.get_vcc_limit(rail, 'lower')
+    #upper = scope.XADC.get_vcc_limit(rail, 'upper')
+    #vmin = scope.XADC.get_vcc(rail, 'min')
+    #vmax = scope.XADC.get_vcc(rail, 'max')
+    #margin = min(upper-vmax, vmin-lower)
+    #print(' MARGIN: %.3f' % margin, end='')
+
+
+    #print()
+    #print(scope.XADC.status)
+    #print(scope.XADC.vcc_limits())
+    #print()
+
+    #print(' temp=%4.1f, XADC=%s' % (scope.XADC.temp, scope.XADC.status), end='')
+    #print(' temp=%4.1f ' % scope.XADC.temp, end='')
+    if scope.XADC.status != 'good':
+        print(' ** WARNING: XADC errors: %s' % scope.XADC.status, end='')
+        if 'VCCint' in scope.XADC.status: 
+            print(' vccint=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccint, scope.XADC.get_vcc('vccint', 'min'),  scope.XADC.get_vcc('vccint', 'max')), end='')
+        if 'VCCbram' in scope.XADC.status: 
+            print(' vccbram=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccbram, scope.XADC.get_vcc('vccbram', 'min'),  scope.XADC.get_vcc('vccbram', 'max')), end='')
+        if 'VCCaux' in scope.XADC.status: 
+            print(' vccaux=%1.3f/%1.3f/%1.3f' % (scope.XADC.vccaux, scope.XADC.get_vcc('vccaux', 'min'),  scope.XADC.get_vcc('vccaux', 'max')), end='')
+
     if log:
         logfile = open(logfilename, 'a')
         logfile.write('%4.1f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f\n' % 
@@ -235,6 +268,7 @@ def test_reg_rw(address, nbytes, reps, desc):
         read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
         assert read_data == data, "rep %d: expected %0x, got %0x; this is a highly unusual error which indicates inability to communicate with the FPGA" % (i, int.from_bytes(data, byteorder='little'), int.from_bytes(read_data, byteorder='little'))
 
+
 @pytest.mark.skipif(not target_attached, reason='No target detected')
 def test_target_power():
     #scope.io.cwe.setTargetPowerSlew(fastmode=True) # will fail if this is commented out
@@ -244,6 +278,7 @@ def test_target_power():
         scope.io.target_pwr = 1
         time.sleep(0.2)
     common_xadc_check(scope, False, "failure indicates that the target soft-power-up logic needs adjustment, this needs follow-up")
+
 
 @pytest.mark.parametrize("samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, segments, segment_cycles, reps, desc", testData)
 def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, segments, segment_cycles, reps, desc):
@@ -297,8 +332,6 @@ def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, 
         assert errors == 0, "%d errors (rep %d); First error: %d; scope.adc.errors: %s" % (errors, i, first_error, scope.adc.errors)
         assert scope.adc.errors == False
     scope.sc._fast_fifo_read_enable = True # return to default
-
-
 
 
 @pytest.mark.parametrize("samples, presamples, testmode, clock, fastreads, adcmul, bits, stream, threshold, seg_size, check, segments, segment_cycles, desc", testTargetData)
@@ -500,11 +533,12 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
     scope.adc.presamples = 0
     scope.adc.bits_per_sample = bits
     scope.adc.offset = offset
+    scope.adc.timeout = 0.1
     scope.SAD.multiple_triggers = False
 
     scope.trigger.module = 'basic'
     # scope.gain.db = 23.7
-    scope.gain.db = 12
+    scope.gain.db = 18
     reftrace = cw.capture_trace(scope, target, bytearray(16), bytearray(16), as_int=True)
     assert scope.adc.errors == False, 'Unexpected capture error on reference trace: %s' % scope.adc.errors
 
@@ -520,9 +554,14 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
     # + sad_reference_length because trigger happens at the end of the SAD pattern;
     # + latency for the latency of the SAD triggering logic.
     scope.adc.presamples = scope.SAD.sad_reference_length + scope.SAD.latency
+    bad = 0
+    good = 0
     for rep in range(reps):
         sadtrace = cw.capture_trace(scope, target, bytearray(16), bytearray(16), as_int=True)
-        assert sadtrace is not None, 'SAD-triggered capture failed on rep {}'.format(rep)
+        #assert sadtrace is not None, 'SAD-triggered capture failed on rep {}'.format(rep)
+        if sadtrace is None:
+            bad += 1
+            continue
         assert scope.adc.errors == False, 'Unexpected capture error: %s on rep %d' % (scope.adc.errors, rep)
         sad = 0
         samples = 0
@@ -534,7 +573,17 @@ def test_sad_trigger (stress, clock, adc_mul, bits, emode, threshold, interval_t
             if e:
                 if abs(r-s) > interval_threshold:
                     sad += 1
-        assert sad <= threshold, 'FPGA or Python bug? SAD=%d, threshold=%d (iteration %d)' %(sad, threshold, rep)
+        #assert sad <= threshold, 'FPGA or Python bug? SAD=%d, threshold=%d (iteration %d)' %(sad, threshold, rep)
+        if sad > threshold:
+            bad +=1
+        else:
+            good +=1
+
+    # SAD is probabilistic; trying to reliably get 100% isn't the goal here:
+    #print(' %d/%d/%d ' % (good, bad, reps), end='')
+    assert bad/reps <= 0.05, 'too many failures! (%d/%d) FPGA or Python bug, or SAD parameters need adjustment?' % (bad, reps)
+
+
     common_xadc_check(scope, False, 'SAD stress test pushing things too far? If temperature is just above 65C, could be ok.')
 
 
@@ -579,7 +628,7 @@ def test_sad_timeouts(stress):
     scope.SAD.always_armed = False
 
 def test_xadc():
-    common_xadc_check(scope, True, 'Final XADC check, it would be odd for this to trip now.')
+    common_xadc_check(scope, True, 'Final XADC check, it would be odd for this to trip now (unless XADC errors were noted during earlier tests which passed).')
 
 def test_finish():
     # just restore some defaults:

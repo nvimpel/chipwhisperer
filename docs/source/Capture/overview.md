@@ -52,6 +52,7 @@ All differences between Husky and Husky Plus are summarized
 | Basic Trigger Inputs | TIO 1-4, nRST, **SMB** | TIO 1-4, nRST, **SMA** | TIO 1-4, nRST | TIO 4 |
 | Basic Trigger Combination | One of OR, AND, NAND | One of OR, AND, NAND | One of OR, AND, NAND | N/A |
 | Sequenced Triggers | **2 (Husky Plus: up to 4)** | N/A | N/A | N/A | N/A |
+| Hardware-Driven Bit-Banging and Triggering | **512-bit-deep bit-banging on USERIO pins (Husky Plus adds power, reset, and TIO1-4 pins)** | N/A | N/A | N/A | N/A |
 
 ---
 ## IO
@@ -67,7 +68,7 @@ All differences between Husky and Husky Plus are summarized
 | Trigger Out | **Yes** | **Yes** | No | No |
 | Programmers | STM32F UART, XMEGA PDI, AVR ISP, SWD/JTAG (via OpenOCD), SAMBA (AtSAM) | STM32F UART, XMEGA PDI, AVR ISP, SWD/JTAG (via OpenOCD), SAMBA (AtSAM) | STM32F UART, XMEGA PDI , AVR ISP, SWD/JTAG (via OpenOCD), SAMBA (AtSAM) | STM32F UART, SWD/JTAG (via OpenOCD), SAMBA (AtSAM) |
 | Power rails | 3.3V | 5V, 3.3V | 3.3V | 3.3V |
-| User IO Pins | 8 Data pins, **JTAG, SWD, Arm Trace, Generic, Logic Analyzer** | N/A | N/A | N/A |
+| User IO Pins | 8 Data pins, **JTAG, SWD, Arm Trace, Generic, Logic Analyzer, Clocks** | N/A | N/A | N/A |
 
 ---
 ## Glitch
@@ -110,7 +111,9 @@ All differences between Husky and Husky Plus are summarized
 * TraceWhisperer Support
 * Glitch resolution independent of target clock
 * 20-pin User IO header with 8 data pins
-    * Data pins can be used as GPIOs, for JTAG/SWD, Arm Trace, or as Logic Analyzer inputs
+    * Data pins can be used as GPIOs, for JTAG/SWD, Arm Trace, Logic Analyzer inputs, or user-defined clocks
+* Sequenced triggering
+* Hardware-driven bit-banging and triggering
 
 
 ## ChipWhisperer-Husky-Plus features over ChipWhisperer-Husky
@@ -120,4 +123,10 @@ All differences between Husky and Husky Plus are summarized
 * Larger logic analyzer sample buffer (65552 samples vs 16376 samples)
 * Larger TraceWhisperer sample buffer (32776 samples vs 8188 samples)
 * Longer trigger sequences (up to 4 sequenced triggers vs 2)
+* More User IO clocks (4 vs 1)
+* More pins can be used by bit-banger module (TIO1-4, nRST, target power, vs only User IO)
+* More TraceWhisperer pattern matches (8 vs 2)[^1]
+
+
+[^1]: Up to ChipWhisperer release 6.0, Husky supported 8 TraceWhisperer pattern matches. This was reduced to 2 after the 6.0 release to make space for new USERIO and bit-banging features. If this is a problem for you, contact us and we'll discuss options.
 

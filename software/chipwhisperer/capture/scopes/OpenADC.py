@@ -18,6 +18,7 @@ from .cwhardware import ChipWhispererDecodeTrigger, ChipWhispererExtra, \
      ChipWhispererSAD, ChipWhispererHuskyClock
 from .cwhardware.ChipWhispererHuskyMisc import XilinxDRP, XilinxMMCMDRP, LEDSettings, HuskyErrors, \
         USERIOSettings, XADCSettings, LASettings, ADS4128Settings
+from .cwhardware.ChipWhispererHuskyBitBanger import BitBanger
 from ._OpenADCInterface import OpenADCInterface, HWInformation, GainSettings, TriggerSettings, ClockSettings
 from ..api.cwcommon import ChipWhispererSAMErrors
 
@@ -25,7 +26,7 @@ try:
     from ..trace import TraceWhisperer
     from ..trace.TraceWhisperer import UARTTrigger
 except Exception as e:
-    tracewhisperer_logger.info("Could not import TraceWhisperer: {}".format(e))
+    tracewhisperer_logger.warning("Could not import TraceWhisperer: {}".format(e))
     TraceWhisperer = None # type: ignore
 
 from .cwhardware.ChipWhispererSAM3Update import SAMFWLoader
@@ -90,6 +91,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
     * :attr:`scope.trace <chipwhisperer.capture.trace.TraceWhisperer.TraceWhisperer>`
     * :attr:`scope.UARTTrigger <chipwhisperer.capture.trace.TraceWhisperer.UARTTrigger>`
     * :attr:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`
+    * :attr:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
     * :attr:`scope.errors <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.HuskyErrors>`
     * :attr:`scope.XADC <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.XADCSettings>`
     * :attr:`scope.ADS4128 <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.ADS4128Settings>`
@@ -653,11 +655,8 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         """
         if not self._is_husky:
             raise ValueError("For CW-Husky only.")
-        self.fpga_reg_write('RESET', [1])
-        self.fpga_reg_write('RESET', [0])
-        # TODO-temporary: when Husky bitfiles are fixed, replace RESET writes above with:
-        #self.sc._setReset(True)
-        #self.sc._setReset(False)
+        self.sc._setReset(True)
+        self.sc._setReset(False)
         self.adc._clear_caches()
         self.sc._clear_caches()
         self.gain._clear_caches()
@@ -694,10 +693,11 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         cwtype = self._getCWType()
         if cwtype in ["cwhusky", "cwhuskyplus"]:
             self.sc._is_husky = True
-            # TODO-temporary: when Husky bitfiles are fixed, RESET writes below won't be necessary, can use _setReset() instead
-            self.fpga_reg_write('RESET', [1])
-            self.fpga_reg_write('RESET', [0])
+            self.sc._setReset(True)
+            self.sc._setReset(False)
             self.sc._setMaxSamples() # TODO: won't be needed when _setReset can be called
+            if cwtype == "cwhuskyplus":
+                self.sc._is_husky_plus = True
         else:
             self.sc._setReset(True)
             self.sc._setReset(False)
@@ -735,15 +735,20 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.XADC = XADCSettings(self.sc)
             self.LEDs = LEDSettings(self.sc)
             self.LA = LASettings(oaiface=self.sc, mmcm=self.la_mmcm, scope=self)
+            if cwtype == "cwhuskyplus":
+                self._is_husky_plus = True
+                self.LA._is_husky_plus = True
+                self.clock.pll._is_husky_plus = True
             if TraceWhisperer:
                 try:
                     trace_reg_select = self.sc._address_str2int('TW_TRACE_REG_SELECT')
                     main_reg_select = self.sc._address_str2int('TW_MAIN_REG_SELECT')
-                    self.trace = TraceWhisperer(husky=True, target=None, scope=self, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
-                    self.UARTTrigger = UARTTrigger(scope=self, trace_reg_select=3, main_reg_select=2)
+                    self.trace = TraceWhisperer(husky=True, huskyplus=self._is_husky_plus, target=None, scope=self, trace_reg_select=trace_reg_select, main_reg_select=main_reg_select)
+                    self.UARTTrigger = UARTTrigger(scope=self, huskyplus=self._is_husky_plus, trace_reg_select=3, main_reg_select=2)
                 except Exception as e:
-                    scope_logger.info("TraceWhisperer unavailable " + str(e))
+                    scope_logger.warning("TraceWhisperer unavailable " + str(e))
             self.userio = USERIOSettings(self.sc, self.trace)
+            self.bitbanger = BitBanger(self.sc)
             self.SAD = ChipWhispererSAD.HuskySAD(self.sc)
             self.errors = HuskyErrors(self.sc, self.XADC, self.adc, self.clock, self.trace)
             self._is_husky = True
@@ -751,10 +756,6 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.gain._is_husky = True
             self.sc._is_husky = True
             self.adc.bits_per_sample = 12
-            if cwtype == "cwhuskyplus":
-                self._is_husky_plus = True
-                self.LA._is_husky_plus = True
-                self.clock.pll._is_husky_plus = True
         else:
             self.clock = ClockSettings(self.sc, hwinfo=self.hwinfo)
             self.errors = ChipWhispererSAMErrors(self._getNAEUSB())
@@ -1020,6 +1021,7 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                 rtn['trace'] = self.trace._dict_repr()
             rtn['XADC'] = self.XADC._dict_repr()
             rtn['userio'] = self.userio._dict_repr()
+            rtn['bitbanger'] = self.bitbanger._dict_repr()
             rtn['LEDs'] = self.LEDs._dict_repr()
             rtn['errors'] = self.errors._dict_repr()
 

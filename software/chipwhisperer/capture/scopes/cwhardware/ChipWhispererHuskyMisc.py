@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2021, NewAE Technology Inc
+# Copyright (c) 2021-2025, NewAE Technology Inc
 # All rights reserved.
 #
 # Authors: Jean-Pierre Thibault
 #
 # Find this and more at newae.com - this file is part of the chipwhisperer
-# project, http://www.assembla.com/spaces/chipwhisperer
+# project, https://github.com/newaetech/chipwhisperer
 #
 #    This file is part of chipwhisperer.
 #
@@ -31,6 +31,7 @@ from .. import _OpenADCInterface as OAI
 from ....logging import *
 import numpy as np
 import time
+import datetime
 
 CODE_READ = 0x80
 CODE_WRITE = 0xC0
@@ -84,19 +85,207 @@ class XilinxDRP(util.DisableNewAttr):
 
 
 class XilinxMMCMDRP(util.DisableNewAttr):
-    ''' Methods for dynamically programming Xilinx MMCM via its DRP.
-        Husky only.
+    ''' Methods for dynamically programming Xilinx MMCM/PLL via its DRP.
+    Husky only.
+    References: XAPP888, UG472.
+    Not intended to be directly accessed by user; access should be via the
+    parent object instead.
     '''
     _name = 'Xilinx MMCM DRP'
-    def __init__(self, drp):
+
+    def __init__(self, drp, max_freq=200e6, vco_min=600e6, vco_max=1200e6, fin_min=10e6, fin_max=800e6, fout_min=4.69e6, fout_max=800e6):
         super().__init__()
         self.drp = drp
+        self._warning_frequency = max_freq
+        # Note: for Husky's FPGA, VCO range is 600-1200 MHz for MMCMs, 800-1600 MHz for PLLs
+        self.vco_min = vco_min
+        self.vco_max = vco_max
+
+        # For Husky's Artix7 FPGA, these limits are specified in DS181. They are not the same for MMCMs and PLLs; default values are for MMCMs.
+        self.fin_min = fin_min
+        self.fin_max = fin_max
+        self.fout_min = fout_min
+        self.fout_max = fout_max
+
+        self.mul_range = list(range(2, 127))
+        self.div_range = list(range(1, 112))
+        self.sec_div_range = list(range(1, 127))
+        self.sec_div_range.append(1)
         self.disable_newattr()
 
+    def _dict_repr(self):
+        rtn = {}
+        rtn['main_div'] = self.main_div
+        rtn['sec_div'] = self.sec_div
+        rtn['mul'] = self.mul
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    @property
+    def main_div(self):
+        """MMMC/PLL main divider value.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_main_div`.
+        """
+        return self.get_main_div()
+
+    @property
+    def sec_div(self):
+        """MMMC/PLL secondary divider values.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_sec_div`.
+        """
+        divs = []
+        for c in range(6):
+            divs.append(self.get_sec_div(c))
+        return divs
+
+    @property
+    def mul(self):
+        """MMMC/PLL multiplier value.
+        To make changes, it's recommended to use the parent object.
+        If you know what you're doing, it's also possible to use :class:`set_freqs`.
+        If you *really* know what you're doing and have read Xilinx UG472 and
+        XAPP888 you can change this parameter via
+        :class:`set_mul`.
+        """
+        return self.get_mul()
+
+
+    def set_freqs(self, ifreq, ofreqs, threshold=0.01):
+        """Calculate Multiply & Divide settings based on input frequency.
+        Computing a closest match for multiple arbitrary frequencies is not straightforward, and "closest match"
+        may not be what the user wants anyways. So we first pick all the settings that get us closest to the first
+        clock frequency. We then move onto the next clock, and so on.
+        User can always manually specify PLL settings to get a different outcome.
+
+        Args:
+            ifreq (int or float): PLL input clock frequency in Hz
+            ofreqs (list): requested output clock frequencies in Hz
+
+        Returns:
+            Achieved output clock frequencies in Hz (list).
+
+        """
+        using_bests = False
+        bests = []
+        if ifreq < self.fin_min or ifreq > self.fin_max:
+            scope_logger.warning('PLL input clock frequency out of range (%d, %d)' % (self.fin_min, self.fin_max))
+        if len(ofreqs) > 6:
+            raise ValueError('Too many clocks requested!')
+        for c, clock in enumerate(ofreqs):
+            if clock is None:
+                bests.append([[None, None, None]])
+                continue
+            if clock > self._warning_frequency:
+                scope_logger.warning("""
+                    Requested clock frequency exceeds specification (250 MHz). 
+                    This may or may not work, depending on temperature, voltage, and luck.
+                    It may not work reliably.
+                    You can adjust the _warning_frequency property if you don't want
+                    to see this message anymore.
+                    """)
+            if clock < self.fout_min or ifreq > self.fout_max:
+                scope_logger.warning('PLL output clock frequency out of range (%d, %d)' % (self.fout_min, self.fout_max))
+            lowerror = 1e99
+            next_bests = []
+            next_best_div_range = []
+            next_best_mul_range = []
+            if using_bests:
+                div_range = best_div_range
+            else:
+                div_range = self.div_range
+
+            for i,maindiv in enumerate(div_range):
+                mmin = int(np.ceil(self.vco_min/ifreq*maindiv))
+                mmax = int(np.ceil(self.vco_max/ifreq*maindiv))
+                if using_bests:
+                    mul_range = [best_mul_range[i]]
+                else:
+                    mul_range = self.mul_range
+                for mul in range(mmin,mmax+1):
+                    if mul/maindiv < self.vco_min/ifreq or mul/maindiv > self.vco_max/ifreq or mul not in mul_range:
+                        continue
+                    for secdiv in self.sec_div_range:
+                        calcfreq = ifreq*mul/maindiv/secdiv
+                        err = abs(clock - calcfreq)
+                        if err < lowerror:
+                            lowerror = err
+                            next_bests = [[mul, maindiv, secdiv]]
+                            next_best_div_range = [maindiv]
+                            next_best_mul_range = [mul]
+                        elif err == lowerror:
+                            next_bests.append([mul, maindiv, secdiv])
+                            next_best_div_range.append(maindiv)
+                            next_best_mul_range.append(mul)
+
+            if next_bests == []:
+                scope_logger.error("Couldn't find a legal div/mul combination")
+            else:
+                using_bests = True
+
+            best_div_range = next_best_div_range
+            best_mul_range = next_best_mul_range
+            bests.append(next_bests)
+            scope_logger.debug('set_freqs progress for clock %d: best_div_range = %s' % (c, best_div_range))
+            scope_logger.debug('set_freqs progress for clock %d: best_mul_range = %s' % (c, best_mul_range))
+
+
+        # almost done! now we've got mul and maindiv; for each clock we go back to find the corresponding sec_div,
+        # then we can report all generated clock frequencies vs requested frequencies
+        mul, maindiv, secdiv = next_bests[0]
+        self.set_mul(mul)
+        self.set_main_div(maindiv)
+        actual_freqs = []
+        for c, clock in enumerate(ofreqs):
+            if clock is None:
+                # there doesn't seem to be a way to turn off the clock, 
+                # so let's set secondary divider to max value when user specifies "None" for the frequency
+                secdiv = max(self.sec_div_range)
+                self.set_sec_div(secdiv, c)
+                actual_freqs.append(ifreq*mul/maindiv/secdiv)
+                continue
+            # find secdiv:
+            secdiv = None
+            for b in bests[c]:
+                if b[0] == mul and b[1] == maindiv:
+                    secdiv = b[2]
+                    break
+            if secdiv is None:
+                raise ValueError('Internal error, could not find secdiv. There is a bug somewhere in this function.')
+            actual_freq = ifreq * mul / maindiv / secdiv
+            actual_freqs.append(actual_freq)
+            if abs(actual_freq-clock)/clock*100 > threshold:
+                warning = '*** outside of tolerance threshold***'
+            else:
+                warning = ''
+            message = 'Clock %d: requested %4.3f MHz, getting %4.3f MHz %s' % (c, clock/1e6, actual_freq/1e6, warning)
+            scope_logger.info(message)
+            if warning:
+                print(message)
+            self.set_sec_div(secdiv, c)
+        time.sleep(0.1)
+        return actual_freqs
+
+
     def set_mul(self, mul):
+        if mul not in self.mul_range:
+            raise ValueError("Multiplier (%d) out of range" % mul)
         muldiv2 = int(mul/2)
         lo = muldiv2
         if mul%2:
+            #scope_logger.warning("Odd multiplier means clock duty cycle will not be 50%")
             hi = lo+1
         else:
             hi = lo
@@ -108,8 +297,8 @@ class XilinxMMCMDRP(util.DisableNewAttr):
 
 
     def set_main_div(self, div):
-        if not isinstance(div, int):
-            raise ValueError("Only integers are supported")
+        if div not in self.div_range:
+            raise ValueError("Divider (%d) out of range" % div)
         # Set main divider:
         if div == 1:
             raw = 0x1000
@@ -117,6 +306,7 @@ class XilinxMMCMDRP(util.DisableNewAttr):
             div2 = int(div/2)
             lo = div2
             if div % 2:
+                #scope_logger.warning("Odd divider means clock duty cycle will not be 50%")
                 hi = lo+1
             else:
                 hi = lo
@@ -126,11 +316,18 @@ class XilinxMMCMDRP(util.DisableNewAttr):
 
 
     def set_sec_div(self, div, clock=0):
-        if not isinstance(div, int):
-            raise ValueError("Only integers are supported")
+        if div not in self.sec_div_range:
+            raise ValueError("Divider (%d) out of range" % div)
+        # Set main divider:
         if clock > 5:
             raise ValueError("Clock must be in range [0,5]")
-        addr = 0x08 + clock*2
+        # pay attention to addressing, it's weird!
+        if clock == 5:
+            addr = 0x06
+        elif clock == 6:
+            addr = 0x12
+        else:
+            addr = 0x08 + clock*2
         # Set secondary divider:
         if div == 1:
             self.drp.write(addr+1, 0x0040)
@@ -138,6 +335,7 @@ class XilinxMMCMDRP(util.DisableNewAttr):
             div2 = int(div/2)
             lo = div2
             if div % 2:
+                #scope_logger.warning("Odd divider means clock duty cycle will not be 50%")
                 hi = lo+1
             else:
                 hi = lo
@@ -206,7 +404,13 @@ class XilinxMMCMDRP(util.DisableNewAttr):
     def get_sec_div(self, clock=0):
         if clock > 5:
             raise ValueError("Clock must be in range [0,5]")
-        addr = 0x08 + clock*2
+        # pay attention to addressing, it's weird!
+        if clock == 5:
+            addr = 0x06
+        elif clock == 6:
+            addr = 0x12
+        else:
+            addr = 0x08 + clock*2
         #  read CLKOUT2 to ensure fractional mode is disabled and check NO_COUNT bit for CLKOUT divider:
         raw = list(int.to_bytes(self.drp.read(addr+1), length=2, byteorder='little'))
         if raw[1] & 0x08:
@@ -312,12 +516,156 @@ class HuskyErrors(ChipWhispererSAMErrors):
         self.trace.errors = 0
 
 
+class USERIOPin(util.DisableNewAttr):
+    ''' Control Husky's USERIO (20-pin front connector) interface, one pin at a time.
+    Everything that this class does can also be done by 
+    :class:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>`,
+    but the API of this class makes it easier to change a single USERIO pin's properties.
+
+    Example::
+
+        scope.userio.pin[0].direction = 'output'
+        scope.userio.pin[0].drive_data = 1
+        scope.userio.pin[0].drive_data = 0
+        scope.userio.pin[0].drive_data = 1
+
+    '''
+    _name = 'USERIO Pin'
+
+    def __init__(self, userio, pin_number):
+        super().__init__()
+        self.parent = userio
+        self.pin_number = pin_number
+        self.disable_newattr()
+
+    def _dict_repr(self):
+        rtn = {}
+        rtn['name'] = self.name
+        rtn['function'] = self.function
+        rtn['direction'] = self.direction
+        rtn['drive_data'] = self.drive_data
+        rtn['status'] = self.status
+        rtn['clock_enabled'] = self.clock_enabled
+        if self.pin_number > 8 - self.parent.num_clocks:
+            info = '%s' % self.clock
+            if not self.parent.clocks_locked:
+                info += ' *** PLL UNLOCKED **'
+            rtn['clock'] = info
+        else:
+            rtn['clock'] = 'not supported'
+        return rtn
+
+    def __repr__(self):
+        return util.dict_to_str(self._dict_repr())
+
+    def __str__(self):
+        return self.__repr__()
+
+    @property
+    def name(self):
+        """Pin name.
+        """
+        label = 'USERIO_'
+        if self.pin_number < 8:
+            label += 'D%d' % self.pin_number
+        else:
+            label += 'CK'
+        return label
+
+
+    @property
+    def function(self):
+        """See :class:`scope.userio.pin_functions <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.pin_functions>`.
+        """
+        return self.parent.pin_functions[self.pin_number]
+
+
+    @property
+    def direction(self):
+        """See :class:`scope.userio.direction <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.direction>`.
+        """
+        raw = self.parent._direction_list[self.pin_number]
+        if 'bitbanger.data' in self.function:
+            return 'I/O'
+        elif raw or 'bitbanger.clock' in self.function:
+            return 'output'
+        else:
+            return 'input'
+
+    @direction.setter
+    def direction(self, value):
+        if value == 'output':
+            value = 1
+        elif value == 'input':
+            value = 0
+        elif value not in [0,1]:
+            raise ValueError()
+        self.parent._direction_list[self.pin_number] = value
+
+
+    @property
+    def drive_data(self):
+        """See :class:`scope.userio.drive_data <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.drive_data>`.
+        """
+        return self.parent._drive_data_list[self.pin_number]
+
+    @drive_data.setter
+    def drive_data(self, value):
+        self.parent._drive_data_list[self.pin_number] = value
+
+    @property
+    def status(self):
+        """See :class:`scope.userio.status <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.status>`.
+        """
+        return self.parent._status_list[self.pin_number]
+
+    @property
+    def clock_enabled(self):
+        """See :class:`scope.userio.clock_enabled <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.clock_enabled>`.
+        """
+        return self.parent._clock_enabled_list[self.pin_number]
+
+    @clock_enabled.setter
+    def clock_enabled(self, value):
+        self.parent._clock_enabled_list[self.pin_number] = value
+
+    @property
+    def clock(self):
+        """See :class:`scope.userio.clocks <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings.clocks>`.
+        """
+        return self.parent.clocks[8-self.pin_number]
+
+    @clock.setter
+    def clock(self, value):
+        self.parent.clocks[8-self.pin_number] = value
+
+
+
+
+
 class USERIOSettings(util.DisableNewAttr):
     ''' Control Husky's USERIO (20-pin front connector) interface.
+    Example::
+
+        scope.userio.direction = 0x1ff
+        scope.userio.drive_data = 0x155
+        scope.userio.drive_data = 0x0aa
+
+
+    The methods in this class make it easy to change all USERIO pin properties
+    simultaneously. If you are modifying the properties of a single pin, you
+    may find the 
+    :class:`scope.userio.pin[x] <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin>`
+    methods more appealing, i.e.::
+
+        scope.userio.pin[0].direction = 1  # or scope.userio.pin[0].direction = 'output'
+        scope.userio.pin[0].drive_data = 1
+        scope.userio.pin[0].drive_data = 0
+
     '''
     _name = 'USERIO Control'
 
-    fpga_mode_definitions = [None]*16 # type: list
+    fpga_mode_definitions = [None]*18 # type: list
 
     # fpga_mode = 0:
     fpga_mode_definitions[0] = ['streaming debug',
@@ -361,7 +709,7 @@ class USERIOSettings(util.DisableNewAttr):
                                   'trigger_capture',
                                   'glitch_enable',
                                   'glitchclk',
-                                  'glitch_mmcm2_clk_out',
+                                  'unused',
                                   'glitch_mmcm1_clk_out',
                                   'xadc_error_flag',
                                   'unused',
@@ -381,15 +729,16 @@ class USERIOSettings(util.DisableNewAttr):
 
     # fpga_mode = 5:
     fpga_mode_definitions[5] = ['clockglitch debug2', 
-                                 ['glitch_done_count[1]',
-                                  'glitch_done_count[0]',
-                                  'glitch_enable',
-                                  'glitchclk',
-                                  'glitch_trigger',
-                                  'glitch_mmcm1_clk_out',
-                                  'sourceclk',
+                                 ['unused',
                                   'exttrigger',
-                                  'unused']]
+                                  'sourceclk',
+                                  'unused',
+                                  'glitch_trigger',
+                                  'glitchclk',
+                                  'glitch_enable',
+                                  'glitch_done_count[0]',
+                                  'glitch_done_count[1]']]
+
 
     # fpga_mode = 6:
     fpga_mode_definitions[6] = ['usb debug1', 
@@ -511,12 +860,50 @@ class USERIOSettings(util.DisableNewAttr):
                                   'trigger 3 window',
                                   'unused']]
 
+    # fpga_mode = 16:
+    fpga_mode_definitions[16] = ['SAD debug',
+                                 ['&ready2trigger_all',
+                                  '(refsample_shift_count == 0)',
+                                  'always_armed',
+                                  'shifter_active',
+                                  'active',
+                                  'armed_and_ready_sad',
+                                  'armed_and_ready',
+                                  'trigger',
+                                  'unused']]
+
+    # fpga_mode = 17:
+    fpga_mode_definitions[17] = ['bitbanger debug',
+                                 ['matching',
+                                  'matched',
+                                  'bitrecord',
+                                  'trigger',
+                                  'pattern_en',
+                                  'data_drive',
+                                  'active',
+                                  'trigger_active',
+                                  'unused']]
+
+
+
+    trace_pins = ['TMS', 'TCK', 'TDO/SWO', 'unused', 'TRACEDATA[0]', 'TRACEDATA[1]', 'TRACEDATA[2]', 'TRACEDATA[3]', 'TRACECLOCK']
+
     def __init__(self, oaiface : OAI.OpenADCInterface, trace):
         super().__init__()
         self._last_mode = None
         self._drive_data = 0
         self.oa = oaiface
         self._trace = trace
+        self.pins = []
+        for pin in range(9):
+            self.pins.append(USERIOPin(self, pin))
+        self.num_clocks = 1 # note: will get overwritten by _check_clocks(); prevents mypy complaint
+        self.clocks_supported = self._check_clocks()
+        self._drp = XilinxDRP(self.oa, "USERIO_DRP_DATA", "USERIO_DRP_ADDR", "USERIO_DRP_RESET")
+        self._pll = XilinxMMCMDRP(self._drp, vco_min=800e6, vco_max=1600e6, fin_min=19e6, fin_max=800e6, fout_min=6.25e6, fout_max=800e6)
+        self._clocks = [None]*self.num_clocks
+        self._clock_source = 0
+        self._clock_source_freq = 96e6
         self.disable_newattr()
 
     def _dict_repr(self):
@@ -525,30 +912,39 @@ class USERIOSettings(util.DisableNewAttr):
         if self.mode in ['fpga_debug', 'swo_trace_plus_debug']:
             rtn['fpga_mode'] = self.fpga_mode
         rtn['direction'] = self.direction
+        rtn['clock_enabled'] = self.clock_enabled
+        rtn['clocks'] = self.clocks
+        rtn['clock_source'] = self.clock_source
+        rtn['clocks_locked'] = self.clocks_locked
         rtn['drive_data'] = self.drive_data
         rtn['status'] = self.status
         pins_rtn = {}
-        trace_pins = ['TMS', 'TCK', 'TDO/SWO', 'unused', 'TRACEDATA[0]', 'TRACEDATA[1]', 'TRACEDATA[2]', 'TRACEDATA[3]', 'TRACECLOCK']
         for i in range(9):
-            if self.mode == 'trace':
-                info = trace_pins[i]
-            elif self.mode == 'swo_trace_plus_debug':
-                if i < 3:
-                    info = trace_pins[i]
-                else:
-                    info = self.fpga_mode_definitions[self.fpga_mode][1][i]
-            elif self.direction & 2**i:
-                info = 'Husky-driven, '
-                if self.mode == 'normal':
-                    info += 'value = %d' % ((self.status >> i) & 0x01)
-                else:
-                    info = self.fpga_mode_definitions[self.fpga_mode][1][i]
+            info = '{0:{width}s}'.format(self.pin_functions[i], width=len(max(self.pin_functions, key=len)))
+            if 'bitbanger.data' in self.pin_functions[i]:
+                info += ', I/O,    '
+            elif self._direction_list[i] or 'bitbanger.clock' in self.pin_functions[i]:
+                info += ', output, '
             else:
-                info = 'Target-driven, value = %d' % ((self.status >> i) & 0x01)
+                info += ', input,  '
+            info += 'status = %d' % self._status_list[i]
+            info += ', clock_enabled = %d' % self._clock_enabled_list[i]
+            info += ', drive = %d' % self._drive_data_list[i]
+            if i > 8 - self.num_clocks:
+                if self.clocks[8-i] is None:
+                    info += ', clock not set'
+                else:
+                    info += ', clock = %.1f' % self.clocks[8-i]
+                    if not self.clocks_locked:
+                        info += ' *** PLL UNLOCKED ***'
+            else:
+                info += ', clock not supported'
+
             if i < 8:
-                pins_rtn['pin D%d' % i] = info
+                pins_rtn['D%d' % i] = info
             else:
-                pins_rtn['pin CK'] = info
+                pins_rtn['CK'] = info
+
         rtn['Individual pins'] = pins_rtn
         return rtn
 
@@ -557,6 +953,43 @@ class USERIOSettings(util.DisableNewAttr):
 
     def __str__(self):
         return self.__repr__()
+
+    def config_register_write(self, register, value):
+        """ Convenience function for setting the registers that got merged into USERIO_CONFIG.
+        """
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_CONFIG", maxResp=7)
+        if register == 'USERIO_CLKSEL':
+            raw[0] = value
+        elif register == 'USERIO_DEBUG_SELECT':
+            raw[1] = value
+        elif register == 'USERIO_DEBUG_DRIVEN':
+            raw[2] = value
+        elif register == 'USERIO_CW_DRIVEN':
+            raw[3:5] = int.to_bytes(value, length=2, byteorder='little')
+        elif register == 'USERIO_CLOCK_OUT':
+            raw[5:7] = int.to_bytes(value, length=2, byteorder='little')
+        else:
+            raise ValueError()
+        self.oa.sendMessage(CODE_WRITE, "USERIO_CONFIG", raw)
+
+
+    def config_register_read(self, register):
+        """ Convenience function for reading the registers that got merged into USERIO_CONFIG.
+        """
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_CONFIG", maxResp=7)
+        if register == 'USERIO_CLKSEL':
+            return raw[0]
+        elif register == 'USERIO_DEBUG_SELECT':
+            return raw[1]
+        elif register == 'USERIO_DEBUG_DRIVEN':
+            return raw[2]
+        elif register == 'USERIO_CW_DRIVEN':
+            return int.from_bytes(raw[3:5], byteorder='little')
+        elif register == 'USERIO_CLOCK_OUT':
+            return int.from_bytes(raw[5:7], byteorder='little')
+        else:
+            raise ValueError()
+
 
     @property
     def mode(self):
@@ -572,7 +1005,7 @@ class USERIOSettings(util.DisableNewAttr):
         if self._last_mode:
             return self._last_mode
         else:
-            debug = self.oa.sendMessage(CODE_READ, "USERIO_DEBUG_DRIVEN", maxResp=1)[0]
+            debug = self.config_register_read('USERIO_DEBUG_DRIVEN')
             if self._trace:
                 trace = self._trace.enabled
             else:
@@ -591,86 +1024,383 @@ class USERIOSettings(util.DisableNewAttr):
     @mode.setter
     def mode(self, setting):
         if setting == 'normal':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [0])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 0)
             self._trace._set_enabled(0)
         elif setting == 'trace':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [0])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 0)
             self._trace._set_enabled(1)
             self._trace._set_userio_dir(3)  # restore default just in case
         elif setting == 'fpga_debug':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [1])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 1)
             self._trace._set_enabled(0)
         elif setting == 'swo_trace_plus_debug':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [1])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 1)
             self._trace._set_enabled(1)
             self._trace._set_userio_dir(0xff-4)
         elif setting == 'target_debug_jtag':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [2])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 2)
             self._trace._set_enabled(0)
         elif setting == 'target_debug_swd':
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_DRIVEN", [6])
+            self.config_register_write('USERIO_DEBUG_DRIVEN', 6)
             self._trace._set_enabled(0)
         else:
             raise ValueError("Invalid mode; use normal/trace/fpga_debug/target_debug_jtag/target_debug_swd")
         self._last_mode = setting
 
     @property
+    def fpga_mode_options(self):
+        """Lists the category for each :class:`fpga_mode` setting.
+        """
+        for i,d in enumerate(self.fpga_mode_definitions):
+            print('scope.userio.fpga_mode = %2d: %s' % (i, d[0]))
+
+    @property
     def fpga_mode(self):
         """When scope.userio.mode = 'fpga_debug', selects which FPGA signals
-        are routed to the USERIO pins. Print the scope.userio object to obtain the signal definition
-        corresponding to the current fpga_mode setting.
+        are routed to the USERIO pins. See :class:`fpga_mode_options` to see the
+        category of each available setting; print the scope.userio object to
+        obtain the full signal definition corresponding to the current fpga_mode
+        setting.
         """
-        return self.oa.sendMessage(CODE_READ, "USERIO_DEBUG_SELECT", maxResp=1)[0]
+        return self.config_register_read('USERIO_DEBUG_SELECT')
 
     @fpga_mode.setter
     def fpga_mode(self, setting):
-        if not setting in range(0, 16):
-            raise ValueError("Must be integer in [0, 15]")
+        top_mode = len(self.fpga_mode_definitions)
+        if not setting in range(top_mode):
+            raise ValueError("Must be integer in [0, %d]" % (top_mode-1))
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DEBUG_SELECT", [setting])
+            self.config_register_write('USERIO_DEBUG_SELECT', setting)
+
+
+    def _setter_check_and_transform(self, value, num_bits, maxvalue):
+        """Common code used by many of this class's properties.
+        """
+        if type(value) is list:
+            # sanity check:
+            if any(not i in [0,1] for i in value) or len(value) != num_bits:
+                raise ValueError("Can't set value to %s" % value)
+            data = 0
+            for i,d in enumerate(value):
+                if d:
+                    data += 2**i
+        else:
+            data = value
+        if not data in range(0, maxvalue+1):
+            raise ValueError("Out of range! Must be integer 0-%d; got %d" % (maxvalue, data))
+        return data
+
+    def _reader_2list(self, value, num_bits):
+        """Common code used by many of this class's properties.
+        """
+        data = [0]*num_bits
+        for i in range(num_bits):
+            if value & 2**i:
+                data[i] = 1
+        return data
 
 
     @property
     def direction(self):
-        """Set the direction of the USERIO data pins (D0-D7) with an
-        8-bit integer, where bit <x> determines the direction of D<x>:
+        """Set the direction of the USERIO data pins (D0-D7) and clock pin with an
+        9-bit integer, where bit <x> determines the direction of D<x> and bit 8
+        determines the direction of CK.
 
         * bit x = 0: D<x> is an input to Husky.
         * bit x = 1: D<x> is driven by Husky.
 
-        When scope.userio.mode is not "normal", then this setting is controlled
+        When :class:`mode` is not "normal", then this setting is controlled
         by the FPGA and cannot be changed by the user.
         Use with care.
         """
-        return self.oa.sendMessage(CODE_READ, "USERIO_CW_DRIVEN", maxResp=1)[0]
+        return self.config_register_read('USERIO_CW_DRIVEN')
 
     @direction.setter
     def direction(self, setting):
-        if not setting in range(0, 256):
-            raise ValueError("Must be integer 0-255")
+        if not setting in range(0, 512):
+            raise ValueError("Must be integer 0-511")
         else:
-            self.oa.sendMessage(CODE_WRITE, "USERIO_CW_DRIVEN", [setting])
+            self.config_register_write('USERIO_CW_DRIVEN', setting)
+
+    @property
+    def _direction_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].direction).
+        """
+        direction = self._read_direction()
+        return util.Lister(direction, setter=self._set_direction, getter=self._read_direction)
+
+    @_direction_list.setter
+    def _direction_list(self, value):
+        self._set_direction(value)
+
+    def _set_direction(self, direction):
+        data = self._setter_check_and_transform(direction, 9, 511)
+        self.direction = data
+
+    def _read_direction(self):
+        return self._reader_2list(self.direction, 9)
+
+    @property
+    def clock_enabled(self):
+        """Enable clock output.
+        9-bit integer, where bit <x> enables the clock on D<x> and bit 8
+        enables the clock on CK.
+        Clocks are not available on all bits: see scope.userio.clocks_supported
+        for a binary representation of which USERIO pins can output a clock.
+
+        """
+        return self.config_register_read('USERIO_CLOCK_OUT')
+
+    @clock_enabled.setter
+    def clock_enabled(self, setting):
+        if setting & (self.clocks_supported ^ 0xFFFF):
+            raise ValueError("Clocks supported only on pins: %s" % bin(self.clocks_supported))
+        else:
+            self.config_register_write('USERIO_CLOCK_OUT', setting)
+
+    @property
+    def _clock_enabled_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].clock_enabled).
+        """
+        clock_enabled = self._read_clock_enabled()
+        return util.Lister(clock_enabled, setter=self._set_clock_enabled, getter=self._read_clock_enabled)
+
+    @_clock_enabled_list.setter
+    def _clock_enabled_list(self, value):
+        self._set_clock_enabled(value)
+
+    def _set_clock_enabled(self, clock_enabled):
+        data = self._setter_check_and_transform(clock_enabled, 9, 511)
+        self.clock_enabled = data
+
+    def _read_clock_enabled(self):
+        return self._reader_2list(self.clock_enabled, 9)
+
+    def _check_clocks(self):
+        """To see which USERIO pins can be configured as a clock, write all ones to USERIO_CLOCK_OUT and
+        read back.
+        """
+        self.config_register_write('USERIO_CLOCK_OUT', 0xFFFF)
+        readback = self.config_register_read('USERIO_CLOCK_OUT')
+        self.config_register_write('USERIO_CLOCK_OUT', 0x0000)
+        self.num_clocks = bin(readback)[2:].count('1')
+        return readback
+
+
+    @property
+    def clocks(self):
+        """ Clock frequencies for pins that are configured as clocks.
+        See scope.userio.num_clocks for the number of clock that can be
+        generated. Provide desired clock frequencies as a list; the first
+        element is for the CK pin, then D7 pin, then D6, and so on.
+
+        All clocks are generated from a single PLLE2 FPGA macro, which limits
+        what is possible when requesting multiple clock frequencies. A warning
+        is issued if an actual clock frequency is more than 0.1% off from its
+        requested value; you can also see the actual frequencies by querying
+        this property after assignment: it will report the actual (not
+        requested) frequencies.
+
+        When calculating PLL parameters for multiple clocks, we use an
+        algorithm which prioritizes the requested frequencies in the order that
+        they are specified (e.g. CK first, then D7, then D6...).
+
+        If you have different needs, you can set the PLL's multiply/divide
+        parameters via the methods exposed by the scope.userio._pll object.
+        """
+        return self._get_clocks()
+
+    @clocks.setter
+    def clocks(self, frequencies):
+        if len(frequencies) > self.num_clocks:
+            raise ValueError('Too many clocks!')
+        for i,f in enumerate(frequencies):
+            if f:
+                self._clocks[i] = f
+        if self.clock_source == 'usb':
+            ifreq = 96e6
+        else:
+            ifreq = self.clock_source_freq
+        self._clocks = self._pll.set_freqs(ifreq, self._clocks)
+        if not self.clocks_locked:
+            scope_logger.warning('USERIO PLL is not locked. Generated clocks may not be dependable. (have you set scope.userio.clock_source_freq correctly?)')
+
+    def _read_clocks(self):
+        # note: returns *actual set* frequency, not requested frequency
+        return self._clocks
+
+    def _get_clocks(self):
+        return util.Lister(self._clocks, setter=self._set_clocks, getter=self._read_clocks)
+
+    def _set_clocks(self, clocks):
+        self.clocks = clocks
+
+
+    @property
+    def clock_source(self):
+        """ Set the clock source for the PLL that generates the USERIO output clocks.
+
+        Args:
+            source (str): "target" or "usb". When set to "target", uses the
+                target clock as defined by scope.clock (i.e. can be either
+                internally or externally generated). The frequency of that
+                clock must be explicitely provided to
+                :class:`clock_source_freq`. When set to "usb", the internal
+                fixed 96 MHz clock is used (:class:`clock_source_freq` does not
+                need to be set in that case).
+
+        .. note:: When this property is updated, PLL parameters are
+            re-calculated to maintain the clock frequencies that were
+            previously *generated*. These may be different from the clock
+            frequencies that were previously *requested*!
+        """
+        if self._clock_source:
+            return 'target'
+        else:
+            return 'usb'
+
+    @clock_source.setter
+    def clock_source(self, source):
+        if source == self.clock_source:
+            change = False
+        else:
+            change = True
+        if source == 'target':
+            raw = 1
+        elif source == 'usb':
+            raw = 0
+        else:
+            raise ValueError()
+        self._clock_source = raw
+        self.config_register_write('USERIO_CLKSEL', raw)
+        if change and self._clocks != [None]*self.num_clocks:
+            # re-set clock frequencies
+            self.clocks = [None]*self.num_clocks
+
+    @property
+    def clock_source_freq(self):
+        """ Specify the target clock frequency.
+
+        Args:
+            freq (int or float): target clock frequency. When
+                :class:`clock_source` is set to "target", we need to know that
+                clock's frequency in order to calculate the PLL settings that
+                will generate the requested clock frequencies.
+
+        .. note:: When this property is updated, PLL parameters are
+            re-calculated to maintain the clock frequencies that were
+            previously *generated*. These may be different from the clock
+            frequencies that were previously *requested*!
+        """
+        return self._clock_source_freq
+
+    @clock_source_freq.setter
+    def clock_source_freq(self, freq):
+        if freq != self._clock_source_freq:
+            self._clock_source_freq = freq
+            if self._clocks != [None]*self.num_clocks:
+                # re-set clock frequencies
+                self.clocks = [None]*self.num_clocks
+
+
+    @property
+    def clocks_locked(self):
+        """ Indicates whether the PLL that generates the USERIO output clocks
+        is locked. Usually the reason for it to be unlocked is that the PLL
+        parameters bring either the output clocks or the internal VCO out of
+        range.
+        """
+        if self.config_register_read('USERIO_CLKSEL') & 2:
+            return True
+        else:
+            return False
+
 
     @property
     def drive_data(self):
-        """8-bit data to drive on the USERIO data bus.
+        """9-bit data to drive on the USERIO data pins and clock pin (clock pin is msb).
         """
         return self._drive_data
 
     @drive_data.setter
-    def drive_data(self, setting):
-        if not setting in range(0, 256):
-            raise ValueError("Must be integer 0-255")
-        else:
-            self._drive_data = setting
-            self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", [setting])
+    def drive_data(self, value):
+        if not value in range(0, 512):
+            raise ValueError("Must be integer 0-511")
+        #self._set_drive_data(value)
+        self.oa.sendMessage(CODE_WRITE, "USERIO_DRIVE_DATA", int.to_bytes(value, length=2, byteorder='little'), Validate=False)
+        self._drive_data = value
+
+    @property
+    def _drive_data_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].drive_data).
+        """
+        drive_data = self._read_drive_data()
+        return util.Lister(drive_data, setter=self._set_drive_data, getter=self._read_drive_data)
+
+    @_drive_data_list.setter
+    def _drive_data_list(self, value):
+        self._set_drive_data(value)
+
+    def _set_drive_data(self, drive_data):
+        data = self._setter_check_and_transform(drive_data, 9, 511)
+        self.drive_data = data
+
+    def _read_drive_data(self):
+        return self._reader_2list(self.drive_data, 9)
 
     @property
     def status(self):
         """Returns current value of header pins. LSB=D0, MSB=CK.
         """
-        raw = self.oa.sendMessage(CODE_READ, "USERIO_READ", maxResp=2)
+        raw = self.oa.sendMessage(CODE_READ, "USERIO_DRIVE_DATA", maxResp=2)
         return int.from_bytes(raw, byteorder='little')
+
+    @property
+    def _status_list(self):
+        """Meant to be called from USERIOPin instance (e.g. scope.userio.pins[0].status).
+        """
+        return self._reader_2list(self.status, 9)
+
+    def _bb_trig(self, pin):
+        bb_trig = self.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+        if bb_trig & 0x0f == pin:
+            return 'scope.bitbanger.data_pin'
+        elif bb_trig >> 4 == pin:
+            return 'scope.bitbanger.clock_pin'
+        else:
+            return False
+
+
+    @property
+    def pin_functions(self):
+        """Returns informative list of functions for USERIO pins, as currently
+        configured by :class:`scope.userio <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings>` properties.
+        """
+        functions = []
+        for i in range(9):
+            bb_override = self._bb_trig(i)
+            if bb_override:
+                function = bb_override
+
+            elif self.mode == 'trace':
+                function = self.trace_pins[i]
+
+            elif self.mode == 'swo_trace_plus_debug':
+                if i < 3:
+                    function = self.trace_pins[i]
+                else:
+                    function = self.fpga_mode_definitions[self.fpga_mode][1][i]
+
+            elif self.mode == 'fpga_debug':
+                function = self.fpga_mode_definitions[self.fpga_mode][1][i]
+
+            elif self.mode == 'normal':
+                if self._clock_enabled_list[i] and self._direction_list[i]:
+                    function = 'clock output'
+                else:
+                    function = 'data I/O'
+            functions.append(function)
+        return functions
 
 
 
@@ -1008,6 +1738,21 @@ class XADCSettings(util.DisableNewAttr):
 
 class LASettings(util.DisableNewAttr):
     ''' Husky logic analyzer settings. For accessing recorded glitch generation, IO, and USERIO signals.
+    Example::
+
+        scope.LA.enabled = True
+        scope.LA.clk_source = 'usb'
+        scope.LA.oversampling_factor = 2
+        scope.LA.capture_group = 'USERIO 20-pin'
+        scope.LA.capture_depth = 128
+
+        scope.LA.armed()
+        scope.LA.trigger_now()
+        raw_data = scope.LA.read_capture_data()
+        userio_d0 = scope.LA.extract(raw_data, 0)
+        userio_d1 = scope.LA.extract(raw_data, 1)
+        userio_ck = scope.LA.extract(raw_data, 8)
+
     '''
     _name = 'Husky Logic Analyzer Setting'
 
@@ -1209,8 +1954,22 @@ class LASettings(util.DisableNewAttr):
     def clk_source(self, enable):
         self._setClkSource(enable)
         self.reset_MMCM()
+        # Wait a bit before exiting: without this, setting clk_source() and
+        # then oversampling_factor() immediately after can result in an
+        # unlocked PLL because the new clock frequency won't be reflected in
+        # source_clock_frequency yet, which will lead to incorrect PLL
+        # parameters. At worse, the PLL will be locked but not at the requested
+        # frequency!
+        time.sleep(0.25)
 
     def arm(self):
+        """Arm the logic analyzer.
+
+        Raises:
+           Exception: LA clock is not locked.
+        """
+        if not self.locked:
+            raise Exception("LA clock is not locked! Review your settings. If everything looks good, you may need to re-specify scope.LA.oversampling_factor.")
         self.oa.sendMessage(CODE_WRITE, "LA_ARM", [1], Validate=False)
 
     @property

@@ -165,7 +165,7 @@ to learn how to glitch with your ChipWhisperer device.
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings
     :members:
-    :exclude-members: enabled, mmcm_locked, phase_shift_steps, actual_num_glitches, num_glitches
+    :exclude-members: enabled, mmcm_locked, phase_shift_steps, actual_num_glitches, reset_glitch_counter, num_glitches
 
 scope.glitch **(Husky Only)**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -191,6 +191,10 @@ The following attributes are only available on, or differ substantially on the C
 .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.mmcm_locked
 
 .. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.num_glitches
+
+.. autoattribute:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.actual_num_glitches
+
+.. automethod:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererGlitch.GlitchSettings.reset_glitch_counter
         
 Pro Only Features
 -----------------------
@@ -267,6 +271,26 @@ scope.userio
 
 .. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOSettings
     :members:
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyMisc.USERIOPin
+    :members:
+
+
+scope.bitbanger
+^^^^^^^^^^^^^^^
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger
+    :members:
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.OneWireHelper
+    :members:
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.SWDHelper
+    :members:
+
+.. autoclass:: chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBangerPacket
+    :members:
+
 
 scope.XADC
 ^^^^^^^^^^

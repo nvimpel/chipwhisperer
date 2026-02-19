@@ -42,32 +42,6 @@ def SIGNEXT(x, b):
     x = x & ((1 << b) - 1)
     return (x ^ m) - m
 
-class MultiGlitchList(list):
-    """Class that behaves like a list, but can set individual elements using a getter/setter
-
-    Useful so that we can do scope.glitch.ext_offset[1] = 5 with Husky multi-glitch
-    """
-    def __setitem__(self, *args, **kwargs):
-        oldval = self._getter()
-        oldval[args[0]] = args[1]
-        self._setter(oldval)
-        pass
-
-    def __repr__(self):
-        oldrepr = super().__repr__()
-        return f"MultiGlitchList({oldrepr})"
-
-    def __init__(self, *args, **kwargs):
-        if "getter" not in kwargs:
-            raise KeyError("MultiGlitchList requires a getter")
-        if "setter" not in kwargs:
-            raise KeyError("MultiGlitchList requires a setter")
-        
-        self._getter = kwargs.pop("getter")
-        self._setter = kwargs.pop("setter")
-        super().__init__(*args, **kwargs)
-        
-
 class GlitchSettings(util.DisableNewAttr):
 
     # Output modes, sorted by ID (FPGA value)
@@ -273,13 +247,33 @@ class GlitchSettings(util.DisableNewAttr):
 
     @property
     def actual_num_glitches(self):
-        """The number of glitches that were generated during the previous
-        glitch event (should equal scope.glitch.num_glitches; for debugging).
+        """The number of glitches that have been generated. 
+        Use :class:`reset_glitch_counter()` to reset this counter.
+        16-bit counter which saturates instead of overflowing.
+        Can be used to confirmed that the expected number of glitches have been generated.
+        CW-Husky only.
+
+        Returns: 
+            Number of glitches.
+        """
+        if not self._is_husky:
+            raise ValueError("For CW-Husky only.")
+        glitches = self.cwg.getNumActualGlitches()
+        if glitches == 2**16 - 1:
+            scope_logger.warning('Glitch counter saturated (i.e. most likely there were more glitches.')
+            scope_logger.warning('To avoid this, check the number of glitches more often and reset the')
+            scope_logger.warning('glitch counter via scope.glitch.reset_glitch_counter().')
+        return glitches
+
+    def reset_glitch_counter(self):
+        """Resets the hardware glitch counter.
+        Use :class:`actual_num_glitches` to read the counter value.
         CW-Husky only.
         """
         if not self._is_husky:
             raise ValueError("For CW-Husky only.")
-        return self.cwg.getNumActualGlitches()
+        self.num_glitches = self.num_glitches
+
 
     @property
     def state(self):
@@ -1017,7 +1011,7 @@ class ChipWhispererGlitch(object):
         if type(offsets) is int:
             return offsets
         else:
-            return MultiGlitchList(offsets, setter=self.setTriggerOffset, getter=self.readTriggerOffset)
+            return util.Lister(offsets, setter=self.setTriggerOffset, getter=self.readTriggerOffset)
 
 
     def setGlitchOffsetFine(self, fine):
@@ -1176,7 +1170,7 @@ class ChipWhispererGlitch(object):
         if type(repeats) is int:
             return repeats
         else:
-            return MultiGlitchList(repeats, setter=self.setRepeat, getter=self.readRepeat)
+            return util.Lister(repeats, setter=self.setRepeat, getter=self.readRepeat)
             
 
 

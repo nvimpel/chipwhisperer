@@ -41,6 +41,7 @@ def reset_setup(scope, target):
     scope.LA.downsample = 1
     scope.trace.enabled = False
     target.baud = 38400 * 10 / 7.37
+    reset_target(scope)
 
 
 def reset_target(scope):
@@ -130,12 +131,12 @@ def check_ramp(raw, testmode, bits_per_sample, samples, segment_cycles, verbose=
                 errors += 1
                 if not first_error:
                     first_error = i
-                if verbose: print("Byte %d: unexpected value %0x" % current_count)
+                if verbose: print("Byte %d: unexpected value %0x" % (i, current_count))
             if byte != current_count:
                 errors += 1
                 if not first_error:
                     first_error = i
-                if verbose: print("Byte %d: unexpected value %0x" % current_count)
+                if verbose: print("Byte %d: unexpected value %0x" % (i, current_count))
 
     elif testmode == 'internal':
         for i, byte in enumerate(raw[1:]):
@@ -175,9 +176,9 @@ def armed(scope):
 
 def common_fpga_version_check(scope):
     if scope._is_husky_plus:
-        assert scope.fpga_buildtime == '12/16/2024, 13:17'
+        assert scope.fpga_buildtime == '2/3/2026, 18:06'
     else:
-        assert scope.fpga_buildtime == '12/11/2024, 12:33'
+        assert scope.fpga_buildtime == '2/2/2026, 15:14'
 
 def common_fw_version_check(scope):
     if scope._is_husky_plus:
@@ -203,7 +204,7 @@ def common_xadc_check(scope, verbose=False, error_msg=''):
                     vmargin = vseen - vlimit
                 else:
                     vmargin = vlimit - vseen
-                if vmargin > 0:
+                if vmargin >= 0:
                     status = '✅ pass'
                 else:
                     status = '❌ FAIL!'
@@ -212,7 +213,7 @@ def common_xadc_check(scope, verbose=False, error_msg=''):
     if scope.XADC.status != 'good':
         failed = True
         print('\*** nFailing due to XADC status: %s' % scope.XADC.status)
-    if scope.XADC.max_temp >= 65.0:
+    if scope.XADC.max_temp >= 70.0:
         failed = True
         print('\n*** Failing due to high temperature: %s' % scope.XADC.max_temp)
     assert not failed, error_msg

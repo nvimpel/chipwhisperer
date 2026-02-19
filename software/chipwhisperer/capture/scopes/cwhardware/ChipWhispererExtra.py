@@ -777,6 +777,27 @@ class GPIOSettings(util.DisableNewAttr):
     def read_tio_states(self):
         return self.cwe.read_tio_states()
 
+
+    def _tio_bb_trig(self, pin):
+        if self._is_husky:
+            BB_TRIG_PINS = {self.GPIO_PIN_TIO1: 9,
+                            self.GPIO_PIN_TIO2: 10,
+                            self.GPIO_PIN_TIO3: 11,
+                            self.GPIO_PIN_TIO4: 12
+                           }
+            if pin not in BB_TRIG_PINS.keys():
+                return False
+            bb_trig = self.cwe.oa.sendMessage(CODE_READ, "BB_TRIG_SELECT", maxResp=1)[0]
+            if bb_trig & 0x0f == BB_TRIG_PINS[pin]:
+                return 'scope.bitbanger.data_pin'
+            elif bb_trig >> 4 == BB_TRIG_PINS[pin]:
+                return 'scope.bitbanger.clock_pin'
+            else:
+                return False
+        else:
+            return False
+
+
     @property
     def tio1_mode(self):
         return self._get_tio_mode(self.GPIO_PIN_TIO1)
@@ -793,6 +814,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_low" / False: Driven output: logic 0
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
+
+        For Husky, TIO1 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
 
         Default value is "serial_rx".
 
@@ -833,6 +863,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
 
+        For Husky, TIO2 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
+
         Default value is "serial_tx".
 
         :Getter:  Return one of the above strings. This shows how ChipWhisperer is 
@@ -872,6 +911,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
 
+        For Husky, TIO3 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
+
         Default value is "high_z".
 
         :Getter:  Return one of the above strings. This shows how ChipWhisperer is 
@@ -908,6 +956,15 @@ class GPIOSettings(util.DisableNewAttr):
         * "gpio_low" / False: Driven output: logic 0
         * "gpio_high" / True: Driven output: logic 1
         * "gpio_disabled": Driven output: no effect
+
+        For Husky, TIO4 can also be used as the 
+        :class:`scope.bitbanger <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger>`
+        data or clock pin;
+        however, that cannot be set by this property; use 
+        :class:`scope.bitbanger.data_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.data_pin>` 
+        or
+        :class:`scope.bitbanger.clock_pin <chipwhisperer.capture.scopes.cwhardware.ChipWhispererHuskyBitBanger.BitBanger.clock_pin>`
+        to make this choice.
 
         Default value is "high_z". Typically, this pin is used as a trigger
         input.
@@ -947,8 +1004,12 @@ class GPIOSettings(util.DisableNewAttr):
         Return:
             The API string that represents the TIO GPIO mode.
         """
-        mode = self._get_tio_mode(tio_num)
-        return self.TIO_MODE_TRANSLATE.api_to_str(mode)
+        bb_override = self._tio_bb_trig(tio_num)
+        if bb_override:
+            return bb_override
+        else:
+            mode = self._get_tio_mode(tio_num)
+            return self.TIO_MODE_TRANSLATE.api_to_str(mode)
 
     def _set_tio_mode(self, tio_num, mode):
         """Internal function to set the current mode of a TIO pin.
@@ -1154,6 +1215,7 @@ class GPIOSettings(util.DisableNewAttr):
         Options:
 
         * "high_z": input: to use as a trigger (scope.trigger.triggers = 'aux') or clock (scope.clock.clkgen_src = 'extclk_aux_io').
+        * "userio_ck": output: provide the same clock that's on USERIO CK.
         * "hs2": output: provide the same clock that's on HS2.
         """
         if not self._is_husky:
@@ -1161,6 +1223,8 @@ class GPIOSettings(util.DisableNewAttr):
         data = self.cwe.oa.sendMessage(CODE_READ, "CW_AUX_IO", Validate=False, maxResp=1)[0]
         if data & 0x01:
             return "hs2"
+        elif data & 0x08:
+            return "userio_ck"
         else:
             return "high_z"
 
@@ -1170,11 +1234,15 @@ class GPIOSettings(util.DisableNewAttr):
             raise ValueError("For CW-Husky only.")
         data = self.cwe.oa.sendMessage(CODE_READ, "CW_AUX_IO", Validate=False, maxResp=1)[0]
         if state == 'high_z':
-            data &= 0xfe
+            data &= 0xf6
         elif state == 'hs2':
+            data &= 0xf7
             data |= 0x01
+        elif state == 'userio_ck':
+            data &= 0xfe
+            data |= 0x08
         else:
-            raise ValueError("Options: high_z, hs2")
+            raise ValueError("Options: high_z, hs2, userio_ck")
         return self.cwe.oa.sendMessage(CODE_WRITE, "CW_AUX_IO", [data])
 
     @property
@@ -1794,32 +1862,6 @@ class ProTrigger(TriggerSettings):
         self.cwe.oa.sendMessage(CODE_WRITE, "CW_EXTCLK_ADDR", resp2)
 
 
-class SequenceTriggerList(list):
-    """Class that behaves like a list, but can set individual elements using a getter/setter
-
-    Useful so that we can do scope.trigger.<property>[<index>] = <value> with Husky sequenced triggers
-    """
-    def __setitem__(self, *args, **kwargs):
-        oldval = self._getter()
-        oldval[args[0]] = args[1]
-        self._setter(oldval)
-        pass
-
-    def __repr__(self):
-        oldrepr = super().__repr__()
-        return f"SequenceTriggerList({oldrepr})"
-
-    def __init__(self, *args, **kwargs):
-        if "getter" not in kwargs:
-            raise KeyError("SequenceTriggerList requires a getter")
-        if "setter" not in kwargs:
-            raise KeyError("SequenceTriggerList requires a setter")
-        
-        self._getter = kwargs.pop("getter")
-        self._setter = kwargs.pop("setter")
-        super().__init__(*args, **kwargs)
-
-
 class HuskyTrigger(TriggerSettings):
     """Husky trigger object.
     Communicates with all the trigger modules inside CW-Husky.
@@ -1831,7 +1873,8 @@ class HuskyTrigger(TriggerSettings):
               'UART':           0x03,
               'trace':          0x04,
               'ADC':            0x05,
-              'edge_counter':   0x06
+              'edge_counter':   0x06,
+              'bitbanger':      0x07
               }
 
     def __init__(self, cwextra):
@@ -1888,7 +1931,7 @@ class HuskyTrigger(TriggerSettings):
         if type(triggers) is str:
             return triggers
         else:
-            return SequenceTriggerList(triggers, setter=self.setMultipleTriggers, getter=self.readMultipleTriggers)
+            return util.Lister(triggers, setter=self.setMultipleTriggers, getter=self.readMultipleTriggers)
 
     def setMultipleTriggers(self, triggers):
         msg = []
@@ -1962,6 +2005,7 @@ class HuskyTrigger(TriggerSettings):
         * 'UART':         Trigger from UART module
         * 'edge_counter': Trigger after a number of rising/falling edges
         * 'trace':        Trigger from TraceWhisperer
+        * 'bitbanger':    Trigger from bitbanger module
 
         :Getter: Return the active trigger module
 
@@ -2000,7 +2044,7 @@ class HuskyTrigger(TriggerSettings):
         if type(modules) is str:
             return modules
         else:
-            return SequenceTriggerList(modules, setter=self.setModule, getter=self.readModule)
+            return util.Lister(modules, setter=self.setModule, getter=self.readModule)
 
 
     def setModule(self, modes):
@@ -2075,6 +2119,7 @@ class HuskyTrigger(TriggerSettings):
     def window_start(self):
         """Minimum number of clock cycles (of the ADC sampling clock) that must follow trigger #0
         before trigger #1 is allowed to complete the sequence. 0 = no limit.
+
         Args:
             start: 16-bit integer
         """
@@ -2086,7 +2131,7 @@ class HuskyTrigger(TriggerSettings):
 
     def get_window_start(self):
         starts = self.read_multiple_window_start()
-        return SequenceTriggerList(starts, setter=self.set_multiple_window_start, getter=self.read_multiple_window_start)
+        return util.Lister(starts, setter=self.set_multiple_window_start, getter=self.read_multiple_window_start)
 
     def read_multiple_window_start(self):
         raw = self.cwe.oa.sendMessage(CODE_READ, "SEQ_TRIGGERS_MINMAX", Validate=False, maxResp=self._window_bytes*(self.max_sequenced_triggers-1)*2)
@@ -2123,6 +2168,7 @@ class HuskyTrigger(TriggerSettings):
     def window_end(self):
         """Maximum number of clock cycles (of the ADC sampling clock) that can follow trigger #0
         before trigger #1 is allowed to complete the sequence. 0 = no limit.
+
         Args:
             end: 16-bit integer
         """
@@ -2135,7 +2181,7 @@ class HuskyTrigger(TriggerSettings):
 
     def get_window_end(self):
         ends = self.read_multiple_window_end()
-        return SequenceTriggerList(ends, setter=self.set_multiple_window_end, getter=self.read_multiple_window_end)
+        return util.Lister(ends, setter=self.set_multiple_window_end, getter=self.read_multiple_window_end)
 
     def read_multiple_window_end(self):
         raw = self.cwe.oa.sendMessage(CODE_READ, "SEQ_TRIGGERS_MINMAX", Validate=False, maxResp=self._window_bytes*(self.max_sequenced_triggers-1)*2)

@@ -1385,8 +1385,9 @@ class ChipWhispererHuskyClock(util.DisableNewAttr):
     def freq_ctr(self):
         """Reads the frequency of the external input clock.
 
-        Caution: the clock must be present for this to function; if there is
-        no clock, this will not return 0.
+        .. caution::
+            The clock must be present for this to function; if there is no
+            clock, this will not return 0.
         """
         return self.fpga_clk_settings.freq_ctr
 
