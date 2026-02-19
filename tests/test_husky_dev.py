@@ -74,7 +74,6 @@ print('* modified with updated instruction addresses.                           
 print('* The simplest way to program a SAM4S target is to run test_husky_prod.py.           *')
 print('**************************************************************************************\n\n')
 
-#test_platform = "stm32f3"
 test_platform = "sam4s"
 logfilename = "test_husky_xadc.log"
 
@@ -87,11 +86,21 @@ if "HUSKY_HW_LOC" in os.environ:
 else:
     hw_loc = None
 
+# set to sam4s, stm32f3, or cw305:
 if "HUSKY_TARGET_PLATFORM" in os.environ:
     test_platform = os.environ["HUSKY_TARGET_PLATFORM"]
 
+if "HUSKY_TYPE" in os.environ:
+    NAME = os.environ["HUSKY_TYPE"]
+else:
+    NAME = None
+
 print("Husky target platform {}".format(test_platform))
-scope = cw.scope(hw_location=hw_loc)
+if NAME:
+    scope = cw.scope(name=NAME, hw_location=hw_loc)
+else:
+    scope = cw.scope(hw_location=hw_loc)
+
 if test_platform == 'cw305':
     target = cw.target(scope, cw.targets.CW305, fpga_id='100t', force=False)
 else:
@@ -684,7 +693,11 @@ def adc_reset_test_setup(samples):
     # NOTE: for some reason, calling scope.dis()/con() here leads to strange errors elsewhere
     #scope.dis()
     #scope.con(hw_location=hw_loc)
-    scope = cw.scope(hw_location=hw_loc)
+    if NAME:
+        scope = cw.scope(name=NAME, hw_location=hw_loc)
+    else:
+        scope = cw.scope(hw_location=hw_loc)
+
     reset_setup(scope,target)
     scope.adc.test_mode = True
     scope.ADS4128.mode = 'normal'
@@ -991,6 +1004,7 @@ def test_glitch_output_sweep_offset(fulltest, reps, clock, width, oversamp, step
             scope.glitch.offset = offset
             scope.LA.arm()
             scope.glitch.manual_trigger()
+            assert not scope.LA.fifo_empty()
             raw = scope.LA.read_capture_data()
             glitch = scope.LA.extract(raw, 0)
             source = scope.LA.extract(raw, 1)
@@ -1259,6 +1273,9 @@ def test_trace (swo_trace, raw_capture, interface, trigger_source, desc):
     if not swo_trace:
         pytest.skip("use --swo_trace to run")
         return None
+    if test_platform != 'stm32f3':
+        pytest.skip("requires stm32 test platform")
+        return None
     reset_setup(scope,target)
     scope.default_setup(verbose=False)
     setup_trace(interface)
@@ -1315,6 +1332,9 @@ def test_trace (swo_trace, raw_capture, interface, trigger_source, desc):
 def test_segment_trace (swo_trace, interface, triggers, desc):
     if not swo_trace:
         pytest.skip("use --swo_trace to run")
+        return None
+    if test_platform != 'stm32f3':
+        pytest.skip("requires stm32 test platform")
         return None
     reset_setup(scope,target)
     errors = 0

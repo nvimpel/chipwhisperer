@@ -47,9 +47,8 @@ print('* Use --stress to run extra iterations of tests which drive the temperatu
 print('* this increases runtime to about 5 minutes.                                         *')
 print('**************************************************************************************\n\n')
 
-# default to sam4s:
+# default to sam4s; note that stm32f3 is not supported by this script
 test_platform = "sam4s"
-#test_platform = "stm32f3" (not supported by this script)
 logfilename = "test_husky_prod_xadc.log"
 
 if "HUSKY_HW_LOC" in os.environ:
@@ -63,9 +62,17 @@ else:
 
 if "HUSKY_TARGET_PLATFORM" in os.environ:
     test_platform = os.environ["HUSKY_TARGET_PLATFORM"]
+if "HUSKY_TYPE" in os.environ:
+    NAME = os.environ["HUSKY_TYPE"]
+else:
+    NAME = None
 
 print("Husky target platform {}".format(test_platform))
-scope = cw.scope(hw_location=hw_loc)
+if NAME:
+    scope = cw.scope(name=NAME, hw_location=hw_loc)
+else:
+    scope = cw.scope(hw_location=hw_loc)
+
 target = cw.target(scope)
 scope.errors.clear()
 verbose = False
