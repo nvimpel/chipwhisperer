@@ -17,10 +17,6 @@ except Exception as e:
     Layout = None 
     widgets = None
 
-# We don't directly call anything from jupyter_bokeh, but the interactive plotting
-# that we do here will silently fail if this package is not installed:
-if importlib.util.find_spec('jupyter_bokeh') is None:
-    raise ImportError("The jupyter_bokeh package is required for TraceWhispererExplorer. Try installing chipwhisperer-jupyter's requirements.txt.")
 
 class TraceWhispererExplorer(util.DisableNewAttr):
     """Class to interactively capture power traces and TraceWhisperer data.
@@ -32,6 +28,10 @@ class TraceWhispererExplorer(util.DisableNewAttr):
 
     def __init__(self, scope, target, functions, width=2000, height=600, plot_tools='pan, box_zoom, hover, reset, save'):
         super().__init__()
+        # We don't directly call anything from jupyter_bokeh, but the interactive plotting
+        # that we do here will silently fail if this package is not installed:
+        if importlib.util.find_spec('jupyter_bokeh') is None:
+            raise ImportError("The jupyter_bokeh package is required for TraceWhispererExplorer. Try installing chipwhisperer-jupyter's requirements.txt.")
         if interact is None:
             raise ImportError("The bokeh and ipywidgets packages are required for TraceWhispererExplorer. Try installing chipwhisperer-jupyter's requirements.txt.")
         self.scope = scope
