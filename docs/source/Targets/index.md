@@ -53,14 +53,14 @@ Many targets are available for the CW308:
 | CW308T-ATSAM4L   | ATSAM4L        | Arm Cortex-M4  | Yes             | External                   | Released | Side channel countermeasures |
 | CW308T-ATSAML11  | ATSAML11E16A   | Arm Cortex-M23 | Yes             | External                   | Released |                |
 | CW308T-AURIX     | TC233LP        | TriCore        | No              | External                   | Released | Lockstep Core | 
-| CW308T-CEC1702   | CEC1702        | Arm Cortex-M4F | Yes             | External                   | Released | Lots of hardware crypto modules | 
-| CW308T-D2000     | Quark D2000    | x86            | No              | External                   | Released | Intel x86 microcontroller |
+| CW308T-CEC1702   | CEC1702        | Arm Cortex-M4F | Yes             | External                   | Discontinued | Lots of hardware crypto modules | 
+| CW308T-D2000     | Quark D2000    | x86            | No              | External                   | Discontinued | Intel x86 microcontroller |
 | CW308T-EFR32MG21A| EFR32MG21A     | Arm Cortex-M33 | Yes             | External                   | Released | 'Secure Element' Core |
 | CW308T-EFR32MG21-SOCKET | QFN Socket (EFR32MG21x) | Arm Cortex-M33 | Yes | External               | Released | Fits EFR32MG21A/B |
 | CW308T-ESP32     | ESP32          | LX6            | Yes             | External                   | Released | Low-cost IoT chip |
-| CW308T-FE310     | FE310-G002     | RISC-V         | No              | External                   | Released | Si-Five RISC-V |
+| CW308T-FE310     | FE310-G002     | RISC-V         | No              | External                   | Discontinued | Si-Five RISC-V |
 | CW308T-K82       | MK82FN256VLL15 | Arm Cortex-M4  | Yes             | External                   | Released | Multiple AES cores |
-| CW308T-MPC5748G  | MPC5748G       | PowerPC        | Yes (API under NDA) | External               | Released | Triple-Core, CAN interface |
+| CW308T-MPC5748G  | MPC5748G       | PowerPC        | Yes (API under NDA) | External               | Discontinued | Triple-Core, CAN interface |
 | CW308T-MPC5676R  | MPC5676R       | PowerPC        | No              | External                   | Released |                |
 | CW308T-MPC5777C  | MPC5777C       | PowerPC        | Yes             | External                   | Released | CSE/SHE Core   |
 | CW308T-STM32F0   | STM32F071RBT6  | Arm Cortex-M0  | No              | CW-integrated , external   | Released |                |
