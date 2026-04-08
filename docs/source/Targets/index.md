@@ -18,7 +18,7 @@ The following targets typically come attached to a capture board:
 |--------|--------|--------------|-----------------|-----------|---------|------|
 | CW303 XMEGA | ATXmega128D4-AU | 8-bit Harvard  | No| CW-integrated  | Released | |
 | CW303 Arm | STM32F303RCT6 |Arm Cortex-M4 | No | CW-integrated  | Released |
-| CW1101 Target Board | STM32F030F4P6 | Arm Cortex-M0 | No | CW-integrated  | Released | 
+| CW1101 CW-Nano Target Board | STM32F030F4P6 | Arm Cortex-M0 | No | CW-integrated  | Released | 
 
 These boards are integrated into a capture board and therefore can be found
 with the associated capture design files: [https://github.com/newaetech/chipwhisperer-capture](https://github.com/newaetech/chipwhisperer-capture)
@@ -30,9 +30,10 @@ with a 20-pin cable and SMA cables
 
 | Target | Device | Architecture | Hardware Crypto |Programmer | Status | Notes |
 |--------|--------|--------------|-----------------|-----------|---------|------|
-| CW304 Notduino | ATMega328P | 8-bit Harvard  | No | CW-integrated  | Released | Only available as PCB + components (unsoldered) |
+| CW304 Notduino | ATMega328P | 8-bit Harvard  | No | CW-integrated  | Discontinued | Only available as PCB + components (unsoldered) |
 | CW305 Artix FPGA | Xilinx Artix-7 | FPGA | Yes | CW-integrated , external | Released |
 | CW310 Kintex FPGA | Xilinx Kintex-7 | FPGA | Yes | CW-integrated, external | Released |
+| CW340 Kintex FPGA | Xilinx Kintex-7 | FPGA | Yes | CW-integrated, external | Released |
 
 Hardware design files can be found at [https://github.com/newaetech/chipwhisperer-capture](https://github.com/newaetech/chipwhisperer-capture)
 
@@ -44,6 +45,8 @@ many niceties for running target boards off of, including various voltage regula
 circuit, clock selection, and programming headers for standards like JTAG.
 
 Hardware design files for targets can be found on our Github at: [https://github.com/newaetech/chipwhisperer-target-cw308t](https://github.com/newaetech/chipwhisperer-target-cw308t)
+
+These targets can also be used with the [CW313](CW313.md) thanks to our [CW308-to-CW312 adapter board](CW308_CW312_adapter.md).
 
 Many targets are available for the CW308:
 
@@ -104,3 +107,34 @@ HAL, but we did not have sufficient interest to perform the production run.
 | CW308T-LPC1343 | LPC1343 | Arm Cortex-M3 | No | External | In development | Glitch attack possible on code read protect |
 | CW308T-MEGARF | ATMega256RFR2 | 8-bit Harvard | Yes | CW-integrated, external | In development | 802.15.4 SOC |
 | CW308T-MSP430FR5 | MSP430FR5(8/9)69 | 16-bit Harvard | Possible | External | In development | 
+
+
+### CW312/CW313 Targets
+
+Very similar to the CW308, the [CW312/CW313](CW313.md) uses a convenient edge connector.
+
+The CW312 is a yet-to-be-released replacement for the CW308; the
+[CW313](CW313.md) is a lower cost version which retains most of the CW308's
+features.
+
+As noted above, CW308 targets may be used with the CW313, but going the other
+way around is not possible (unless you design your own adapter).
+
+Hardware design files for targets can be found on our Github at: [https://github.com/newaetech/chipwhisperer-target-cw308t](https://github.com/newaetech/chipwhisperer-target-cw308t)
+
+The following targets are available for the CW312/CW313:
+
+#### 32-bit Targets
+| Target            | Device        | Architecture   | Hardware Crypto |Programmer                  | Status   | Notes          |
+|-------------------|---------------|----------------|-----------------|----------------------------|----------|----------------|
+| CW312T-SAM4S      | ATSAM4S2      | Arm Cortex-M4  | No              | CW-integrated, external    | Released |                |
+| CW312T-RP2350     | RP2350 | dual Arm Cortex-M33, Hazard3 RISC-V | No | USB Bootloader            | Released | Arm and RISC-V cores |
+
+#### FPGA Targets
+
+| Target            | Device            | Architecture   | Hardware Crypto |Programmer                  | Status   | Notes          |
+|-------------------|-------------------|----------------|-----------------|----------------------------|----------|----------------|
+| CW312T-iCE40      | Lattice iCE40UP5K | FPGA           | Yes             | CW-integrated, external    | Released | Can hold hardware AES core or RISC-V softcore |
+| CW312T-XC7A35     | Xilinx Artix-7    | FPGA           | Yes             | CW-integrated, external    | Released | Can hold hardware AES core, ECC core, Arm softcore, RISC-V softcore |
+
+
