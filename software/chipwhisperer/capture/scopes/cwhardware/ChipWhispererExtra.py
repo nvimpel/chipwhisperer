@@ -106,26 +106,26 @@ class CWExtraSettings:
             TIO_MODE_HIGHZ,
             TIO_MODE_STX,
             TIO_MODE_SRX,
-            TIO_MODE_USIO,
-            TIO_MODE_USII,
+            #TIO_MODE_USIO,
+            #TIO_MODE_USII,
             TIO_MODE_GPIO_LOW,
             TIO_MODE_GPIO_HIGH,
         ), ( # GPIO_PIN_TIO2
             TIO_MODE_HIGHZ,
             TIO_MODE_STX,
             TIO_MODE_SRX,
-            TIO_MODE_USIO,
-            TIO_MODE_USII,
+            #TIO_MODE_USIO,
+            #TIO_MODE_USII,
             TIO_MODE_GPIO_LOW,
             TIO_MODE_GPIO_HIGH,
         ), ( # GPIO_PIN_TIO3
             TIO_MODE_HIGHZ,
             TIO_MODE_STX,
             TIO_MODE_SRX,
-            TIO_MODE_STXRX,
-            TIO_MODE_USIO,
-            TIO_MODE_USII,
-            TIO_MODE_USINOUT,
+            #TIO_MODE_STXRX,
+            #TIO_MODE_USIO,
+            #TIO_MODE_USII,
+            #TIO_MODE_USINOUT,
             TIO_MODE_GPIO_LOW,
             TIO_MODE_GPIO_HIGH,
         ), ( # GPIO_PIN_TIO4
@@ -905,7 +905,6 @@ class GPIOSettings(util.DisableNewAttr):
 
         * "serial_rx": UART input
         * "serial_tx": UART output
-        * "serial_tx_rx": UART 1-wire I/O (for smartcards)
         * "high_z" / None: High impedance input
         * "gpio_low" / False: Driven output: logic 0
         * "gpio_high" / True: Driven output: logic 1
