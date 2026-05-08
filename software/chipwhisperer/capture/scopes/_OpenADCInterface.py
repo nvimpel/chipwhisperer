@@ -1841,6 +1841,10 @@ class TriggerSettings(util.DisableNewAttr):
         if mode not in known_modes:
             raise ValueError("Invalid fill mode %s. Valid modes: %s" % (mode, known_modes), mode)
 
+        if mode == "segment" and self._is_husky:
+            raise ValueError("fifo_fill_mode 'segment' is not supported on CW-Husky. "
+                             "Use scope.adc.segments instead.")
+
         self._set_fifo_fill_mode(mode)
 
         # Segment mode requires samples have an odd divisability to work
