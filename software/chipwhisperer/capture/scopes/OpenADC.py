@@ -981,9 +981,13 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             return timeout or timeout2
 
     def get_last_trace_segmented(self):
-        """Return last trace assuming it was captued with segmented mode.
+        """Return last trace assuming it was captured with segmented mode.
 
-        NOTE: The length of each returned trace is 1 less sample than requested.
+        For CW-Lite/Pro (fifo_fill_mode="segment"), the trigger occupies one
+        sample slot per segment, so each returned segment is 1 sample shorter
+        than the requested sample count.
+
+        For CW-Husky, segments use the full requested sample count.
 
         Returns:
             2-D numpy array of the last captured traces.
@@ -992,7 +996,10 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             Added segmented capture (requires custom bitstream)
         """
 
-        seg_len = self.adc.samples-1
+        if self._is_husky:
+            seg_len = self.adc.samples
+        else:
+            seg_len = self.adc.samples - 1
         num_seg = int(len(self.data_points) / seg_len)
 
         return np.reshape(self.data_points[:num_seg*seg_len], (num_seg, seg_len))
