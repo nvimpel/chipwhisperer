@@ -176,7 +176,7 @@ def armed(scope):
 
 def common_fpga_version_check(scope):
     if scope._is_husky_plus:
-        assert scope.fpga_buildtime == '2/3/2026, 18:06'
+        assert scope.fpga_buildtime == '5/8/2026, 14:48'
     else:
         assert scope.fpga_buildtime == '2/2/2026, 15:14'
 
