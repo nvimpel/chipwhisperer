@@ -1084,6 +1084,13 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
         """
         return self.sc.sendMessage(CODE_WRITE, addr, listofbytes)
 
+    def _write_stats(self):
+        raw = self.fpga_reg_read('REG_SAM3U_WR_DEBUG', 4)
+        last_addr = raw[0]
+        last_wdata = raw[1]
+        count = raw[2] + (raw[3] << 8)
+        return {'last_addr':last_addr, 'last_wdata':last_wdata, 'count':count}
+
     def __enter__(self):
         return self
 

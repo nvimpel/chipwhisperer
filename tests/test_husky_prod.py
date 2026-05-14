@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2025, NewAE Technology Inc
+# Copyright (c) 2025-2026, NewAE Technology Inc
 # All rights reserved.
 #
 # Find this and more at newae.com - this file is part of the chipwhisperer
@@ -30,6 +30,7 @@ import time
 import numpy as np
 import random
 import os
+import functools as ft
 
 from test_common import *
 
@@ -69,8 +70,10 @@ else:
 
 print("Husky target platform {}".format(test_platform))
 if NAME:
+    #scope = cw.scope(name=NAME, hw_location=hw_loc, registers='/home/jpnewae/git/cw_husky_userio/fpga/hdl/registers.v')
     scope = cw.scope(name=NAME, hw_location=hw_loc)
 else:
+    #scope = cw.scope(hw_location=hw_loc, registers='/home/jpnewae/git/cw_husky_userio/fpga/hdl/registers.v')
     scope = cw.scope(hw_location=hw_loc)
 
 target = cw.target(scope)
@@ -196,6 +199,12 @@ testSADTriggerData = [
     (10e6,  'max',  8,     False,   12,         11,                 0,      100,    'fastest'),
 ]
 
+def test_reg_setup_writes():
+    # NOTE: this is highly dependent on what Python (and this script) does upon conecting to the scope object.
+    # The register we are reading gives us stats of the FPGA writes. For a specific configuration, these are constant.
+    stats = scope._write_stats()
+    exp_stats = {'last_addr':55, 'last_wdata':0, 'count':468}
+    assert stats == exp_stats, 'Unexpected write stats: %s; expected %s (note: only works on a freshly-programmed FPGA)' % (stats, exp_stats)
 
 def test_fpga_version():
     common_fpga_version_check(scope)
@@ -258,6 +267,52 @@ def cooldown():
     scope.clock.clkgen_freq = 7.37e6
     reset_setup(scope,target)
 
+def test_reg_reads(stress):
+    # note: must run before test_reg_rw, otherwise ECHO register will have a different value;
+    # similarly, reset_setup() must have been run.
+    if stress:
+        reps = 2000
+    else:
+        reps = 100
+    bad = 0
+    failing_registers = []
+    for i in range(reps):
+        if not correct_fpga_version(scope):
+            if 'BUILDTIME' not in failing_registers:
+                failing_registers.append('BUILDTIME')
+            bad += 1
+        for reg, nbytes, exp in zip(['SOFTPOWER_CONTROL', 'CW_TRIGSRC_ADDR', 'CW_IOROUTE_ADDR', 'SAD_VERSION', 'SAD_COUNTER_WIDTH', 'ECHO_ADDR'],
+                                    [8,                    8,                 8,                 2,             1,                  8],
+                                    [[35,0,208,7,203,7,0,0], [32,0]*4,        [2,1,0,0,0,0,0,0], [202,15],      [7],                [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]]):
+            if scope.fpga_reg_read(reg, nbytes) != exp:
+                bad += 1
+                if reg not in failing_registers:
+                    failing_registers.append(reg)
+    assert bad == 0, 'bad reads: %d (%s)' % (bad, failing_registers)
+
+def test_reg_address_bits(deep_reg_test):
+    if not deep_reg_test:
+        pytest.skip("use --deep_reg_test to run")
+    print('*** must watch for Armed, Capturing, ADC, and Glitch LEDs each turning on and back off one at a time, several times *** ', end='')
+    sleep = 0.2
+    for operation in ['read', 'write']:
+        for _ in range(3):
+            for abit in range(8):
+                address = 2**abit
+                if address < 16:
+                    scope.LEDs.setting = 4
+                else:
+                    scope.LEDs.setting = 5
+                if operation == 'read':
+                    scope.fpga_reg_read(address, 1)
+                else:
+                    scope.fpga_reg_write(address, [0])
+                time.sleep(sleep)
+    scope.LEDs.setting = 0
+    scope.reset_fpga()
+    reset_setup(scope,target)
+
+
 @pytest.mark.parametrize("address, nbytes, reps, desc", testRWData)
 def test_reg_rw(address, nbytes, reps, desc):
     reset_setup(scope,target)
@@ -267,6 +322,133 @@ def test_reg_rw(address, nbytes, reps, desc):
         temp = scope.fpga_buildtime # just a dummy read
         read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
         assert read_data == data, "rep %d: expected %0x, got %0x; this is a highly unusual error which indicates inability to communicate with the FPGA" % (i, int.from_bytes(data, byteorder='little'), int.from_bytes(read_data, byteorder='little'))
+
+
+def test_reg_write_counter():
+    initcount = scope._write_stats()['count']
+    for i in range(100):
+        wdata = random.randint(0,255)
+        scope.fpga_reg_write('ECHO_ADDR', [wdata])
+        stats = scope._write_stats()
+        exp_stats = {'last_addr':4, 'last_wdata':wdata, 'count':initcount+i+1}
+        assert stats == exp_stats, 'Unexpected write stats on rep %d: %s; expected %s' % (i, stats, exp_stats)
+
+
+@pytest.mark.parametrize("address, nbytes, reps, desc", testRWData)
+def test_reg_repeat_reads(deep_reg_test, address, nbytes, reps, desc):
+    # writes random data and checks whether we repeated reads return the same:
+    if not deep_reg_test:
+        pytest.skip("use --deep_reg_test to run")
+    repreads = 10
+    goodbytes = 0
+    badbytes = 0
+    goodwords = 0
+    badwords = 0
+    worst_corrects = nbytes*repreads
+    best_corrects = 0
+    changing_reads = 0
+    reads = []
+    for i in range(2*reps//repreads//nbytes):
+        data = int.to_bytes(random.randrange(2**(8*nbytes)), length=nbytes, byteorder='little')
+        scope.sc.sendMessage(0xc0, address, bytearray(data), Validate=False)
+        good = 0
+        bad = 0
+        for rr in range(repreads):
+            temp = scope.fpga_buildtime # just a dummy read
+            read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
+            if rr == 0:
+                first_read = read_data
+            else:
+                if list(read_data) != list(first_read):
+                    changing_reads += 1 
+            if list(read_data) == list(data):
+                goodwords += 1
+            else:
+                badwords += 1
+            for rb, wb in zip(read_data, data):
+                if rb == wb:
+                    goodbytes += 1
+                    good += 1
+                else:
+                    badbytes += 1
+                    bad += 1
+        reads.append(good)
+        if bad < worst_corrects:
+            worst_corrects = bad
+        if good > best_corrects:
+            best_corrects = good
+    if changing_reads != 0 or badbytes != 0:
+        print('test failed! some statistics:')
+        print('Changing reads: %d' % changing_reads)
+        print('Good bytes: %d ' % goodbytes)
+        print('Bad  bytes: %d ' % badbytes)
+        print('Good words: %d ' % goodwords)
+        print('Bad  words: %d ' % badwords)
+        print('Most  correctly read bytes: %d out of %d' % (best_corrects, nbytes*repreads))
+        print('Least correctly read bytes: %d out of %d' % (worst_corrects, nbytes*repreads))
+        print('\nHistogram of good read bytes: %s' % display_hist(np.asarray(reads), num_bins=repreads*nbytes, zeros_as_blank=True))
+        assert False
+
+
+@pytest.mark.parametrize("address, nbytes, reps, desc", testRWData)
+def test_reg_deep_rw(deep_reg_test, address, nbytes, reps, desc):
+    # like test_reg_rw but looks at which bits tend to be in error:
+    if not deep_reg_test:
+        pytest.skip("use --deep_reg_test to run")
+    rxbits = []
+    ebits0 = []
+    ebits1 = []
+    gbits0 = []
+    gbits1 = []
+    errors0 = 0
+    errors1 = 0
+    goodbits0 = 0
+    goodbits1 = 0
+    if desc == 'ones_vs_zeros':
+        randdata = False
+    else:
+        randdata = True
+    for i in range(reps):
+        if randdata:
+            data = int.to_bytes(random.randrange(2**(8*nbytes)), length=nbytes, byteorder='little')
+        else:
+            data = [0xFF, 0x00, 0xFF, 0x00]
+        scope.sc.sendMessage(0xc0, address, bytearray(data), Validate=False)
+        temp = scope.fpga_buildtime # just a dummy read
+        read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
+        for rb, wb in zip(read_data, data):
+            for i in range(8):
+                if 2**i & rb:
+                    rxbits.append(i)
+                if ((2**i & rb) != (2**i & wb)):
+                    if (2**i & rb):
+                        ebits1.append(i)
+                        errors1 += 1
+                    else:
+                        ebits0.append(i)
+                        errors0 += 1
+                else:
+                    if (2**i & rb):
+                        gbits1.append(i)
+                        goodbits1 += 1
+                    else:
+                        gbits0.append(i)
+                        goodbits0 += 1
+
+    if errors0 + errors1 != 0:
+        print('test failed! some statistics:')
+        print('\nHistogram of bits received:  %s' % display_hist(np.asarray(rxbits), num_bins=8, zeros_as_blank=True))
+        if errors0:
+            print('\nHistogram of bit errors (0): %s' % display_hist(np.asarray(ebits0), num_bins=8, zeros_as_blank=True))
+        if errors1:
+            print('\nHistogram of bit errors (1): %s' % display_hist(np.asarray(ebits1), num_bins=8, zeros_as_blank=True))
+        if goodbits0:
+            print('\nHistogram of good bits  (0): %s' % display_hist(np.asarray(gbits0), num_bins=8, zeros_as_blank=True))
+        if goodbits1:
+            print('\nHistogram of good bits  (1): %s' % display_hist(np.asarray(gbits1), num_bins=8, zeros_as_blank=True))
+        print('Errored bits (0/1): %d / %d' % (errors0, errors1))
+        print('Good bits    (0/1): %d / %d' % (goodbits0, goodbits1))
+        assert False
 
 
 @pytest.mark.skipif(not target_attached, reason='No target detected')
@@ -633,4 +815,80 @@ def test_xadc():
 def test_finish():
     # just restore some defaults:
     scope.default_setup(verbose=False)
+
+
+# this function copied from https://gist.github.com/mattmills49/44a50b23d3c7a8f71dfadadd0f876ac2
+def display_hist(x, num_bins = 8, zeros_as_blank = False):
+    '''Returns a histogram as a unicode text string, e.g. '▁▂▄█▆▃▁▁'
+    
+    Inspired by the `precis` function from the Statistical Rethinking R package
+    by Richard McElreath. This function will calculate a histogram and then
+    returns a string displaying the histogram in unicode characters. It uses the
+    LOWER BLOCK group like "2584 ▄ LOWER HALF BLOCK". 
+    
+    After I published this I was alerted to the correct term for this type of text
+    plot: spark lines. There is a python package by @RedKrieg that is much more 
+    robust for turning a sequence into a spark line called pysparklines. And the
+    original(?) terminal package form @holman called spark:
+    * pysparklines: https://github.com/RedKrieg/pysparklines
+    * spark: https://github.com/holman/spark
+    
+    Parameters
+    ----------
+    x : numpy.array 
+        The vector of values to compute the histogram for
+    num_bins : int or list of float
+        The number of characters to print out. Can pass custom bin edges to 
+        `np.histogram` as well.
+    zeros_as_blank : bool
+        Should buckets with 0 observations be a blank space, False would still
+        show a one eight block if there are no observations.
+        
+    Returns
+    -------
+    unicode_str : str
+        The histogram str to be displayed
+        
+    Examples
+    --------
+    >>> display_hist(np.random.uniform(size = 1000))
+    '▇▇▇▇▇▆▇█'
+    >>> display_hist(np.random.normal(size = 1000))
+    '▁▂▄█▆▃▁▁'
+    >>> display_hist(np.abs(np.random.normal(size = 1000)))
+    '█▇▅▃▂▁▁▁'
+    >>> display_hist(np.power(np.random.normal(size = 1000), 2))
+    '█▂▁▁▁▁▁▁'
+    >>> display_hist(np.hstack([np.repeat(0, 900), np.repeat(10, 100)]), zeros_as_blank = True)
+    '█      ▁'
+    >>> display_hist(np.hstack([np.repeat(0, 900), np.repeat(10, 100)]))
+    '█▁▁▁▁▁▁▁'
+    >>> display_hist(np.hstack([np.random.normal(size = 1000), 
+                                np.random.normal(loc = 3, scale = 0.5, size = 1000)]), 
+                     num_bins = 16)
+    '▁▁▂▂▃▅▄▄▂▁▃▆█▄▁▁'
+    
+    References
+    ----------
+    The unicode code charts: https://www.unicode.org/Public/UCD/latest/charts/CodeCharts.pdf
+    '''
+    
+    ## Get bin counts as a pct of total obs
+    hist_counts, bin_edges = np.histogram(x, bins = num_bins)
+    x_total = x.shape[0]
+    pct_counts = hist_counts / x_total
+    ## scale the percentages by the max pct and 0, then convert to the index
+    ## of the appropriate unicode string in unicode_list
+    max_pct = np.max(pct_counts)
+    bin_labels = np.floor(pct_counts * (8 - 1) / max_pct).astype('int')
+    ## adjust zeros to blank space index
+    if zeros_as_blank:
+        zero_ind = pct_counts == 0.0
+        bin_labels[zero_ind] = 8
+        
+    unicode_list = ['\u2581', '\u2582', '\u2583', '\u2584',
+                    '\u2585', '\u2586', '\u2587', '\u2588', ' ']
+    unicode_labels = [unicode_list[l] for l in bin_labels]
+    unicode_str = ft.reduce(lambda x, y: x + y, unicode_labels)
+    return unicode_str
 

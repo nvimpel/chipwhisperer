@@ -174,17 +174,23 @@ def armed(scope):
 # these are essentially test_X functions common to multiple test scripts:
 #########################################################################
 
-def common_fpga_version_check(scope):
+def correct_fpga_version(scope):
     if scope._is_husky_plus:
-        assert scope.fpga_buildtime == '5/8/2026, 14:48'
+        #return scope.fpga_buildtime == '5/8/2026, 14:48'
+        #return scope.fpga_buildtime == '5/12/2026, 14:53'
+        return scope.fpga_buildtime == '5/13/2026, 11:28'
     else:
-        assert scope.fpga_buildtime == '2/2/2026, 15:14'
+        return scope.fpga_buildtime == '2/2/2026, 15:14'
+
+def common_fpga_version_check(scope):
+    assert correct_fpga_version(scope)
 
 def common_fw_version_check(scope):
     if scope._is_husky_plus:
         assert scope.fw_version['major'] == 1
         assert scope.fw_version['minor'] == 0
-        assert scope.sam_build_date == '12:22:29 Sep 16 2024'
+        #assert scope.sam_build_date == '12:22:29 Sep 16 2024'
+        assert scope.sam_build_date == '14:20:23 May 12 2026'
     else:
         assert scope.fw_version['major'] == 1
         assert scope.fw_version['minor'] == 5
