@@ -203,7 +203,11 @@ def test_reg_setup_writes():
     # NOTE: this is highly dependent on what Python (and this script) does upon conecting to the scope object.
     # The register we are reading gives us stats of the FPGA writes. For a specific configuration, these are constant.
     stats = scope._write_stats()
-    exp_stats = {'last_addr':55, 'last_wdata':0, 'count':1034}
+    if target_attached:
+        count = 1034
+    else:
+        count = 1066
+    exp_stats = {'last_addr':55, 'last_wdata':0, 'count':count}
     assert stats == exp_stats, 'Unexpected write stats: %s; expected %s (note: only works on a freshly-programmed FPGA)' % (stats, exp_stats)
 
 def test_fpga_version():
@@ -276,6 +280,10 @@ def test_reg_reads(stress):
         reps = 100
     bad = 0
     failing_registers = []
+    if target_attached: 
+        exp_ioroute = [2,1,0,0,0,0,0,0]
+    else:
+        exp_ioroute = [2,1,0,0,0,0,32,0]
     for i in range(reps):
         if not correct_fpga_version(scope):
             if 'BUILDTIME' not in failing_registers:
@@ -283,7 +291,7 @@ def test_reg_reads(stress):
             bad += 1
         for reg, nbytes, exp in zip(['SOFTPOWER_CONTROL', 'CW_TRIGSRC_ADDR', 'CW_IOROUTE_ADDR', 'SAD_VERSION', 'SAD_COUNTER_WIDTH', 'ECHO_ADDR'],
                                     [8,                    8,                 8,                 2,             1,                  8],
-                                    [[35,0,208,7,203,7,0,0], [32,0]*4,        [2,1,0,0,0,0,0,0], [202,15],      [7],                [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]]):
+                                    [[35,0,208,7,203,7,0,0], [32,0]*4,        exp_ioroute,       [202,15],      [7],                [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]]):
             if scope.fpga_reg_read(reg, nbytes) != exp:
                 bad += 1
                 if reg not in failing_registers:
