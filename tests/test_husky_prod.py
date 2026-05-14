@@ -274,6 +274,7 @@ def cooldown():
 def test_reg_reads(stress):
     # note: must run before test_reg_rw, otherwise ECHO register will have a different value;
     # similarly, reset_setup() must have been run.
+    # Because this test only checks reset values of registers, failures indicate read problems.
     if stress:
         reps = 2000
     else:
@@ -296,9 +297,11 @@ def test_reg_reads(stress):
                 bad += 1
                 if reg not in failing_registers:
                     failing_registers.append(reg)
-    assert bad == 0, 'bad reads: %d (%s)' % (bad, failing_registers)
+    assert bad == 0, '%d errors in reads of reset values on these registers: %s' % (bad, failing_registers)
 
 def test_reg_address_bits(deep_reg_test):
+    # The LEDs are driven by the address bits that are registered internally on a read or write command.
+    # Incorrect LED flashing indicates problems with timing on the address/ALEn pins.
     if not deep_reg_test:
         pytest.skip("use --deep_reg_test to run")
     print('*** must watch for Armed, Capturing, ADC, and Glitch LEDs each turning on and back off one at a time, several times *** ', end='')
@@ -329,7 +332,7 @@ def test_reg_rw(address, nbytes, reps, desc):
         scope.sc.sendMessage(0xc0, address, bytearray(data), Validate=False)
         temp = scope.fpga_buildtime # just a dummy read
         read_data = scope.sc.sendMessage(0x80, address, maxResp=nbytes)
-        assert read_data == data, "rep %d: expected %0x, got %0x; this is a highly unusual error which indicates inability to communicate with the FPGA" % (i, int.from_bytes(data, byteorder='little'), int.from_bytes(read_data, byteorder='little'))
+        assert read_data == data, "rep %d: expected %0x, got %0x; indicates inability to communicate with the FPGA (either reading and/or writing)" % (i, int.from_bytes(data, byteorder='little'), int.from_bytes(read_data, byteorder='little'))
 
 
 def test_reg_write_counter():
@@ -339,12 +342,13 @@ def test_reg_write_counter():
         scope.fpga_reg_write('ECHO_ADDR', [wdata])
         stats = scope._write_stats()
         exp_stats = {'last_addr':4, 'last_wdata':wdata, 'count':initcount+i+1}
-        assert stats == exp_stats, 'Unexpected write stats on rep %d: %s; expected %s' % (i, stats, exp_stats)
+        assert stats == exp_stats, 'Unexpected write stats on rep %d: %s; expected %s. *If* test_reg_reads passed, indicates write problems.' % (i, stats, exp_stats)
 
 
 @pytest.mark.parametrize("address, nbytes, reps, desc", testRWData)
 def test_reg_repeat_reads(deep_reg_test, address, nbytes, reps, desc):
-    # writes random data and checks whether we repeated reads return the same:
+    # Writes random data and checks whether we repeated reads return the same.
+    # If we always read back "bad" read data, then possibly it's only the writes that aren't working.
     if not deep_reg_test:
         pytest.skip("use --deep_reg_test to run")
     repreads = 10
@@ -395,12 +399,13 @@ def test_reg_repeat_reads(deep_reg_test, address, nbytes, reps, desc):
         print('Most  correctly read bytes: %d out of %d' % (best_corrects, nbytes*repreads))
         print('Least correctly read bytes: %d out of %d' % (worst_corrects, nbytes*repreads))
         print('\nHistogram of good read bytes: %s' % display_hist(np.asarray(reads), num_bins=repreads*nbytes, zeros_as_blank=True))
-        assert False
+        assert False, 'If changing_reads is 0, suggests that reads do work reliably but writes do not.'
 
 
 @pytest.mark.parametrize("address, nbytes, reps, desc", testRWData)
 def test_reg_deep_rw(deep_reg_test, address, nbytes, reps, desc):
-    # like test_reg_rw but looks at which bits tend to be in error:
+    # Like test_reg_rw but looks at which bits tend to be in error.
+    # Cannot distinguish between read and/or write issues.
     if not deep_reg_test:
         pytest.skip("use --deep_reg_test to run")
     rxbits = []
@@ -456,7 +461,7 @@ def test_reg_deep_rw(deep_reg_test, address, nbytes, reps, desc):
             print('\nHistogram of good bits  (1): %s' % display_hist(np.asarray(gbits1), num_bins=8, zeros_as_blank=True))
         print('Errored bits (0/1): %d / %d' % (errors0, errors1))
         print('Good bits    (0/1): %d / %d' % (goodbits0, goodbits1))
-        assert False
+        assert False, 'read and/or write problems (cannot distinguish)'
 
 
 @pytest.mark.skipif(not target_attached, reason='No target detected')
