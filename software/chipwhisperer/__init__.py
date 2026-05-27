@@ -409,6 +409,22 @@ def scope(scope_type : Optional[Type[scopes.ScopeTypes]]=None, name : opstr=None
         scope_logger.warning("with this version. It may not work properly; we recommend that you revert your ChipWhisperer")
         scope_logger.warning("installation to the 6.0 release, or to this commit: ")
         scope_logger.warning("https://github.com/newaetech/chipwhisperer/commit/7b3206b0da308bee8ab603ddd8e58bf2725dd85b")
+    # Quick register read sanity: ECHO register has a fixed known value after programming.
+    # We are not sure whether the FPGA is freshly programmed, so we check for the known value.
+    # 1. if it's correct, we know reads work:
+    expected_read = [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]
+    if rtn.fpga_reg_read('ECHO_ADDR', 8) == expected_read:
+        scope_logger.info('ECHO read successful')
+        pass
+    # 2. if it's different, then we write and read it back. Incorrect read back indicates
+    #    a problem with either reading and/or writing.
+    else:
+        rtn.fpga_reg_write('ECHO_ADDR', expected_read)
+        rdata = rtn.fpga_reg_read('ECHO_ADDR', 8)
+        if rdata == expected_read:
+            scope_logger.info('ECHO write+read successful')
+        else:
+            scope_logger.error('Trouble reading/writing FPGA: expected %s, read %s. Contact support@newae.com.' % (expected_read, rdata))
     return rtn
 
 
