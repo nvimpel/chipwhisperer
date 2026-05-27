@@ -176,11 +176,9 @@ def armed(scope):
 
 def correct_fpga_version(scope):
     if scope._is_husky_plus:
-        #return scope.fpga_buildtime == '5/8/2026, 14:48'
-        #return scope.fpga_buildtime == '5/12/2026, 14:53'
-        return scope.fpga_buildtime == '5/13/2026, 11:28'
+        return scope.fpga_buildtime == '5/22/2026, 12:13'
     else:
-        return scope.fpga_buildtime == '2/2/2026, 15:14'
+        return scope.fpga_buildtime == '5/26/2026, 09:27'
 
 def common_fpga_version_check(scope):
     assert correct_fpga_version(scope)
@@ -188,13 +186,12 @@ def common_fpga_version_check(scope):
 def common_fw_version_check(scope):
     if scope._is_husky_plus:
         assert scope.fw_version['major'] == 1
-        assert scope.fw_version['minor'] == 0
-        #assert scope.sam_build_date == '12:22:29 Sep 16 2024'
-        assert scope.sam_build_date == '14:20:23 May 12 2026'
+        assert scope.fw_version['minor'] == 2
+        assert scope.sam_build_date == '09:22:46 May 26 2026'
     else:
         assert scope.fw_version['major'] == 1
-        assert scope.fw_version['minor'] == 5
-        assert scope.sam_build_date == '22:39:17 Nov 14 2024'
+        assert scope.fw_version['minor'] == 7
+        assert scope.sam_build_date == '09:22:43 May 26 2026'
 
 def common_xadc_check(scope, verbose=False, error_msg=''):
     failed = False
