@@ -290,9 +290,13 @@ def test_reg_reads(stress):
             if 'BUILDTIME' not in failing_registers:
                 failing_registers.append('BUILDTIME')
             bad += 1
+        if scope._is_husky_plus:
+            triggers = 4
+        else:
+            triggers = 2
         for reg, nbytes, exp in zip(['SOFTPOWER_CONTROL', 'CW_TRIGSRC_ADDR', 'CW_IOROUTE_ADDR', 'SAD_VERSION', 'SAD_COUNTER_WIDTH', 'ECHO_ADDR'],
-                                    [8,                    8,                 8,                 2,             1,                  8],
-                                    [[35,0,208,7,203,7,0,0], [32,0]*4,        exp_ioroute,       [202,15],      [7],                [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]]):
+                                    [8,                    triggers*2,        8,                 2,             1,                  8],
+                                    [[35,0,208,7,203,7,0,0], [32,0]*triggers, exp_ioroute,       [202,15],      [7],                [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]]):
             if scope.fpga_reg_read(reg, nbytes) != exp:
                 bad += 1
                 if reg not in failing_registers:
