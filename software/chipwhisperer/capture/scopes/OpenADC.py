@@ -702,6 +702,18 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
             self.sc._setReset(True)
             self.sc._setReset(False)
 
+        if not self.scopetype.ser.fw_up2date:
+            # Improvements to the reliability of the SAM3U - FPGA communication involved updates
+            # to both the SAM3U firmware and the FPGA bitfile. The proper bitfile is always used
+            # without any intervention required from the user, but the SAM3U FW requires the user
+            # to manually perform an update.
+            # In the past, a warning was issued prompting the user to update. Now we take a more
+            # forceful approach and prevent the user from using the scope object until the upgrade
+            # is done.
+            scope_logger.error('Your firmware is out of date and incompatible with this version of ChipWhisperer. ' +
+                               'Run scope.upgrade_firmware(); scope.dis(), and then re-connect.')
+            return True
+
         self.adc = TriggerSettings(self.sc)
         self.gain = GainSettings(self.sc, self.adc)
 
@@ -1083,6 +1095,13 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
 
         """
         return self.sc.sendMessage(CODE_WRITE, addr, listofbytes)
+
+    def _write_stats(self):
+        raw = self.fpga_reg_read('REG_SAM3U_WR_DEBUG', 4)
+        last_addr = raw[0]
+        last_wdata = raw[1]
+        count = raw[2] + (raw[3] << 8)
+        return {'last_addr':last_addr, 'last_wdata':last_wdata, 'count':count}
 
     def __enter__(self):
         return self

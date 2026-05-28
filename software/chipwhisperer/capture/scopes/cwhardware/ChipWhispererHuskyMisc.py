@@ -469,11 +469,13 @@ class LEDSettings(util.DisableNewAttr):
         elif raw == 1: return "1 (USB and CLKGEN clock heartbeats)"
         elif raw == 2: return "2 (ADC clock heartbeats)"
         elif raw == 3: return "3 (PLL clock heartbeat)"
+        elif raw == 4: return "4 (SAM3U R/W debug)"
+        elif raw == 5: return "5 (SAM3U R/W debug)"
         else: return ValueError
 
     @setting.setter
     def setting(self, val):
-        if val < 0 or val > 3:
+        if val < 0 or val > 5:
             raise ValueError
         self.oa.sendMessage(CODE_WRITE, "LED_SELECT", [val])
 
