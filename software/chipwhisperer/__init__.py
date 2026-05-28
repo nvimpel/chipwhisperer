@@ -404,22 +404,25 @@ def scope(scope_type : Optional[Type[scopes.ScopeTypes]]=None, name : opstr=None
         time.sleep(2)
         rtn = scope_type()
         rtn.con(**kwargs)
-    # Quick register read sanity: ECHO register has a fixed known value after programming.
-    # We are not sure whether the FPGA is freshly programmed, so we check for the known value.
-    # 1. if it's correct, we know reads work:
-    expected_read = [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]
-    if rtn.fpga_reg_read('ECHO_ADDR', 8) == expected_read:
-        scope_logger.info('ECHO read successful')
-        pass
-    # 2. if it's different, then we write and read it back. Incorrect read back indicates
-    #    a problem with either reading and/or writing.
-    else:
-        rtn.fpga_reg_write('ECHO_ADDR', expected_read)
-        rdata = rtn.fpga_reg_read('ECHO_ADDR', 8)
-        if rdata == expected_read:
-            scope_logger.info('ECHO write+read successful')
+
+    if rtn._is_husky:
+        # Quick register read sanity: ECHO register has a fixed known value after programming.
+        # We are not sure whether the FPGA is freshly programmed, so we check for the known value.
+        # 1. if it's correct, we know reads work:
+        expected_read = [0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]
+        if rtn.fpga_reg_read('ECHO_ADDR', 8) == expected_read:
+            scope_logger.info('ECHO read successful')
+            pass
+        # 2. if it's different, then we write and read it back. Incorrect read back indicates
+        #    a problem with either reading and/or writing.
         else:
-            scope_logger.error('Trouble reading/writing FPGA: expected %s, read %s. Contact support@newae.com.' % (expected_read, rdata))
+            rtn.fpga_reg_write('ECHO_ADDR', expected_read)
+            rdata = rtn.fpga_reg_read('ECHO_ADDR', 8)
+            if rdata == expected_read:
+                scope_logger.info('ECHO write+read successful')
+            else:
+                scope_logger.error('Trouble reading/writing FPGA: expected %s, read %s. Contact support@newae.com.' % (expected_read, rdata))
+
     return rtn
 
 
