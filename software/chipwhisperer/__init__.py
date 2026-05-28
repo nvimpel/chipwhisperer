@@ -405,7 +405,7 @@ def scope(scope_type : Optional[Type[scopes.ScopeTypes]]=None, name : opstr=None
         rtn = scope_type()
         rtn.con(**kwargs)
 
-    if rtn._is_husky:
+    if isinstance(rtn, scopes.OpenADC) and rtn._is_husky:
         # Quick register read sanity: ECHO register has a fixed known value after programming.
         # We are not sure whether the FPGA is freshly programmed, so we check for the known value.
         # 1. if it's correct, we know reads work:
