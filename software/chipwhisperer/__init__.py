@@ -404,11 +404,6 @@ def scope(scope_type : Optional[Type[scopes.ScopeTypes]]=None, name : opstr=None
         time.sleep(2)
         rtn = scope_type()
         rtn.con(**kwargs)
-    if rtn._is_husky_plus:
-        scope_logger.warning("There is a known Husky Plus issue (https://github.com/newaetech/chipwhisperer/issues/573)")
-        scope_logger.warning("with this version. It may not work properly; we recommend that you revert your ChipWhisperer")
-        scope_logger.warning("installation to the 6.0 release, or to this commit: ")
-        scope_logger.warning("https://github.com/newaetech/chipwhisperer/commit/7b3206b0da308bee8ab603ddd8e58bf2725dd85b")
     # Quick register read sanity: ECHO register has a fixed known value after programming.
     # We are not sure whether the FPGA is freshly programmed, so we check for the known value.
     # 1. if it's correct, we know reads work:
