@@ -407,18 +407,6 @@ class OpenADCInterface(util.DisableNewAttr):
         return self.msg_clr_mask(address, i, mask, max_resp=max_resp)
 
 ### Generic
-    def fpga_write(self, address, data):
-        """Helper function to write FPGA registers. Intended for development/debug, not for regular use.
-        """
-        address = self._address_str2int(address)
-        return self.msg_write(address, data)
-
-    def fpga_read(self, address, num_bytes):
-        """Helper function to read FPGA registers. Intended for development/debug, not for regular use.
-        """
-        address = self._address_str2int(address)
-        return self.msg_read(address, maxResp=num_bytes)
-
     def setSettings(self, state, validate=False):
         cmd = bytearray(1)
         cmd[0] = state
