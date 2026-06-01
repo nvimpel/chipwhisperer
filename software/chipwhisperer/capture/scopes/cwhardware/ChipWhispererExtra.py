@@ -2257,9 +2257,9 @@ class HuskyTrigger(TriggerSettings):
         Sets the number of rising+falling edges on :code:`scope.trigger.triggers` that
         need to be seen for a trigger to be issued.
 
-        Edges are sampled by the ADC sampling clock (:code:`scope.clock.adc_freq`), so
-        ensure that scope.trigger.triggers does not change faster than what can
-        be seen by that clock.
+        Edges are sampled by the ADC sampling clock (:code:`scope.clock.adc_freq`);
+        consecutive edges must be at least 1/:code:`scope.clock.adc_freq` seconds apart in order to
+        be "seen" (and to be safe, twice that).
 
         Args:
             val (int): number of edges, non-zero 16-bit integer.
