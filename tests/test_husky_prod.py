@@ -521,10 +521,8 @@ def test_internal_ramp(stress, samples, presamples, testmode, clock, fastreads, 
     scope.adc.lo_gain_errors_disabled = True
     scope.adc.segment_cycle_counter_en = True
     for i in range(reps):
-        scope.sc.arm(False)
         scope.arm()
         scope.sc.triggerNow()
-        scope.sc.arm(False)
         assert scope.capture() == False, 'unable to capture (rep %d), highly unusual error' % i
         raw = np.int64(scope.get_last_trace(True))
         errors, first_error = check_ramp(raw, testmode, bits, samples, segment_cycles)

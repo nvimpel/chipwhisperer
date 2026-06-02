@@ -851,10 +851,9 @@ class OpenADC(util.DisableNewAttr, ChipWhispererCommonInterface):
                 scope_logger.error('Chosen trigger module is disabled due to XADC errors (%s); clear them before proceeding.' % self.XADC.status)
         # with DelayedKeyboardInterrupt():
         try:
+            self.sc.arm(False)
             self.advancedSettings.armPreScope()
-
-            self.sc.arm()
-
+            self.sc.arm(True)
             self.advancedSettings.armPostScope()
 
             # For Husky, scope.adc parameters must be cached before startCaptureThread turns on fast read mode,

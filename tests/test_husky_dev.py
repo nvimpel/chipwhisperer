@@ -621,10 +621,8 @@ def test_internal_ramp(fulltest, samples, presamples, testmode, clock, fastreads
     scope.adc.lo_gain_errors_disabled = True
     scope.adc.segment_cycle_counter_en = True
     for i in range(reps):
-        scope.sc.arm(False)
         scope.arm()
         scope.sc.triggerNow()
-        scope.sc.arm(False)
         assert scope.capture() == False
         raw = np.int64(scope.get_last_trace(True))
         errors, first_error = check_ramp(raw, testmode, bits, samples, segment_cycles)
@@ -673,10 +671,8 @@ def test_adc_reset(fulltest, reps, freq_start, freq_stop, freq_step, adc_mul_sta
             #assert abs(scope.clock.adc_freq - clock * adcmul) <= 10e6
             if verbose: print('Running clock=%d, mul=%d, adc=%d' % (clock/1e6, adcmul, scope.clock.adc_freq/1e6))
             for i in range(reps):
-                scope.sc.arm(False)
                 scope.arm()
                 scope.sc.triggerNow()
-                scope.sc.arm(False)
                 assert scope.capture() == False
                 raw = np.int64(scope.get_last_trace(True))
                 errors, first_error = check_ramp(raw, 'internal', 12, samples, 0)
@@ -753,10 +749,8 @@ def test_adc_freq_sweep(fulltest, samples, presamples, freq_start, freq_stop, fr
         assert scope.clock.pll.pll_locked == True
         assert abs(scope.clock.adc_freq - clock * adcmul) <= 10e6
         for i in range(reps):
-            scope.sc.arm(False)
             scope.arm()
             scope.sc.triggerNow()
-            scope.sc.arm(False)
             assert scope.capture(poll_done=True) == False
             raw = np.int64(scope.get_last_trace(True))
             errors, first_error = check_ramp(raw, testmode, bits, samples, segment_cycles)
@@ -1711,7 +1705,6 @@ def test_userio_edge_triggers(fulltest, pins, max_edges, reps, desc):
             scope.trigger.edges = edges
             scope.userio.drive_data = random.randrange(0, 0x100)
             edges_applied = 0
-            scope.sc.arm(False)
             assert not armed(scope)
             scope.arm()
             while (edges_applied < edges):
