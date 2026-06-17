@@ -1480,6 +1480,9 @@ class clock(util.DisableNewAttr):
         else:
             raise ValueError('Invalid source (target_clock/trace_clock/usb_clock)')
         self.main.fpga_write(self.main.REG_FE_CLOCK_SEL, [val])
+        # wait for clock counters to settle in case user wants to do something with
+        # this clock immediately after calling this method
+        time.sleep(0.2)
 
     @property
     def trace_clock_shift_enable(self):
@@ -2234,7 +2237,7 @@ class UARTTrigger(TraceWhisperer):
         if found:
             self.clock.swo_clock_freq = sample_freq
             if not self.clock.swo_clock_locked:
-                tracewhisperer_logger.error("SWO clock not locked!")
+                tracewhisperer_logger.error("SWO clock not locked! Ensure clock source is correct and alive.")
             self.swo_div = div
             self._baud = actual_baud
             tracewhisperer_logger.info("Setting baudrate to %d (freq_mul=%d)" % (actual_baud, freq_mul))
