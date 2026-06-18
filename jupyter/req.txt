@@ -1,0 +1,1 @@
+Potrebujeme mat v venv v ktorom pobezi notebook tieto kniznice: chipwhisperer, mplcursors
