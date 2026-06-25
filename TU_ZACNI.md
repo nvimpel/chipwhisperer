@@ -13,7 +13,8 @@ Ak sa ponáhľate a používate Ubuntu, spustenie nasledujúcich príkazov a ná
 sudo apt update && sudo apt upgrade
 
 sudo apt install make git avr-libc gcc-avr \
-    gcc-arm-none-eabi libusb-1.0-0-dev usbutils python3 python3-venv python3-dev
+    gcc-arm-none-eabi libusb-1.0-0-dev usbutils \
+    python3.12 python3.12-venv python3.12-dev python3-pip
 
 cd ~/
 git clone https://github.com/nvimpel/chipwhisperer.git
