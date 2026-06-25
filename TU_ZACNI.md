@@ -16,7 +16,7 @@ sudo apt install make git avr-libc gcc-avr \
     gcc-arm-none-eabi libusb-1.0-0-dev usbutils python3 python3-venv python3-dev
 
 cd ~/
-git clone [https://github.com/nvimpel/chipwhisperer](https://github.com/nvimpel/chipwhisperer)
+git clone https://github.com/nvimpel/chipwhisperer.git
 cd chipwhisperer
 
 python3 -m venv ~/.cwvenv
