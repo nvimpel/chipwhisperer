@@ -16,4 +16,4 @@ terminaltables
 phoenixAES
 ipywidgets
 nbconvert
-chipwhisperer
+chipwhisperer==6.*
