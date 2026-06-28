@@ -15,7 +15,8 @@ sudo apt update && sudo apt upgrade
 sudo apt install make git avr-libc gcc-avr \
     gcc-arm-none-eabi libusb-1.0-0-dev usbutils curl
 
-# install uv (Python environment manager)
+#moze tu vyskocit error pri instalovani packagov, na ktory treba pouzit apt --fix-broken a skusit to znovu
+
 curl -Ls https://astral.sh/uv/install.sh | sh
 source ~/.bashrc
 
@@ -23,7 +24,7 @@ cd ~/
 git clone https://github.com/nvimpel/chipwhisperer.git
 cd chipwhisperer
 
-# create isolated environment (uv downloads Python 3.12 automatically)
+
 uv venv ~/.cwvenv --python 3.12
 source ~/.cwvenv/bin/activate
 
