@@ -13,24 +13,29 @@ Ak sa ponáhľate a používate Ubuntu, spustenie nasledujúcich príkazov a ná
 sudo apt update && sudo apt upgrade
 
 sudo apt install make git avr-libc gcc-avr \
-    gcc-arm-none-eabi libusb-1.0-0-dev usbutils \
-    python3.12 python3.12-venv python3.12-dev python3-pip
+    gcc-arm-none-eabi libusb-1.0-0-dev usbutils curl
+
+# install uv (Python environment manager)
+curl -Ls https://astral.sh/uv/install.sh | sh
+source ~/.bashrc
 
 cd ~/
 git clone https://github.com/nvimpel/chipwhisperer.git
 cd chipwhisperer
 
-python3 -m venv ~/.cwvenv
+# create isolated environment (uv downloads Python 3.12 automatically)
+uv venv ~/.cwvenv --python 3.12
 source ~/.cwvenv/bin/activate
 
 sudo cp 50-newae.rules /etc/udev/rules.d/50-newae.rules
 sudo udevadm control --reload-rules
-sudo groupadd -fr chipwhisperer # nové verzie systemd vyžadujú systémové účty pre udev
+sudo groupadd -fr chipwhisperer
 sudo usermod -aG chipwhisperer $USER
 sudo usermod -aG plugdev $USER
 
-python -m pip install -e .
-python -m pip install -r jupyter/requirements.txt
+uv pip install --upgrade pip
+uv pip install -e .
+uv pip install -r jupyter/requirements.txt
 
 ```
 Po dokončení spustíte pomocou 
